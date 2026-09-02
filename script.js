@@ -14,6 +14,19 @@ navLinks.querySelectorAll("a").forEach((link) => {
   });
 });
 
+// Pricing CTAs — scroll to contact and prefill the message
+document.querySelectorAll(".price-cta").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const pkg = btn.dataset.package;
+    const messageField = document.getElementById("message");
+    messageField.value = `I'm interested in the ${pkg} package.`;
+    document
+      .getElementById("contact")
+      .scrollIntoView({ behavior: "smooth", block: "start" });
+    document.getElementById("name").focus();
+  });
+});
+
 // Google Apps Script Web app URL — paste yours here (ends in /exec)
 const FORM_ENDPOINT =
   "https://script.google.com/macros/s/AKfycbyj0Aoo5McNV3ihAB47cDVH1MUFJgp30BTCpuM737nHoOsrfcTSPxp53FqiUGZZJlE1/exec";
