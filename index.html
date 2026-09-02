@@ -266,6 +266,39 @@
         </div>
       </section>
 
+      <section id="razorpay-demo" class="razorpay-demo">
+        <div class="wrap razorpay-grid">
+          <div class="razorpay-copy">
+            <p class="demo-badge">Test mode — no real money moves</p>
+            <h2>See verified payments in action</h2>
+            <p>
+              This is what the Premium package includes: a real Razorpay
+              checkout with server-verified payment confirmation — not a
+              self-reported "I've paid" click. Try it below with a test card or
+              test UPI ID; nothing is actually charged.
+            </p>
+            <p class="test-details">
+              <strong>Test card:</strong> 4111 1111 1111 1111 · any future date
+              · any CVV<br /><strong>Test UPI:</strong> success@razorpay
+            </p>
+          </div>
+          <div class="razorpay-box">
+            <label for="demoAmount">Amount (₹)</label>
+            <input
+              type="number"
+              id="demoAmount"
+              min="1"
+              value="100"
+              inputmode="numeric"
+            />
+            <button type="button" id="razorpayPayBtn" class="btn btn-primary">
+              Pay with Razorpay (test)
+            </button>
+            <p class="form-note" id="razorpayStatus"></p>
+          </div>
+        </div>
+      </section>
+
       <section id="testimonials" class="testimonials">
         <div class="wrap">
           <h2>What clients say</h2>
@@ -367,6 +400,7 @@
       </p>
     </footer>
 
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script src="script.js"></script>
   </body>
 </html>

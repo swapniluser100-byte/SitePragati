@@ -497,6 +497,77 @@ h2 {
   }
 }
 
+/* ===== Razorpay demo ===== */
+.razorpay-demo {
+  background: var(--paper-dim);
+}
+.razorpay-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 48px;
+  align-items: center;
+}
+.demo-badge {
+  display: inline-block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--teal);
+  background: rgba(47, 111, 98, 0.1);
+  padding: 5px 12px;
+  border-radius: 20px;
+  margin-bottom: 16px;
+}
+.razorpay-copy p {
+  color: var(--slate);
+  margin-bottom: 16px;
+  max-width: 48ch;
+}
+.test-details {
+  font-size: 0.85rem;
+  background: var(--white);
+  padding: 14px 16px;
+  border-radius: 6px;
+  border: 1px solid rgba(27, 37, 68, 0.1);
+  color: var(--navy);
+  line-height: 1.7;
+}
+.razorpay-box {
+  background: var(--white);
+  border-radius: 10px;
+  padding: 32px;
+  border: 1px solid rgba(27, 37, 68, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.razorpay-box label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--navy);
+}
+.razorpay-box input {
+  padding: 12px 14px;
+  border: 1px solid rgba(27, 37, 68, 0.2);
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 1rem;
+  background: var(--paper);
+  color: var(--navy);
+}
+.razorpay-box .btn {
+  margin-top: 6px;
+}
+#razorpayStatus {
+  min-height: 1.2em;
+  font-weight: 500;
+}
+
+@media (max-width: 860px) {
+  .razorpay-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ===== Testimonials ===== */
 .quote-grid {
   display: grid;
