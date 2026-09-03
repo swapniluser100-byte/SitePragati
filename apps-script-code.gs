@@ -17,7 +17,7 @@
 //     RAZORPAY_KEY_SECRET = ...
 // This keeps the secret out of any file that might end up in GitHub.
 
-const RECIPIENT_EMAIL = "swapniluser100@gmail.com"; // <-- CHANGE THIS to your email
+const RECIPIENT_EMAIL = "youremail@gmail.com"; // <-- CHANGE THIS to your email
 
 function doPost(e) {
   var sheet = getOrCreateSheet("Leads", [
