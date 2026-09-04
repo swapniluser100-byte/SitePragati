@@ -35,7 +35,7 @@ export async function onRequestPost(context) {
       .bind(name, business, businessType, contact, message)
       .run();
 
-    // 2. Email notification via Resend
+    // 2. Email notification via Resend.
     const notifyEmail = env.NOTIFY_EMAIL;
     const resendKey = env.RESEND_API_KEY;
 
