@@ -5,4 +5,4 @@ pages_build_output_dir = "."
 [[d1_databases]]
 binding = "DB"
 database_name = "sitepragati-db"
-database_id = "REPLACE_WITH_YOUR_DATABASE_ID"
+database_id = "5c51f93f-8f3e-4fcf-b026-975e29697116"
