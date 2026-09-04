@@ -97,6 +97,13 @@ This is separate from lead capture — it still runs through its own Google Apps
 ### Adding a new case study later (no code changes needed)
 **Easiest — via the Cloudflare dashboard:** in the left sidebar, click **Storage & Databases → D1 SQL Database**, select `sitepragati-db`, then the **Console** tab. Paste an `INSERT` statement directly (see the commented example at the bottom of `schema.sql` for the exact format), then run it. Refresh your site — the new case study appears automatically.
 
+### Adding the customers + transactions tables (if you already ran the original schema.sql)
+Since `customers` and `transactions` were added after your first setup, run this once against your existing database so you don't risk re-running the whole `schema.sql` (which would duplicate your case studies):
+```
+npx wrangler d1 execute sitepragati-db --remote --file=create-customers-tables.sql
+```
+This only creates the two new tables — it doesn't touch `case_studies` or `leads`. After this, the **Customers** tab in `/admin.html` will work.
+
 **Or via CLI:** save a new `INSERT` statement as a `.sql` file and run:
 ```
 npx wrangler d1 execute sitepragati-db --remote --file=your-new-file.sql
@@ -119,6 +126,7 @@ Visit `/admin.html` on your site to log in and manage leads and case studies —
 
 **What you can do there:**
 - **Leads tab** — see every enquiry, change its status (New / Contacted / Won / Lost) with a dropdown, delete old ones
+- **Customers tab** — track your actual paying clients: business name, contact name, phone, address, and next payment due date/amount. Click "Transactions" on any customer to view, add, edit, or delete their full payment history
 - **Case Studies tab** — add, edit, or delete case studies through a form — no SQL needed anymore. Changes appear on the live "Our work" section immediately (just refresh)
 
 **Security notes:**

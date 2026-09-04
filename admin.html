@@ -33,6 +33,7 @@
 
   <nav class="admin-tabs">
     <button type="button" class="tab-btn active" data-tab="leads">Leads</button>
+    <button type="button" class="tab-btn" data-tab="customers">Customers</button>
     <button type="button" class="tab-btn" data-tab="caseStudies">Case Studies</button>
   </nav>
 
@@ -60,6 +61,114 @@
           <tr><td colspan="8" class="empty-note">Loading…</td></tr>
         </tbody>
       </table>
+    </div>
+  </section>
+
+  <!-- Customers tab -->
+  <section id="customersTab" class="tab-panel">
+
+    <!-- List view -->
+    <div id="customersListView">
+      <div class="panel-head">
+        <h2>Customers</h2>
+        <button type="button" id="addCustomerBtn" class="btn btn-primary btn-small">+ Add customer</button>
+      </div>
+
+      <div id="customerForm" class="cs-form" hidden>
+        <h3 id="customerFormTitle">Add customer</h3>
+        <input type="hidden" id="custId">
+        <div class="cs-form-grid">
+          <div>
+            <label for="custBusinessName">Business name</label>
+            <input type="text" id="custBusinessName" required>
+          </div>
+          <div>
+            <label for="custContactName">Contact name</label>
+            <input type="text" id="custContactName">
+          </div>
+          <div>
+            <label for="custPhone">Phone</label>
+            <input type="text" id="custPhone">
+          </div>
+          <div>
+            <label for="custNextDueDate">Next payment due date</label>
+            <input type="date" id="custNextDueDate">
+          </div>
+          <div>
+            <label for="custNextDueAmount">Next payment due amount (₹)</label>
+            <input type="number" id="custNextDueAmount" step="0.01">
+          </div>
+        </div>
+        <label for="custAddress">Address</label>
+        <textarea id="custAddress" rows="2"></textarea>
+        <div class="cs-form-actions">
+          <button type="button" id="custSaveBtn" class="btn btn-primary">Save</button>
+          <button type="button" id="custCancelBtn" class="btn btn-outline">Cancel</button>
+        </div>
+      </div>
+
+      <div id="customersList" class="cs-list">
+        <p class="empty-note">Loading…</p>
+      </div>
+    </div>
+
+    <!-- Detail view: one customer's transactions -->
+    <div id="customerDetailView" hidden>
+      <button type="button" id="backToCustomersBtn" class="btn btn-outline btn-small back-btn">&larr; Back to customers</button>
+
+      <div id="customerDetailInfo" class="customer-detail-info"></div>
+
+      <div class="panel-head">
+        <h3>Transactions</h3>
+        <button type="button" id="addTransactionBtn" class="btn btn-primary btn-small">+ Add transaction</button>
+      </div>
+
+      <div id="transactionForm" class="cs-form" hidden>
+        <h3 id="transactionFormTitle">Add transaction</h3>
+        <input type="hidden" id="txnId">
+        <input type="hidden" id="txnCustomerId">
+        <div class="cs-form-grid">
+          <div>
+            <label for="txnAmount">Amount (₹)</label>
+            <input type="number" id="txnAmount" step="0.01" required>
+          </div>
+          <div>
+            <label for="txnDate">Date</label>
+            <input type="date" id="txnDate">
+          </div>
+          <div>
+            <label for="txnStatus">Status</label>
+            <select id="txnStatus">
+              <option value="Paid">Paid</option>
+              <option value="Pending">Pending</option>
+              <option value="Overdue">Overdue</option>
+            </select>
+          </div>
+        </div>
+        <label for="txnDescription">Description</label>
+        <textarea id="txnDescription" rows="2" placeholder="e.g. Monthly care plan, or invoice reference"></textarea>
+        <div class="cs-form-actions">
+          <button type="button" id="txnSaveBtn" class="btn btn-primary">Save</button>
+          <button type="button" id="txnCancelBtn" class="btn btn-outline">Cancel</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table id="transactionsTable">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Amount</th>
+              <th>Description</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="transactionsTableBody">
+            <tr><td colspan="5" class="empty-note">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </section>
 

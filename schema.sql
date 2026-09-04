@@ -1,3 +1,27 @@
+-- Customers table: your actual paying clients (not website leads)
+CREATE TABLE IF NOT EXISTS customers (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  business_name TEXT NOT NULL,
+  contact_name TEXT,
+  phone TEXT,
+  address TEXT,
+  next_payment_due_date TEXT,
+  next_payment_due_amount REAL,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Transactions table: payment history, one customer has many transactions
+CREATE TABLE IF NOT EXISTS transactions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  customer_id INTEGER NOT NULL,
+  amount REAL NOT NULL,
+  transaction_date TEXT,
+  description TEXT,
+  status TEXT DEFAULT 'Paid',
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
+);
+
 -- Leads table: stores every enquiry submitted through the contact form
 CREATE TABLE IF NOT EXISTS leads (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -20,6 +20,7 @@ function showDashboard() {
   loginScreen.hidden = true;
   dashboard.hidden = false;
   loadLeads();
+  loadCustomers();
   loadCaseStudies();
 }
 
@@ -131,6 +132,283 @@ async function deleteLead(id) {
 }
 
 document.getElementById('refreshLeads').addEventListener('click', loadLeads);
+
+// ===== Customers =====
+let customersCache = [];
+let currentCustomerId = null;
+
+async function loadCustomers() {
+  const list = document.getElementById('customersList');
+  list.innerHTML = '<p class="empty-note">Loading…</p>';
+
+  try {
+    const res = await fetch('/api/admin/customers');
+    const data = await res.json();
+    customersCache = data.customers || [];
+
+    if (customersCache.length === 0) {
+      list.innerHTML = '<p class="empty-note">No customers yet.</p>';
+      return;
+    }
+
+    list.innerHTML = customersCache.map(c => `
+      <div class="cs-card">
+        <div class="cs-card-info">
+          <h3>${escapeHtml(c.business_name)}</h3>
+          <p>${escapeHtml(c.contact_name || '')} ${c.phone ? '· ' + escapeHtml(c.phone) : ''}</p>
+          <p>${c.next_payment_due_date ? 'Next due: ' + escapeHtml(c.next_payment_due_date) : 'No due date set'}${c.next_payment_due_amount ? ' — ₹' + escapeHtml(String(c.next_payment_due_amount)) : ''}</p>
+        </div>
+        <div class="cs-card-actions">
+          <button class="btn btn-outline btn-small" data-view-txns="${c.id}">Transactions</button>
+          <button class="btn btn-outline btn-small" data-edit-cust="${c.id}">Edit</button>
+          <button class="btn-danger" data-delete-cust="${c.id}">Delete</button>
+        </div>
+      </div>
+    `).join('');
+
+    list.querySelectorAll('[data-view-txns]').forEach(btn => {
+      btn.addEventListener('click', () => openCustomerDetail(btn.dataset.viewTxns));
+    });
+    list.querySelectorAll('[data-edit-cust]').forEach(btn => {
+      btn.addEventListener('click', () => openCustomerForm(btn.dataset.editCust));
+    });
+    list.querySelectorAll('[data-delete-cust]').forEach(btn => {
+      btn.addEventListener('click', () => deleteCustomer(btn.dataset.deleteCust));
+    });
+  } catch (err) {
+    list.innerHTML = '<p class="empty-note">Could not load customers.</p>';
+  }
+}
+
+const custForm = document.getElementById('customerForm');
+const custFields = {
+  id: document.getElementById('custId'),
+  business_name: document.getElementById('custBusinessName'),
+  contact_name: document.getElementById('custContactName'),
+  phone: document.getElementById('custPhone'),
+  address: document.getElementById('custAddress'),
+  next_payment_due_date: document.getElementById('custNextDueDate'),
+  next_payment_due_amount: document.getElementById('custNextDueAmount')
+};
+
+function clearCustomerForm() {
+  Object.values(custFields).forEach(el => el.value = '');
+}
+
+function openCustomerForm(id) {
+  clearCustomerForm();
+  document.getElementById('customerFormTitle').textContent = id ? 'Edit customer' : 'Add customer';
+
+  if (id) {
+    const c = customersCache.find(x => String(x.id) === String(id));
+    if (c) {
+      Object.keys(custFields).forEach(key => {
+        if (c[key] != null) custFields[key].value = c[key];
+      });
+    }
+  }
+
+  custForm.hidden = false;
+  custForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+document.getElementById('addCustomerBtn').addEventListener('click', () => openCustomerForm(null));
+document.getElementById('custCancelBtn').addEventListener('click', () => {
+  custForm.hidden = true;
+  clearCustomerForm();
+});
+
+document.getElementById('custSaveBtn').addEventListener('click', async () => {
+  const payload = {};
+  Object.entries(custFields).forEach(([key, el]) => { payload[key] = el.value; });
+
+  if (!payload.business_name.trim()) {
+    alert('Business name is required.');
+    return;
+  }
+
+  const isEdit = !!payload.id;
+  const method = isEdit ? 'PUT' : 'POST';
+  if (!isEdit) delete payload.id;
+
+  try {
+    const res = await fetch('/api/admin/customers', {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (!res.ok || data.error) {
+      alert('Error: ' + (data.error || 'Could not save'));
+      return;
+    }
+    custForm.hidden = true;
+    clearCustomerForm();
+    loadCustomers();
+  } catch (err) {
+    alert('Something went wrong saving this customer.');
+  }
+});
+
+async function deleteCustomer(id) {
+  if (!confirm('Delete this customer and ALL their transactions? This cannot be undone.')) return;
+  await fetch('/api/admin/customers', {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: Number(id) })
+  });
+  loadCustomers();
+}
+
+// ===== Customer detail view (transactions) =====
+function openCustomerDetail(id) {
+  currentCustomerId = id;
+  const c = customersCache.find(x => String(x.id) === String(id));
+  if (!c) return;
+
+  document.getElementById('customersListView').hidden = true;
+  document.getElementById('customerDetailView').hidden = false;
+
+  document.getElementById('customerDetailInfo').innerHTML = `
+    <h3>${escapeHtml(c.business_name)}</h3>
+    <p>${escapeHtml(c.contact_name || '')} ${c.phone ? '· ' + escapeHtml(c.phone) : ''}</p>
+    <p>${escapeHtml(c.address || '')}</p>
+    <p class="due-amount">${c.next_payment_due_date ? 'Next due: ' + escapeHtml(c.next_payment_due_date) : 'No due date set'}${c.next_payment_due_amount ? ' — ₹' + escapeHtml(String(c.next_payment_due_amount)) : ''}</p>
+  `;
+
+  loadTransactions(id);
+}
+
+document.getElementById('backToCustomersBtn').addEventListener('click', () => {
+  document.getElementById('customerDetailView').hidden = true;
+  document.getElementById('customersListView').hidden = false;
+  currentCustomerId = null;
+});
+
+async function loadTransactions(customerId) {
+  const tbody = document.getElementById('transactionsTableBody');
+  tbody.innerHTML = '<tr><td colspan="5" class="empty-note">Loading…</td></tr>';
+
+  try {
+    const res = await fetch(`/api/admin/transactions?customer_id=${customerId}`);
+    const data = await res.json();
+
+    if (!data.transactions || data.transactions.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="empty-note">No transactions yet.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = data.transactions.map(t => `
+      <tr>
+        <td>${escapeHtml(t.transaction_date || '')}</td>
+        <td>₹${escapeHtml(String(t.amount))}</td>
+        <td>${escapeHtml(t.description || '')}</td>
+        <td>${escapeHtml(t.status)}</td>
+        <td>
+          <button class="btn btn-outline btn-small" data-edit-txn="${t.id}">Edit</button>
+          <button class="btn-danger" data-delete-txn="${t.id}">Delete</button>
+        </td>
+      </tr>
+    `).join('');
+
+    tbody.querySelectorAll('[data-edit-txn]').forEach(btn => {
+      btn.addEventListener('click', () => openTransactionForm(data.transactions.find(t => String(t.id) === btn.dataset.editTxn)));
+    });
+    tbody.querySelectorAll('[data-delete-txn]').forEach(btn => {
+      btn.addEventListener('click', () => deleteTransaction(btn.dataset.deleteTxn));
+    });
+  } catch (err) {
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-note">Could not load transactions.</td></tr>';
+  }
+}
+
+const txnForm = document.getElementById('transactionForm');
+const txnFields = {
+  id: document.getElementById('txnId'),
+  customer_id: document.getElementById('txnCustomerId'),
+  amount: document.getElementById('txnAmount'),
+  transaction_date: document.getElementById('txnDate'),
+  status: document.getElementById('txnStatus'),
+  description: document.getElementById('txnDescription')
+};
+
+function clearTransactionForm() {
+  txnFields.id.value = '';
+  txnFields.amount.value = '';
+  txnFields.transaction_date.value = '';
+  txnFields.status.value = 'Paid';
+  txnFields.description.value = '';
+}
+
+function openTransactionForm(txn) {
+  clearTransactionForm();
+  document.getElementById('transactionFormTitle').textContent = txn ? 'Edit transaction' : 'Add transaction';
+  txnFields.customer_id.value = currentCustomerId;
+
+  if (txn) {
+    txnFields.id.value = txn.id;
+    txnFields.amount.value = txn.amount;
+    txnFields.transaction_date.value = txn.transaction_date || '';
+    txnFields.status.value = txn.status || 'Paid';
+    txnFields.description.value = txn.description || '';
+  }
+
+  txnForm.hidden = false;
+  txnForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+document.getElementById('addTransactionBtn').addEventListener('click', () => openTransactionForm(null));
+document.getElementById('txnCancelBtn').addEventListener('click', () => {
+  txnForm.hidden = true;
+  clearTransactionForm();
+});
+
+document.getElementById('txnSaveBtn').addEventListener('click', async () => {
+  const payload = {
+    id: txnFields.id.value || undefined,
+    customer_id: Number(txnFields.customer_id.value),
+    amount: Number(txnFields.amount.value),
+    transaction_date: txnFields.transaction_date.value,
+    status: txnFields.status.value,
+    description: txnFields.description.value
+  };
+
+  if (!payload.amount) {
+    alert('Amount is required.');
+    return;
+  }
+
+  const isEdit = !!payload.id;
+  const method = isEdit ? 'PUT' : 'POST';
+
+  try {
+    const res = await fetch('/api/admin/transactions', {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (!res.ok || data.error) {
+      alert('Error: ' + (data.error || 'Could not save'));
+      return;
+    }
+    txnForm.hidden = true;
+    clearTransactionForm();
+    loadTransactions(currentCustomerId);
+  } catch (err) {
+    alert('Something went wrong saving this transaction.');
+  }
+});
+
+async function deleteTransaction(id) {
+  if (!confirm('Delete this transaction? This cannot be undone.')) return;
+  await fetch('/api/admin/transactions', {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: Number(id) })
+  });
+  loadTransactions(currentCustomerId);
+}
 
 // ===== Case Studies =====
 let caseStudiesCache = [];
