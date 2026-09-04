@@ -13,8 +13,10 @@ export async function onRequestPost(context) {
       return json({ error: 'Incorrect password' }, 401);
     }
 
-    const token = await createSessionToken(env.SESSION_SECRET);
-    return json({ result: 'success' }, 200, { 'Set-Cookie': sessionCookie(token) });
+    const token = await createSessionToken(env.SESSION_SECRET, { role: 'admin' });
+    return json({ result: 'success' }, 200, {
+      'Set-Cookie': sessionCookie('admin_session', token)
+    });
   } catch (err) {
     return json({ error: 'Login failed' }, 400);
   }

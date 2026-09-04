@@ -1,0 +1,28 @@
+.login-help{
+  margin-top:14px; font-size:0.82rem; color:var(--slate); text-align:center;
+}
+
+.welcome-line{
+  color:var(--slate); font-size:0.95rem; margin-bottom:24px;
+}
+
+.ticket-list{display:flex; flex-direction:column; gap:12px;}
+.ticket-card{
+  background:var(--white); border:1px solid rgba(27,37,68,0.1); border-radius:8px;
+  padding:18px 20px;
+}
+.ticket-card-head{
+  display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:6px;
+}
+.ticket-card-head h3{font-size:1.02rem;}
+.ticket-card p{color:var(--slate); font-size:0.88rem; margin-top:4px;}
+.ticket-date{font-size:0.78rem; color:var(--slate); margin-top:8px;}
+
+.status-badge{
+  display:inline-block; padding:4px 12px; border-radius:20px;
+  font-size:0.78rem; font-weight:600; white-space:nowrap;
+}
+.status-open{background:rgba(232,163,61,0.15); color:var(--amber-dark);}
+.status-in-progress{background:rgba(47,111,98,0.15); color:var(--teal);}
+.status-resolved{background:rgba(27,37,68,0.1); color:var(--navy);}
+.status-closed{background:rgba(84,91,112,0.15); color:var(--slate);}

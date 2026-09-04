@@ -134,10 +134,31 @@ Visit `/admin.html` on your site to log in and manage leads and case studies —
 - Sessions last 24 hours, then you'll need to log in again
 - This is a single-shared-password system, fine for one or two people managing the site — if you ever need multiple admin accounts with separate logins, that's a bigger upgrade (real user accounts) worth asking for separately
 
-## 6. Custom domain (optional)
+## 6. Set up the customer portal
+Lets your paying customers log in at `/customer-portal.html` to view and raise maintenance tickets — separate from your admin login, and each customer only ever sees their own tickets.
+
+1. If you already have a live database, run this once to add the new columns/table:
+   ```
+   npx wrangler d1 execute sitepragati-db --remote --file=create-customer-portal-tables.sql
+   ```
+   (A fresh install already gets this from `schema.sql` — no separate step needed.)
+
+2. No new secrets needed — it reuses your existing `SESSION_SECRET`.
+
+3. **Give each customer a login:** go to `/admin.html` → **Customers** tab → **Edit** an existing customer (or **+ Add customer** for a new one) → fill in **Email** and **Password**. This becomes their login for `/customer-portal.html`. Share these credentials with them yourself (WhatsApp, email, however you normally communicate) — there's no public sign-up.
+
+4. Redeploy: `npx wrangler pages deploy .`
+
+**What your customer sees:** a simple login, then a list of their own tickets with status badges (Open / In Progress / Resolved / Closed), and a "+ New ticket" button to raise a new one.
+
+**What you see:** a new **Tickets** tab in `/admin.html` showing tickets from *all* customers at once (with their business name), where you update status via a dropdown — same pattern as the Leads tab.
+
+**Changing a customer's password later:** edit them in the Customers tab and type a new password — leave the password field blank to keep their current one unchanged.
+
+## 7. Custom domain (optional)
 Buy `sitepragati.in` or similar from Hostinger/BigRock (~₹500–900/year), then connect it under **Custom Domains** in your Cloudflare Pages project (dashboard, not CLI).
 
-## 7. Updating the site later
+## 8. Updating the site later
 For any change to `index.html`, `style.css`, `script.js`, or `functions/`, redeploy with:
 ```
 npx wrangler pages deploy .

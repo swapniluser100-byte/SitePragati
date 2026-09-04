@@ -14,9 +14,9 @@ export async function onRequest(context) {
   }
 
   const token = getCookieValue(request, 'admin_session');
-  const valid = token && await verifySessionToken(token, env.SESSION_SECRET);
+  const payload = token && await verifySessionToken(token, env.SESSION_SECRET);
 
-  if (!valid) {
+  if (!payload) {
     return json({ error: 'Unauthorized' }, 401);
   }
 

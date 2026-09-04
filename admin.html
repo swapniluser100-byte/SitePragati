@@ -34,6 +34,7 @@
   <nav class="admin-tabs">
     <button type="button" class="tab-btn active" data-tab="leads">Leads</button>
     <button type="button" class="tab-btn" data-tab="customers">Customers</button>
+    <button type="button" class="tab-btn" data-tab="tickets">Tickets</button>
     <button type="button" class="tab-btn" data-tab="caseStudies">Case Studies</button>
   </nav>
 
@@ -85,6 +86,14 @@
           <div>
             <label for="custContactName">Contact name</label>
             <input type="text" id="custContactName">
+          </div>
+          <div>
+            <label for="custEmail">Email <span class="field-note">(portal login)</span></label>
+            <input type="email" id="custEmail" placeholder="customer@business.com">
+          </div>
+          <div>
+            <label for="custPassword">Password <span class="field-note" id="custPasswordNote">(required for new customers)</span></label>
+            <input type="text" id="custPassword" placeholder="Set a login password">
           </div>
           <div>
             <label for="custPhone">Phone</label>
@@ -169,6 +178,30 @@
           </tbody>
         </table>
       </div>
+    </div>
+  </section>
+
+  <!-- Tickets tab -->
+  <section id="ticketsTab" class="tab-panel">
+    <div class="panel-head">
+      <h2>Tickets</h2>
+      <button type="button" id="refreshTickets" class="btn btn-outline btn-small">Refresh</button>
+    </div>
+    <div class="table-wrap">
+      <table id="ticketsTable">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Customer</th>
+            <th>Subject</th>
+            <th>Description</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="ticketsTableBody">
+          <tr><td colspan="5" class="empty-note">Loading…</td></tr>
+        </tbody>
+      </table>
     </div>
   </section>
 

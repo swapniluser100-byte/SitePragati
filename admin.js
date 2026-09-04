@@ -21,6 +21,7 @@ function showDashboard() {
   dashboard.hidden = false;
   loadLeads();
   loadCustomers();
+  loadTickets();
   loadCaseStudies();
 }
 
@@ -186,6 +187,8 @@ const custFields = {
   id: document.getElementById('custId'),
   business_name: document.getElementById('custBusinessName'),
   contact_name: document.getElementById('custContactName'),
+  email: document.getElementById('custEmail'),
+  password: document.getElementById('custPassword'),
   phone: document.getElementById('custPhone'),
   address: document.getElementById('custAddress'),
   next_payment_due_date: document.getElementById('custNextDueDate'),
@@ -199,12 +202,16 @@ function clearCustomerForm() {
 function openCustomerForm(id) {
   clearCustomerForm();
   document.getElementById('customerFormTitle').textContent = id ? 'Edit customer' : 'Add customer';
+  document.getElementById('custPasswordNote').textContent = id
+    ? '(leave blank to keep current password)'
+    : '(required for new customers)';
 
   if (id) {
     const c = customersCache.find(x => String(x.id) === String(id));
     if (c) {
       Object.keys(custFields).forEach(key => {
-        if (c[key] != null) custFields[key].value = c[key];
+        // Never pre-fill the password field — it's write-only from the UI's perspective.
+        if (key !== 'password' && c[key] != null) custFields[key].value = c[key];
       });
     }
   }
@@ -229,8 +236,19 @@ document.getElementById('custSaveBtn').addEventListener('click', async () => {
   }
 
   const isEdit = !!payload.id;
+
+  if (!isEdit && !payload.email.trim()) {
+    alert('Email is required — it becomes the customer\'s portal login.');
+    return;
+  }
+  if (!isEdit && !payload.password.trim()) {
+    alert('Password is required for a new customer.');
+    return;
+  }
+
   const method = isEdit ? 'PUT' : 'POST';
   if (!isEdit) delete payload.id;
+  if (isEdit && !payload.password.trim()) delete payload.password; // don't overwrite existing password
 
   try {
     const res = await fetch('/api/admin/customers', {
@@ -260,6 +278,54 @@ async function deleteCustomer(id) {
   });
   loadCustomers();
 }
+
+// ===== Tickets (admin view — all customers) =====
+const TICKET_STATUS_OPTIONS = ['Open', 'In Progress', 'Resolved', 'Closed'];
+
+async function loadTickets() {
+  const tbody = document.getElementById('ticketsTableBody');
+  tbody.innerHTML = '<tr><td colspan="5" class="empty-note">Loading…</td></tr>';
+
+  try {
+    const res = await fetch('/api/admin/tickets');
+    const data = await res.json();
+
+    if (!data.tickets || data.tickets.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="empty-note">No tickets yet.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = data.tickets.map(t => `
+      <tr>
+        <td>${escapeHtml(new Date(t.created_at).toLocaleDateString())}</td>
+        <td>${escapeHtml(t.business_name)}</td>
+        <td>${escapeHtml(t.subject)}</td>
+        <td class="message-cell">${escapeHtml(t.description || '')}</td>
+        <td>
+          <select class="status-select" data-ticket-id="${t.id}">
+            ${TICKET_STATUS_OPTIONS.map(s => `<option value="${s}" ${s === t.status ? 'selected' : ''}>${s}</option>`).join('')}
+          </select>
+        </td>
+      </tr>
+    `).join('');
+
+    tbody.querySelectorAll('.status-select').forEach(select => {
+      select.addEventListener('change', () => updateTicketStatus(select.dataset.ticketId, select.value));
+    });
+  } catch (err) {
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-note">Could not load tickets.</td></tr>';
+  }
+}
+
+async function updateTicketStatus(id, status) {
+  await fetch('/api/admin/tickets', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: Number(id), status })
+  });
+}
+
+document.getElementById('refreshTickets').addEventListener('click', loadTickets);
 
 // ===== Customer detail view (transactions) =====
 function renderCustomerDetailInfo(c) {

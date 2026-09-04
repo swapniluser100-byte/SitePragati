@@ -3,11 +3,25 @@ CREATE TABLE IF NOT EXISTS customers (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   business_name TEXT NOT NULL,
   contact_name TEXT,
+  email TEXT UNIQUE,
+  password_hash TEXT,
   phone TEXT,
   address TEXT,
   next_payment_due_date TEXT,
   next_payment_due_amount REAL,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tickets table: maintenance requests submitted by customers through
+-- their portal, one customer has many tickets
+CREATE TABLE IF NOT EXISTS tickets (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  customer_id INTEGER NOT NULL,
+  subject TEXT NOT NULL,
+  description TEXT,
+  status TEXT DEFAULT 'Open',
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
 );
 
 -- Transactions table: payment history, one customer has many transactions
