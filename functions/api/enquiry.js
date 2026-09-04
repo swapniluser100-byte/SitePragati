@@ -17,30 +17,28 @@ export async function onRequestPost(context) {
 
   try {
     const formData = await request.formData();
-    const name = (formData.get("name") || "").toString().trim();
-    const business = (formData.get("business") || "").toString().trim();
-    const businessType = (formData.get("businessType") || "").toString().trim();
-    const contact = (formData.get("contact") || "").toString().trim();
-    const message = (formData.get("message") || "").toString().trim();
+    const name = (formData.get('name') || '').toString().trim();
+    const business = (formData.get('business') || '').toString().trim();
+    const businessType = (formData.get('businessType') || '').toString().trim();
+    const contact = (formData.get('contact') || '').toString().trim();
+    const message = (formData.get('message') || '').toString().trim();
 
     if (!name || !contact) {
-      return json({ error: "Name and contact are required" }, 400);
+      return json({ error: 'Name and contact are required' }, 400);
     }
 
     // 1. Store in D1
     await env.DB.prepare(
       `INSERT INTO leads (name, business, business_type, contact, message)
-       VALUES (?, ?, ?, ?, ?)`,
-    )
-      .bind(name, business, businessType, contact, message)
-      .run();
+       VALUES (?, ?, ?, ?, ?)`
+    ).bind(name, business, businessType, contact, message).run();
 
-    // 2. Email notification via Resend.
+    // 2. Email notification via Resend
     const notifyEmail = env.NOTIFY_EMAIL;
     const resendKey = env.RESEND_API_KEY;
 
     if (resendKey && notifyEmail) {
-      const subject = `New enquiry from ${name}${business ? " (" + business + ")" : ""}`;
+      const subject = `New enquiry from ${name}${business ? ' (' + business + ')' : ''}`;
       const bodyText =
         `A new enquiry came in through the SitePragati website:\n\n` +
         `Name: ${name}\n` +
@@ -49,28 +47,28 @@ export async function onRequestPost(context) {
         `Contact: ${contact}\n` +
         `Message: ${message}`;
 
-      const emailRes = await fetch("https://api.resend.com/emails", {
-        method: "POST",
+      const emailRes = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
         headers: {
           Authorization: `Bearer ${resendKey}`,
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          from: "SitePragati <onboarding@resend.dev>", // see DEPLOY-GUIDE.md to use your own domain
+          from: 'SitePragati <onboarding@resend.dev>', // see DEPLOY-GUIDE.md to use your own domain
           to: [notifyEmail],
           subject: subject,
-          text: bodyText,
-        }),
+          text: bodyText
+        })
       });
 
       if (!emailRes.ok) {
         // Lead is already saved in D1 even if the email fails — log but don't fail the request
         const errText = await emailRes.text();
-        console.error("Resend error:", errText);
+        console.error('Resend error:', errText);
       }
     }
 
-    return json({ result: "success" });
+    return json({ result: 'success' });
   } catch (err) {
     return json({ error: err.message }, 500);
   }
@@ -79,6 +77,6 @@ export async function onRequestPost(context) {
 function json(obj, status = 200) {
   return new Response(JSON.stringify(obj), {
     status,
-    headers: { "Content-Type": "application/json" },
+    headers: { 'Content-Type': 'application/json' }
   });
 }

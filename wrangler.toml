@@ -1,16 +1,21 @@
 name = "sitepragati"
 compatibility_date = "2026-01-01"
 pages_build_output_dir = "."
-
 [[d1_databases]]
 binding = "DB"
 database_name = "sitepragati-db"
 database_id = "5c51f93f-8f3e-4fcf-b026-975e29697116"
-
 # NOTIFY_EMAIL is a plain (non-secret) variable — safe to set here or in
 # the dashboard. RESEND_API_KEY must NOT go here — it's a secret and
 # belongs only in Pages → Settings → Environment variables (Secret),
 # or set via `wrangler pages secret put RESEND_API_KEY`. See
 # DEPLOY-GUIDE.md for exact steps.
+#
+# The admin console needs two more secrets, set the same way:
+#   npx wrangler pages secret put ADMIN_PASSWORD
+#   npx wrangler pages secret put SESSION_SECRET
+# ADMIN_PASSWORD is what you type in at /admin.html to log in.
+# SESSION_SECRET is a random string used to sign login sessions — pick
+# any long random value, you never need to type it in yourself.
 [vars]
-NOTIFY_EMAIL = "swapniluser100@gmail.com"
+NOTIFY_EMAIL = "youremail@gmail.com"

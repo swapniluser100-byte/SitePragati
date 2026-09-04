@@ -1,52 +1,6 @@
--- Leads table: stores every enquiry submitted through the contact form
-CREATE TABLE IF NOT EXISTS leads (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL,
-  business TEXT,
-  business_type TEXT,
-  contact TEXT,
-  message TEXT,
-  status TEXT DEFAULT 'New',
-  created_at TEXT DEFAULT CURRENT_TIMESTAMP
-);
-
--- SitePragati D1 schema: case_studies table
--- Run this once to create the table, then again (or separately) to seed it.
-
-CREATE TABLE IF NOT EXISTS case_studies (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  business_name TEXT NOT NULL,
-  category TEXT,
-  site_url TEXT,
-  description TEXT,
-  image_file TEXT DEFAULT 'case-placeholder.svg',
-  stat1_label TEXT,
-  stat1_value TEXT,
-  stat2_label TEXT,
-  stat2_value TEXT,
-  stat3_label TEXT,
-  stat3_value TEXT,
-  sort_order INTEGER DEFAULT 0,
-  created_at TEXT DEFAULT CURRENT_TIMESTAMP
-);
-
--- Seed: your existing Prakash's Kitchen case study, migrated from the
--- hardcoded HTML version so the site looks identical after the switch.
-INSERT INTO case_studies (
-  business_name, category, site_url, description, image_file,
-  stat1_label, stat1_value, stat2_label, stat2_value, stat3_label, stat3_value,
-  sort_order
-) VALUES (
-  "Prakash's Kitchen",
-  'Café & restaurant',
-  'prakashskitchen.pages.dev',
-  'A home-style café needed a way to take orders and payments online without paying monthly software fees. We built a full ordering flow with live cart totals, UPI payment, and delivery address capture — plus automatic order logging so nothing gets missed.',
-  'case_study.svg',
-  'from brief to live site', '3 days',
-  'hosting & backend cost', '₹0/mo',
-  'fee on online orders (UPI: 0%)', '2%',
-  1
-);
+-- Run this against your EXISTING database to add only the two new
+-- case studies, without re-inserting Prakash's Kitchen (which is
+-- already there from your first run).
 
 INSERT INTO case_studies (
   business_name, category, site_url, description, image_file,
