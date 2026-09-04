@@ -17,183 +17,142 @@
 //     RAZORPAY_KEY_SECRET = ...
 // This keeps the secret out of any file that might end up in GitHub.
 
-const RECIPIENT_EMAIL = "youremail@gmail.com"; // <-- CHANGE THIS to your email
+const RECIPIENT_EMAIL = 'youremail@gmail.com'; // <-- CHANGE THIS to your email
 
 function doPost(e) {
-  var sheet = getOrCreateSheet("Leads", [
-    "Timestamp",
-    "Name",
-    "Business Name",
-    "Business Type",
-    "Contact",
-    "Message",
+  var sheet = getOrCreateSheet('Leads', [
+    'Timestamp', 'Name', 'Business Name', 'Business Type', 'Contact', 'Message'
   ]);
 
-  var name = e.parameter.name || "";
-  var business = e.parameter.business || "";
-  var businessType = e.parameter.businessType || "";
-  var contact = e.parameter.contact || "";
-  var message = e.parameter.message || "";
+  var name = e.parameter.name || '';
+  var business = e.parameter.business || '';
+  var businessType = e.parameter.businessType || '';
+  var contact = e.parameter.contact || '';
+  var message = e.parameter.message || '';
   var timestamp = new Date();
 
   sheet.appendRow([timestamp, name, business, businessType, contact, message]);
 
-  var subject =
-    "New enquiry from " + name + (business ? " (" + business + ")" : "");
+  var subject = 'New enquiry from ' + name + (business ? ' (' + business + ')' : '');
   var body =
-    "A new enquiry came in through the SitePragati website:\n\n" +
-    "Name: " +
-    name +
-    "\n" +
-    "Business: " +
-    business +
-    "\n" +
-    "Business type: " +
-    businessType +
-    "\n" +
-    "Contact: " +
-    contact +
-    "\n" +
-    "Message: " +
-    message +
-    "\n" +
-    "Received: " +
-    timestamp;
+    'A new enquiry came in through the SitePragati website:\n\n' +
+    'Name: ' + name + '\n' +
+    'Business: ' + business + '\n' +
+    'Business type: ' + businessType + '\n' +
+    'Contact: ' + contact + '\n' +
+    'Message: ' + message + '\n' +
+    'Received: ' + timestamp;
 
   MailApp.sendEmail(RECIPIENT_EMAIL, subject, body);
 
-  return ContentService.createTextOutput(
-    JSON.stringify({ result: "success" }),
-  ).setMimeType(ContentService.MimeType.JSON);
+  return ContentService
+    .createTextOutput(JSON.stringify({ result: 'success' }))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 // Handles the Razorpay demo: ?action=create_order and ?action=verify_payment
 function doGet(e) {
   var action = e.parameter.action;
 
-  if (action === "create_order") {
+  if (action === 'create_order') {
     return createRazorpayOrder(e);
   }
-  if (action === "verify_payment") {
+  if (action === 'verify_payment') {
     return verifyRazorpayPayment(e);
   }
-  return jsonOutput({ error: "Unknown action" });
+  return jsonOutput({ error: 'Unknown action' });
 }
 
 function createRazorpayOrder(e) {
   var props = PropertiesService.getScriptProperties();
-  var keyId = props.getProperty("RAZORPAY_KEY_ID");
-  var keySecret = props.getProperty("RAZORPAY_KEY_SECRET");
+  var keyId = props.getProperty('RAZORPAY_KEY_ID');
+  var keySecret = props.getProperty('RAZORPAY_KEY_SECRET');
 
   if (!keyId || !keySecret) {
-    return jsonOutput({
-      error: "Razorpay keys not configured. Set them in Script Properties.",
-    });
+    return jsonOutput({ error: 'Razorpay keys not configured. Set them in Script Properties.' });
   }
 
   var amountRupees = Number(e.parameter.amount);
   if (!amountRupees || amountRupees < 1) {
-    return jsonOutput({ error: "Invalid amount" });
+    return jsonOutput({ error: 'Invalid amount' });
   }
 
   var amountPaise = Math.round(amountRupees * 100);
   if (amountPaise < 100) {
-    return jsonOutput({ error: "Minimum amount is ₹1" });
+    return jsonOutput({ error: 'Minimum amount is ₹1' });
   }
 
   var payload = {
     amount: amountPaise,
-    currency: "INR",
-    receipt: "receipt_" + new Date().getTime(),
+    currency: 'INR',
+    receipt: 'receipt_' + new Date().getTime()
   };
 
   var options = {
-    method: "post",
-    contentType: "application/json",
+    method: 'post',
+    contentType: 'application/json',
     headers: {
-      Authorization: "Basic " + Utilities.base64Encode(keyId + ":" + keySecret),
+      Authorization: 'Basic ' + Utilities.base64Encode(keyId + ':' + keySecret)
     },
     payload: JSON.stringify(payload),
-    muteHttpExceptions: true,
+    muteHttpExceptions: true
   };
 
-  var response = UrlFetchApp.fetch(
-    "https://api.razorpay.com/v1/orders",
-    options,
-  );
+  var response = UrlFetchApp.fetch('https://api.razorpay.com/v1/orders', options);
   var data = JSON.parse(response.getContentText());
 
   if (data.error) {
-    return jsonOutput({
-      error: data.error.description || "Razorpay error creating order",
-    });
+    return jsonOutput({ error: data.error.description || 'Razorpay error creating order' });
   }
 
   return jsonOutput({
     order_id: data.id,
     amount: data.amount,
     currency: data.currency,
-    key_id: keyId, // safe to expose — this is the public key, not the secret
+    key_id: keyId // safe to expose — this is the public key, not the secret
   });
 }
 
 function verifyRazorpayPayment(e) {
   var props = PropertiesService.getScriptProperties();
-  var keySecret = props.getProperty("RAZORPAY_KEY_SECRET");
+  var keySecret = props.getProperty('RAZORPAY_KEY_SECRET');
 
   var orderId = e.parameter.razorpay_order_id;
   var paymentId = e.parameter.razorpay_payment_id;
   var signature = e.parameter.razorpay_signature;
-  var amount = e.parameter.amount || "";
-  var note = e.parameter.note || "";
+  var amount = e.parameter.amount || '';
+  var note = e.parameter.note || '';
 
   if (!orderId || !paymentId || !signature) {
-    return jsonOutput({ verified: false, error: "Missing fields" });
+    return jsonOutput({ verified: false, error: 'Missing fields' });
   }
   if (!keySecret) {
-    return jsonOutput({
-      verified: false,
-      error: "Razorpay keys not configured",
-    });
+    return jsonOutput({ verified: false, error: 'Razorpay keys not configured' });
   }
 
-  var payload = orderId + "|" + paymentId;
+  var payload = orderId + '|' + paymentId;
   var signatureBytes = Utilities.computeHmacSha256Signature(payload, keySecret);
-  var computedSignature = signatureBytes
-    .map(function (byte) {
-      var v = (byte < 0 ? byte + 256 : byte).toString(16);
-      return v.length === 1 ? "0" + v : v;
-    })
-    .join("");
+  var computedSignature = signatureBytes.map(function (byte) {
+    var v = (byte < 0 ? byte + 256 : byte).toString(16);
+    return v.length === 1 ? '0' + v : v;
+  }).join('');
 
-  var verified = computedSignature === signature;
+  var verified = (computedSignature === signature);
 
   if (verified) {
-    var sheet = getOrCreateSheet("Payments", [
-      "Timestamp",
-      "Order ID",
-      "Payment ID",
-      "Amount (₹)",
-      "Note",
-      "Status",
+    var sheet = getOrCreateSheet('Payments', [
+      'Timestamp', 'Order ID', 'Payment ID', 'Amount (₹)', 'Note', 'Status'
     ]);
-    sheet.appendRow([new Date(), orderId, paymentId, amount, note, "Verified"]);
+    sheet.appendRow([new Date(), orderId, paymentId, amount, note, 'Verified']);
 
     MailApp.sendEmail(
       RECIPIENT_EMAIL,
-      "Payment verified — ₹" + amount,
-      "A payment was successfully created and verified via Razorpay.\n\n" +
-        "Order ID: " +
-        orderId +
-        "\n" +
-        "Payment ID: " +
-        paymentId +
-        "\n" +
-        "Amount: ₹" +
-        amount +
-        "\n" +
-        "Note: " +
-        note,
+      'Payment verified — ₹' + amount,
+      'A payment was successfully created and verified via Razorpay.\n\n' +
+      'Order ID: ' + orderId + '\n' +
+      'Payment ID: ' + paymentId + '\n' +
+      'Amount: ₹' + amount + '\n' +
+      'Note: ' + note
     );
   }
 
@@ -201,9 +160,9 @@ function verifyRazorpayPayment(e) {
 }
 
 function jsonOutput(obj) {
-  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(
-    ContentService.MimeType.JSON,
-  );
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 function getOrCreateSheet(name, headers) {
@@ -212,7 +171,8 @@ function getOrCreateSheet(name, headers) {
   if (!sheet) {
     sheet = ss.insertSheet(name);
     sheet.appendRow(headers);
-    sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold");
+    sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
   }
   return sheet;
 }
+

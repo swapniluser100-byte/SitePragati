@@ -36,22 +36,6 @@ INSERT INTO case_studies (
   1
 );
 
-INSERT INTO case_studies (
-  business_name, category, site_url, description, image_file,
-  stat1_label, stat1_value, stat2_label, stat2_value, stat3_label, stat3_value,
-  sort_order
-) VALUES (
-  "Prakash's Kitchen",
-  'Café & restaurant',
-  'prakashskitchen.pages.dev1',
-  'A home-style café needed a way to take orders and payments online without paying monthly software fees. We built a full ordering flow with live cart totals, UPI payment, and delivery address capture — plus automatic order logging so nothing gets missed.',
-  'case-prakash.svg',
-  'from brief to live site', '3 days',
-  'hosting & backend cost', '₹0/mo',
-  'fee on online orders (UPI: 0%)', '2%',
-  1
-); 
-
 -- To add another case study later, copy this INSERT pattern with new values.
 -- Example (commented out):
 -- INSERT INTO case_studies (
