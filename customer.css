@@ -1,6 +1,16 @@
 .login-help{
   margin-top:14px; font-size:0.82rem; color:var(--slate); text-align:center;
 }
+.role-toggle{
+  display:flex; gap:0; margin-bottom:18px; border:1px solid rgba(27,37,68,0.15);
+  border-radius:6px; overflow:hidden;
+}
+.role-btn{
+  flex:1; padding:10px 0; background:var(--paper); border:none; cursor:pointer;
+  font-size:0.85rem; font-weight:600; color:var(--slate);
+}
+.role-btn.active{background:var(--navy); color:var(--white);}
+.role-btn:not(.active):hover{background:var(--paper-dim);}
 
 .welcome-line{
   color:var(--slate); font-size:0.95rem; margin-bottom:24px;

@@ -19,3 +19,9 @@ database_id = "5c51f93f-8f3e-4fcf-b026-975e29697116"
 # any long random value, you never need to type it in yourself.
 [vars]
 NOTIFY_EMAIL = "swapniluser100@gmail.com"
+
+# Once you've verified a domain in Resend (Domains → Add Domain), uncomment
+# this and set it to an address on that domain. Until then, leave it
+# commented out — emails will use Resend's shared test address, which can
+# only send to your own Resend account email (not to customers).
+# FROM_EMAIL = "SitePragati <hello@yourdomain.in>"

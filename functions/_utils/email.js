@@ -73,7 +73,10 @@ export async function sendResendEmail(env, { to, subject, text, html }) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        from: 'SitePragati <onboarding@resend.dev>', // see DEPLOY-GUIDE.md to use your own domain
+        // Uses your own domain once verified (set FROM_EMAIL) — falls back
+        // to Resend's shared test address otherwise, which can only send
+        // to your own Resend account email. See DEPLOY-GUIDE.md.
+        from: env.FROM_EMAIL || 'SitePragati <onboarding@resend.dev>',
         to: [to],
         subject,
         text,

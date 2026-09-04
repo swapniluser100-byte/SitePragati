@@ -8,7 +8,7 @@
 // DELETE → { id } → remove one (also removes their transactions and
 //          tickets)
 
-import { json, hashPassword } from '../../_utils/auth.js';
+import { json, hashPassword, generateRandomId } from '../../_utils/auth.js';
 
 const FIELDS = [
   'business_name', 'contact_name', 'email', 'phone', 'address',
@@ -23,7 +23,7 @@ export async function onRequestGet(context) {
     // password_hash is deliberately excluded from what's sent to the browser.
     const { results } = await env.DB.prepare(`
       SELECT
-        customers.id, customers.business_name, customers.contact_name,
+        customers.id, customers.unique_id, customers.business_name, customers.contact_name,
         customers.email, customers.phone, customers.address,
         customers.next_payment_due_date, customers.next_payment_due_amount,
         customers.created_at,
@@ -51,11 +51,14 @@ export async function onRequestPost(context) {
     const placeholders = FIELDS.map(() => '?').join(', ');
     const passwordHash = await hashPassword(body.password);
 
-    const result = await env.DB.prepare(
-      `INSERT INTO customers (${FIELDS.join(', ')}, password_hash) VALUES (${placeholders}, ?)`
-    ).bind(...values, passwordHash).run();
+    // System-generated, never client-supplied or editable.
+    const uniqueId = generateRandomId(15);
 
-    return json({ result: 'success', id: result.meta.last_row_id });
+    const result = await env.DB.prepare(
+      `INSERT INTO customers (${FIELDS.join(', ')}, password_hash, unique_id) VALUES (${placeholders}, ?, ?)`
+    ).bind(...values, passwordHash, uniqueId).run();
+
+    return json({ result: 'success', id: result.meta.last_row_id, unique_id: uniqueId });
   } catch (err) {
     return json({ error: err.message }, 500);
   }
@@ -70,17 +73,22 @@ export async function onRequestPut(context) {
     const setClause = FIELDS.map(f => `${f} = ?`).join(', ');
     const values = FIELDS.map(f => f === 'email' && body.email ? body.email.trim().toLowerCase() : (body[f] ?? null));
 
+    // Backfill a unique_id for older customers that predate this feature —
+    // generated once, then left alone on every future edit.
+    const existing = await env.DB.prepare('SELECT unique_id FROM customers WHERE id = ?').bind(body.id).first();
+    const uniqueId = (existing && existing.unique_id) ? existing.unique_id : generateRandomId(15);
+
     if (body.password && body.password.trim()) {
       // Password change requested — update it alongside everything else.
       const passwordHash = await hashPassword(body.password);
       await env.DB.prepare(
-        `UPDATE customers SET ${setClause}, password_hash = ? WHERE id = ?`
-      ).bind(...values, passwordHash, body.id).run();
+        `UPDATE customers SET ${setClause}, password_hash = ?, unique_id = ? WHERE id = ?`
+      ).bind(...values, passwordHash, uniqueId, body.id).run();
     } else {
       // No password provided — leave the existing one untouched.
       await env.DB.prepare(
-        `UPDATE customers SET ${setClause} WHERE id = ?`
-      ).bind(...values, body.id).run();
+        `UPDATE customers SET ${setClause}, unique_id = ? WHERE id = ?`
+      ).bind(...values, uniqueId, body.id).run();
     }
 
     return json({ result: 'success' });

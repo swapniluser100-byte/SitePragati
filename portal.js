@@ -1,28 +1,64 @@
-const loginScreen = document.getElementById('loginScreen');
-const dashboard = document.getElementById('dashboard');
+// ===== Shared: role toggle + auth =====
+let loginRole = 'customer'; // default selected tab on the login screen
 
-// ===== Auth =====
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str == null ? '' : str;
+  return div.innerHTML;
+}
+
+function setRole(role) {
+  loginRole = role;
+  document.getElementById('roleCustomerBtn').classList.toggle('active', role === 'customer');
+  document.getElementById('roleAdminBtn').classList.toggle('active', role === 'admin');
+  document.getElementById('emailFieldWrap').hidden = (role === 'admin');
+  document.getElementById('email').required = (role === 'customer');
+  document.getElementById('loginSub').textContent = role === 'admin' ? 'Admin console' : 'Customer portal';
+  document.getElementById('loginHelp').hidden = (role === 'admin');
+  document.getElementById('loginError').textContent = '';
+}
+
+document.getElementById('roleCustomerBtn').addEventListener('click', () => setRole('customer'));
+document.getElementById('roleAdminBtn').addEventListener('click', () => setRole('admin'));
+
 async function checkSession() {
-  const res = await fetch('/api/admin/leads');
-  if (res.ok) {
-    showDashboard();
-  } else {
+  try {
+    const res = await fetch('/api/whoami');
+    const data = await res.json();
+    if (data.role === 'admin') {
+      showAdminDashboard();
+    } else if (data.role === 'customer') {
+      showCustomerDashboard(data.businessName);
+    } else {
+      showLogin();
+    }
+  } catch (err) {
     showLogin();
   }
 }
 
 function showLogin() {
-  loginScreen.hidden = false;
-  dashboard.hidden = true;
+  document.getElementById('loginScreen').hidden = false;
+  document.getElementById('adminDashboard').hidden = true;
+  document.getElementById('customerDashboard').hidden = true;
 }
 
-function showDashboard() {
-  loginScreen.hidden = true;
-  dashboard.hidden = false;
+function showAdminDashboard() {
+  document.getElementById('loginScreen').hidden = true;
+  document.getElementById('adminDashboard').hidden = false;
+  document.getElementById('customerDashboard').hidden = true;
   loadLeads();
   loadCustomers();
   loadTickets();
   loadCaseStudies();
+}
+
+function showCustomerDashboard(businessName) {
+  document.getElementById('loginScreen').hidden = true;
+  document.getElementById('adminDashboard').hidden = true;
+  document.getElementById('customerDashboard').hidden = false;
+  document.getElementById('welcomeLine').textContent = businessName ? `Welcome, ${businessName}` : '';
+  loadCustomerTickets();
 }
 
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
@@ -31,11 +67,16 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
   const errorEl = document.getElementById('loginError');
   errorEl.textContent = '';
 
+  const endpoint = loginRole === 'admin' ? '/api/admin/login' : '/api/customer/login';
+  const body = loginRole === 'admin'
+    ? { password }
+    : { email: document.getElementById('email').value, password };
+
   try {
-    const res = await fetch('/api/admin/login', {
+    const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password })
+      body: JSON.stringify(body)
     });
     const data = await res.json();
     if (!res.ok) {
@@ -43,16 +84,27 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
       return;
     }
     document.getElementById('password').value = '';
-    showDashboard();
+    if (loginRole === 'admin') {
+      showAdminDashboard();
+    } else {
+      showCustomerDashboard(data.businessName);
+    }
   } catch (err) {
     errorEl.textContent = 'Something went wrong. Please try again.';
   }
 });
 
-document.getElementById('logoutBtn').addEventListener('click', async () => {
+document.getElementById('adminLogoutBtn').addEventListener('click', async () => {
   await fetch('/api/admin/logout', { method: 'POST' });
   showLogin();
 });
+
+document.getElementById('customerLogoutBtn').addEventListener('click', async () => {
+  await fetch('/api/customer/logout', { method: 'POST' });
+  showLogin();
+});
+
+// ===== Admin dashboard =====
 
 // ===== Tabs =====
 document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -65,12 +117,6 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 });
 
 // ===== Leads =====
-function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str == null ? '' : str;
-  return div.innerHTML;
-}
-
 const STATUS_OPTIONS = ['New', 'Contacted', 'Won', 'Lost'];
 
 async function loadLeads() {
@@ -156,6 +202,7 @@ async function loadCustomers() {
       <div class="cs-card">
         <div class="cs-card-info">
           <h3>${escapeHtml(c.business_name)}</h3>
+          <p class="unique-id">${c.unique_id ? 'ID: ' + escapeHtml(c.unique_id) : 'ID: not yet assigned — edit and save to generate'}</p>
           <p>${escapeHtml(c.contact_name || '')} ${c.phone ? '· ' + escapeHtml(c.phone) : ''}</p>
           <p>${c.next_payment_due_date ? 'Next due: ' + escapeHtml(c.next_payment_due_date) : 'No due date set'}${c.next_payment_due_amount ? ' — ₹' + escapeHtml(String(c.next_payment_due_amount)) : ''}</p>
           <p class="total-paid">Total paid: ₹${escapeHtml(String(c.total_paid ?? 0))}</p>
@@ -331,6 +378,7 @@ document.getElementById('refreshTickets').addEventListener('click', loadTickets)
 function renderCustomerDetailInfo(c) {
   document.getElementById('customerDetailInfo').innerHTML = `
     <h3>${escapeHtml(c.business_name)}</h3>
+    <p class="unique-id">${c.unique_id ? 'ID: ' + escapeHtml(c.unique_id) : 'ID: not yet assigned'}</p>
     <p>${escapeHtml(c.contact_name || '')} ${c.phone ? '· ' + escapeHtml(c.phone) : ''}</p>
     <p>${escapeHtml(c.address || '')}</p>
     <p class="due-amount">${c.next_payment_due_date ? 'Next due: ' + escapeHtml(c.next_payment_due_date) : 'No due date set'}${c.next_payment_due_amount ? ' — ₹' + escapeHtml(String(c.next_payment_due_amount)) : ''}</p>
@@ -628,6 +676,85 @@ async function deleteCaseStudy(id) {
   });
   loadCaseStudies();
 }
+
+// ===== Customer dashboard =====
+
+// ===== Tickets =====
+
+function statusClass(status) {
+  return 'status-' + (status || 'open').toLowerCase().replace(/\s+/g, '-');
+}
+
+async function loadCustomerTickets() {
+  const list = document.getElementById('ticketsList');
+  list.innerHTML = '<p class="empty-note">Loading…</p>';
+
+  try {
+    const res = await fetch('/api/customer/tickets');
+    const data = await res.json();
+
+    if (!data.tickets || data.tickets.length === 0) {
+      list.innerHTML = '<p class="empty-note">No tickets yet — raise one above if you need something updated or fixed.</p>';
+      return;
+    }
+
+    list.innerHTML = data.tickets.map(t => `
+      <div class="ticket-card">
+        <div class="ticket-card-head">
+          <h3>${escapeHtml(t.subject)}</h3>
+          <span class="status-badge ${statusClass(t.status)}">${escapeHtml(t.status)}</span>
+        </div>
+        <p>${escapeHtml(t.description || '')}</p>
+        <p class="ticket-date">Raised ${escapeHtml(new Date(t.created_at).toLocaleDateString())}</p>
+      </div>
+    `).join('');
+  } catch (err) {
+    list.innerHTML = '<p class="empty-note">Could not load tickets.</p>';
+  }
+}
+
+const ticketForm = document.getElementById('ticketForm');
+
+document.getElementById('newTicketBtn').addEventListener('click', () => {
+  ticketForm.hidden = false;
+  ticketForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
+document.getElementById('ticketCancelBtn').addEventListener('click', () => {
+  ticketForm.hidden = true;
+  document.getElementById('ticketSubject').value = '';
+  document.getElementById('ticketDescription').value = '';
+});
+
+document.getElementById('ticketSaveBtn').addEventListener('click', async () => {
+  const subject = document.getElementById('ticketSubject').value.trim();
+  const description = document.getElementById('ticketDescription').value.trim();
+
+  if (!subject) {
+    alert('Please enter a subject for the ticket.');
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/customer/tickets', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ subject, description })
+    });
+    const data = await res.json();
+    if (!res.ok || data.error) {
+      alert('Error: ' + (data.error || 'Could not submit ticket'));
+      return;
+    }
+    ticketForm.hidden = true;
+    document.getElementById('ticketSubject').value = '';
+    document.getElementById('ticketDescription').value = '';
+    loadCustomerTickets();
+  } catch (err) {
+    alert('Something went wrong submitting this ticket.');
+  }
+});
+
 
 // ===== Init =====
 checkSession();

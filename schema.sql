@@ -1,6 +1,7 @@
 -- Customers table: your actual paying clients (not website leads)
 CREATE TABLE IF NOT EXISTS customers (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
+  unique_id TEXT UNIQUE,
   business_name TEXT NOT NULL,
   contact_name TEXT,
   email TEXT UNIQUE,
