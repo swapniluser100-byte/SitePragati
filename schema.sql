@@ -1,3 +1,15 @@
+-- Leads table: stores every enquiry submitted through the contact form
+CREATE TABLE IF NOT EXISTS leads (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  business TEXT,
+  business_type TEXT,
+  contact TEXT,
+  message TEXT,
+  status TEXT DEFAULT 'New',
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
 -- SitePragati D1 schema: case_studies table
 -- Run this once to create the table, then again (or separately) to seed it.
 
@@ -67,18 +79,3 @@ INSERT INTO case_studies (
   'time to add a new product', '<1 min',
   1
 );
-
-
-
--- To add another case study later, copy this INSERT pattern with new values.
--- Example (commented out):
--- INSERT INTO case_studies (
---   business_name, category, site_url, description, image_file,
---   stat1_label, stat1_value, stat2_label, stat2_value, stat3_label, stat3_value,
---   sort_order
--- ) VALUES (
---   'Your Next Client', 'Retail / Shop', 'clientsite.pages.dev',
---   'Description of the project...', 'case-placeholder.svg',
---   'build time', '5 days', 'monthly cost', '₹0', 'orders processed', '120+',
---   2
--- );

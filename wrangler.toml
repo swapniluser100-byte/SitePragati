@@ -6,3 +6,11 @@ pages_build_output_dir = "."
 binding = "DB"
 database_name = "sitepragati-db"
 database_id = "5c51f93f-8f3e-4fcf-b026-975e29697116"
+
+# NOTIFY_EMAIL is a plain (non-secret) variable — safe to set here or in
+# the dashboard. RESEND_API_KEY must NOT go here — it's a secret and
+# belongs only in Pages → Settings → Environment variables (Secret),
+# or set via `wrangler pages secret put RESEND_API_KEY`. See
+# DEPLOY-GUIDE.md for exact steps.
+[vars]
+NOTIFY_EMAIL = "swapniluser100@gmail.com"
