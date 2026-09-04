@@ -50,7 +50,7 @@ INSERT INTO case_studies (
   'hosting & backend cost', '₹0/mo',
   'fee on online orders (UPI: 0%)', '2%',
   1
-);
+); 
 
 -- To add another case study later, copy this INSERT pattern with new values.
 -- Example (commented out):
