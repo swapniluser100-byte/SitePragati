@@ -157,6 +157,7 @@ async function loadCustomers() {
           <h3>${escapeHtml(c.business_name)}</h3>
           <p>${escapeHtml(c.contact_name || '')} ${c.phone ? '· ' + escapeHtml(c.phone) : ''}</p>
           <p>${c.next_payment_due_date ? 'Next due: ' + escapeHtml(c.next_payment_due_date) : 'No due date set'}${c.next_payment_due_amount ? ' — ₹' + escapeHtml(String(c.next_payment_due_amount)) : ''}</p>
+          <p class="total-paid">Total paid: ₹${escapeHtml(String(c.total_paid ?? 0))}</p>
         </div>
         <div class="cs-card-actions">
           <button class="btn btn-outline btn-small" data-view-txns="${c.id}">Transactions</button>
@@ -261,6 +262,16 @@ async function deleteCustomer(id) {
 }
 
 // ===== Customer detail view (transactions) =====
+function renderCustomerDetailInfo(c) {
+  document.getElementById('customerDetailInfo').innerHTML = `
+    <h3>${escapeHtml(c.business_name)}</h3>
+    <p>${escapeHtml(c.contact_name || '')} ${c.phone ? '· ' + escapeHtml(c.phone) : ''}</p>
+    <p>${escapeHtml(c.address || '')}</p>
+    <p class="due-amount">${c.next_payment_due_date ? 'Next due: ' + escapeHtml(c.next_payment_due_date) : 'No due date set'}${c.next_payment_due_amount ? ' — ₹' + escapeHtml(String(c.next_payment_due_amount)) : ''}</p>
+    <p class="total-paid">Total paid: ₹${escapeHtml(String(c.total_paid ?? 0))}</p>
+  `;
+}
+
 function openCustomerDetail(id) {
   currentCustomerId = id;
   const c = customersCache.find(x => String(x.id) === String(id));
@@ -269,13 +280,7 @@ function openCustomerDetail(id) {
   document.getElementById('customersListView').hidden = true;
   document.getElementById('customerDetailView').hidden = false;
 
-  document.getElementById('customerDetailInfo').innerHTML = `
-    <h3>${escapeHtml(c.business_name)}</h3>
-    <p>${escapeHtml(c.contact_name || '')} ${c.phone ? '· ' + escapeHtml(c.phone) : ''}</p>
-    <p>${escapeHtml(c.address || '')}</p>
-    <p class="due-amount">${c.next_payment_due_date ? 'Next due: ' + escapeHtml(c.next_payment_due_date) : 'No due date set'}${c.next_payment_due_amount ? ' — ₹' + escapeHtml(String(c.next_payment_due_amount)) : ''}</p>
-  `;
-
+  renderCustomerDetailInfo(c);
   loadTransactions(id);
 }
 
@@ -395,10 +400,25 @@ document.getElementById('txnSaveBtn').addEventListener('click', async () => {
     txnForm.hidden = true;
     clearTransactionForm();
     loadTransactions(currentCustomerId);
+    refreshCurrentCustomerTotal();
   } catch (err) {
     alert('Something went wrong saving this transaction.');
   }
 });
+
+// Re-fetches customers (to get fresh total_paid) and updates the detail
+// panel in place, without leaving the transactions view.
+async function refreshCurrentCustomerTotal() {
+  try {
+    const res = await fetch('/api/admin/customers');
+    const data = await res.json();
+    customersCache = data.customers || [];
+    const c = customersCache.find(x => String(x.id) === String(currentCustomerId));
+    if (c) renderCustomerDetailInfo(c);
+  } catch (err) {
+    // Non-critical — the total will still be correct next time the list loads.
+  }
+}
 
 async function deleteTransaction(id) {
   if (!confirm('Delete this transaction? This cannot be undone.')) return;
@@ -408,6 +428,7 @@ async function deleteTransaction(id) {
     body: JSON.stringify({ id: Number(id) })
   });
   loadTransactions(currentCustomerId);
+  refreshCurrentCustomerTotal();
 }
 
 // ===== Case Studies =====

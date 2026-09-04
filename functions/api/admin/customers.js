@@ -15,9 +15,17 @@ const FIELDS = [
 export async function onRequestGet(context) {
   const { env } = context;
   try {
-    const { results } = await env.DB.prepare(
-      'SELECT * FROM customers ORDER BY business_name ASC'
-    ).all();
+    // total_paid is computed live from transactions — never stored, so it
+    // can't drift out of sync with the actual transaction history.
+    const { results } = await env.DB.prepare(`
+      SELECT
+        customers.*,
+        COALESCE(SUM(CASE WHEN transactions.status = 'Paid' THEN transactions.amount ELSE 0 END), 0) AS total_paid
+      FROM customers
+      LEFT JOIN transactions ON transactions.customer_id = customers.id
+      GROUP BY customers.id
+      ORDER BY customers.business_name ASC
+    `).all();
     return json({ customers: results });
   } catch (err) {
     return json({ error: err.message }, 500);

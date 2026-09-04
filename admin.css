@@ -97,6 +97,7 @@ select.status-select{
 .customer-detail-info h3{font-size:1.1rem; margin-bottom:6px;}
 .customer-detail-info p{color:var(--slate); font-size:0.88rem; margin-bottom:2px;}
 .customer-detail-info .due-amount{color:var(--amber-dark); font-weight:600;}
+.customer-detail-info .total-paid, .cs-card-info .total-paid{color:var(--teal); font-weight:600;}
 .back-btn{margin-bottom:20px;}
 
 /* ===== Case studies ===== */
