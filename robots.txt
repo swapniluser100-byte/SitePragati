@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /portal.html
+Disallow: /api/
+
+Sitemap: https://sitepragati.pages.dev/sitemap.xml
