@@ -21,6 +21,8 @@ CREATE TABLE IF NOT EXISTS tickets (
   subject TEXT NOT NULL,
   description TEXT,
   status TEXT DEFAULT 'Open',
+  payment_amount REAL,
+  payment_reference TEXT,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
 );

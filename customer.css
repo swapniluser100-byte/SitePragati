@@ -34,5 +34,24 @@
 }
 .status-open{background:rgba(232,163,61,0.15); color:var(--amber-dark);}
 .status-in-progress{background:rgba(47,111,98,0.15); color:var(--teal);}
+.status-payment-pending{background:rgba(176,69,58,0.15); color:#B0453A;}
+.status-payment-submitted{background:rgba(47,111,98,0.15); color:var(--teal);}
 .status-resolved{background:rgba(27,37,68,0.1); color:var(--navy);}
 .status-closed{background:rgba(84,91,112,0.15); color:var(--slate);}
+
+.ticket-payment{
+  margin-top:16px; padding:16px; border-radius:8px;
+  background:var(--paper-dim); border:1px dashed rgba(27,37,68,0.25);
+  text-align:center;
+}
+.ticket-payment-submitted{
+  background:rgba(47,111,98,0.08); border:1px solid rgba(47,111,98,0.25); text-align:left;
+}
+.payment-due{font-weight:700; color:#B0453A; font-size:1rem; margin-bottom:10px;}
+.payment-qr{background:#fff; padding:6px; border-radius:6px; margin:0 auto 10px;}
+.payment-note{font-size:0.82rem; color:var(--slate); margin-bottom:12px;}
+.payment-ref-input{
+  width:100%; max-width:280px; padding:9px 12px; margin-bottom:10px;
+  border:1px solid rgba(27,37,68,0.25); border-radius:6px; font-family:inherit; font-size:0.9rem;
+}
+.payment-status-msg{font-size:0.82rem; color:var(--teal); margin-top:8px; min-height:1.1em;}
