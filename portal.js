@@ -386,7 +386,74 @@ function openTicketDetail(id) {
   statusSelect.innerHTML = TICKET_STATUS_OPTIONS.map(s =>
     `<option value="${s}" ${s === t.status ? 'selected' : ''}>${s}</option>`
   ).join('');
+
+  document.getElementById('newCommentText').value = '';
+  document.getElementById('newCommentFile').value = '';
+  document.getElementById('commentFormMsg').textContent = '';
+  loadAdminTicketComments(id);
 }
+
+function renderCommentThread(comments, downloadBase) {
+  if (!comments || comments.length === 0) {
+    return '<p class="empty-note">No messages yet.</p>';
+  }
+  return comments.map(c => `
+    <div class="comment-bubble comment-${c.author_type}">
+      <div class="comment-meta">
+        <strong>${escapeHtml(c.author_name || (c.author_type === 'admin' ? 'SitePragati' : 'Customer'))}</strong>
+        <span>${escapeHtml(new Date(c.created_at).toLocaleString())}</span>
+      </div>
+      ${c.comment ? `<p class="comment-text">${escapeHtml(c.comment)}</p>` : ''}
+      ${c.file_key ? `<a class="comment-file" href="${downloadBase}?key=${encodeURIComponent(c.file_key)}&name=${encodeURIComponent(c.file_name || 'file')}" target="_blank" rel="noopener">📎 ${escapeHtml(c.file_name || 'Download file')}</a>` : ''}
+    </div>
+  `).join('');
+}
+
+async function loadAdminTicketComments(ticketId) {
+  const list = document.getElementById('ticketCommentsList');
+  list.innerHTML = '<p class="empty-note">Loading…</p>';
+  try {
+    const res = await fetch(`/api/admin/ticket-comments?ticket_id=${ticketId}`);
+    const data = await res.json();
+    list.innerHTML = renderCommentThread(data.comments, '/api/admin/ticket-file');
+  } catch (err) {
+    list.innerHTML = '<p class="empty-note">Could not load conversation.</p>';
+  }
+}
+
+document.getElementById('postCommentBtn').addEventListener('click', async () => {
+  const text = document.getElementById('newCommentText').value.trim();
+  const fileInput = document.getElementById('newCommentFile');
+  const msgEl = document.getElementById('commentFormMsg');
+  const file = fileInput.files[0];
+
+  if (!text && !file) {
+    msgEl.textContent = 'Write a message or attach a file.';
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('ticket_id', currentTicketId);
+  formData.append('comment', text);
+  if (file) formData.append('file', file);
+
+  msgEl.textContent = 'Posting…';
+
+  try {
+    const res = await fetch('/api/admin/ticket-comments', { method: 'POST', body: formData });
+    const data = await res.json();
+    if (!res.ok || data.error) {
+      msgEl.textContent = 'Error: ' + (data.error || 'Could not post');
+      return;
+    }
+    document.getElementById('newCommentText').value = '';
+    fileInput.value = '';
+    msgEl.textContent = '';
+    loadAdminTicketComments(currentTicketId);
+  } catch (err) {
+    msgEl.textContent = 'Something went wrong. Please try again.';
+  }
+});
 
 document.getElementById('backToTicketsBtn').addEventListener('click', () => {
   document.getElementById('ticketDetailView').hidden = true;
@@ -814,14 +881,92 @@ async function loadCustomerTickets() {
         <p>${escapeHtml(t.description || '')}</p>
         <p class="ticket-date">Raised ${escapeHtml(new Date(t.created_at).toLocaleDateString())}</p>
         ${renderTicketPaymentSection(t)}
+        <button type="button" class="btn btn-outline btn-small conversation-toggle" data-ticket-id="${t.id}">💬 View conversation</button>
+        <div class="ticket-comments-section" data-ticket-id="${t.id}" hidden>
+          <div class="comments-list" data-ticket-id="${t.id}"><p class="empty-note">Loading…</p></div>
+          <div class="comment-form">
+            <textarea class="new-comment-text" data-ticket-id="${t.id}" rows="3" placeholder="Write a message…"></textarea>
+            <div class="comment-form-row">
+              <input type="file" class="new-comment-file" data-ticket-id="${t.id}">
+              <button type="button" class="btn btn-primary btn-small comment-post-btn" data-ticket-id="${t.id}">Send</button>
+            </div>
+            <p class="comment-form-msg" data-ticket-id="${t.id}"></p>
+          </div>
+        </div>
       </div>
     `).join('');
 
     list.querySelectorAll('.payment-submit-btn').forEach(btn => {
       btn.addEventListener('click', () => submitPaymentReference(btn.dataset.ticketId));
     });
+
+    list.querySelectorAll('.conversation-toggle').forEach(btn => {
+      btn.addEventListener('click', () => toggleCustomerConversation(btn.dataset.ticketId, btn));
+    });
+
+    list.querySelectorAll('.comment-post-btn').forEach(btn => {
+      btn.addEventListener('click', () => postCustomerComment(btn.dataset.ticketId));
+    });
   } catch (err) {
     list.innerHTML = '<p class="empty-note">Could not load tickets.</p>';
+  }
+}
+
+async function toggleCustomerConversation(ticketId, btn) {
+  const section = document.querySelector(`.ticket-comments-section[data-ticket-id="${ticketId}"]`);
+  const isHidden = section.hidden;
+  section.hidden = !isHidden;
+  btn.textContent = isHidden ? '💬 Hide conversation' : '💬 View conversation';
+
+  if (isHidden) {
+    loadCustomerTicketComments(ticketId);
+  }
+}
+
+async function loadCustomerTicketComments(ticketId) {
+  const list = document.querySelector(`.comments-list[data-ticket-id="${ticketId}"]`);
+  list.innerHTML = '<p class="empty-note">Loading…</p>';
+  try {
+    const res = await fetch(`/api/customer/ticket-comments?ticket_id=${ticketId}`);
+    const data = await res.json();
+    list.innerHTML = renderCommentThread(data.comments, '/api/customer/ticket-file');
+  } catch (err) {
+    list.innerHTML = '<p class="empty-note">Could not load conversation.</p>';
+  }
+}
+
+async function postCustomerComment(ticketId) {
+  const textEl = document.querySelector(`.new-comment-text[data-ticket-id="${ticketId}"]`);
+  const fileEl = document.querySelector(`.new-comment-file[data-ticket-id="${ticketId}"]`);
+  const msgEl = document.querySelector(`.comment-form-msg[data-ticket-id="${ticketId}"]`);
+  const text = textEl.value.trim();
+  const file = fileEl.files[0];
+
+  if (!text && !file) {
+    msgEl.textContent = 'Write a message or attach a file.';
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('ticket_id', ticketId);
+  formData.append('comment', text);
+  if (file) formData.append('file', file);
+
+  msgEl.textContent = 'Sending…';
+
+  try {
+    const res = await fetch('/api/customer/ticket-comments', { method: 'POST', body: formData });
+    const data = await res.json();
+    if (!res.ok || data.error) {
+      msgEl.textContent = 'Error: ' + (data.error || 'Could not send');
+      return;
+    }
+    textEl.value = '';
+    fileEl.value = '';
+    msgEl.textContent = '';
+    loadCustomerTicketComments(ticketId);
+  } catch (err) {
+    msgEl.textContent = 'Something went wrong. Please try again.';
   }
 }
 

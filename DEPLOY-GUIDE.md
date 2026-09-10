@@ -188,10 +188,37 @@ Lets your paying customers log in at `/portal.html` (choose "Customer") to view 
 
 **Changing a customer's password later:** edit them in the Customers tab and type a new password — leave the password field blank to keep their current one unchanged.
 
-## 7. Custom domain (optional)
+## 7. Set up ticket conversations & file attachments
+Lets both you and your customers post messages and files back and forth on any ticket — a proper conversation thread, not just a status field.
+
+1. **Create the R2 bucket** (Cloudflare's file storage, separate from D1):
+   ```
+   npx wrangler r2 bucket create sitepragati-ticket-files
+   ```
+
+2. **Add the ticket_comments table.** If you already have a live database:
+   ```
+   npx wrangler d1 execute sitepragati-db --remote --file=create-ticket-comments-table.sql
+   ```
+   (A fresh install already gets this from `schema.sql`.)
+
+3. No new secrets needed — `wrangler.toml` already has the R2 binding configured.
+
+4. Redeploy: `npx wrangler pages deploy .`
+
+**How it works:**
+- **Admin:** open any ticket's detail view → a "Conversation" section at the bottom shows the full thread and lets you reply, optionally attaching a file
+- **Customer:** each ticket card has a "💬 View conversation" toggle that expands into the same kind of thread, with their own reply box
+- Either side can attach a file — the other side gets a clickable download link
+- **Every reply emails the other party** — admin replies email the customer, customer replies email you (`NOTIFY_EMAIL`)
+- Customers can only ever see and download files on their *own* tickets — this is enforced at the database level, not just by being logged in, so there's no way for one customer to access another's files even by guessing a URL
+
+**About file size:** there's no hard limit set in the code, but keep attachments reasonably small (a few MB) — very large files will be slow for the other person to download and use up your R2 storage faster (R2's free tier is generous: 10 GB storage, 1 million writes and 10 million reads per month, more than enough for typical ticket attachments like screenshots and small documents).
+
+## 8. Custom domain (optional)
 Buy `sitepragati.in` or similar from Hostinger/BigRock (~₹500–900/year), then connect it under **Custom Domains** in your Cloudflare Pages project (dashboard, not CLI).
 
-## 8. Updating the site later
+## 9. Updating the site later
 For any change to `index.html`, `style.css`, `script.js`, or `functions/`, redeploy with:
 ```
 npx wrangler pages deploy .

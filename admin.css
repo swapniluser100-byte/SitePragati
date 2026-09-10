@@ -89,6 +89,32 @@ td.message-cell{max-width:220px; white-space:normal; color:var(--slate);}
 .clickable-row:hover{background:var(--paper-dim);}
 .td-status-label{display:block; font-size:0.85rem; font-weight:600; color:var(--navy); margin:20px 0 8px;}
 #ticketDetailStatus{padding:10px 14px; font-size:0.95rem; border-radius:6px; border:1px solid rgba(27,37,68,0.2); min-width:220px;}
+
+.ticket-comments-section{margin-top:28px; padding-top:20px; border-top:1px solid rgba(27,37,68,0.1);}
+.ticket-comments-section h3{font-size:1.05rem; margin-bottom:14px;}
+.comments-list{display:flex; flex-direction:column; gap:12px; margin-bottom:16px; max-height:400px; overflow-y:auto;}
+.comment-bubble{
+  padding:12px 14px; border-radius:8px; max-width:85%;
+  background:var(--paper-dim); border:1px solid rgba(27,37,68,0.1);
+}
+.comment-admin{background:rgba(232,163,61,0.12); border-color:rgba(232,163,61,0.3); align-self:flex-start;}
+.comment-customer{background:rgba(47,111,98,0.1); border-color:rgba(47,111,98,0.25); align-self:flex-end; margin-left:auto;}
+.comment-meta{display:flex; justify-content:space-between; gap:12px; margin-bottom:6px;}
+.comment-meta strong{font-size:0.85rem; color:var(--navy);}
+.comment-meta span{font-size:0.75rem; color:var(--slate);}
+.comment-text{font-size:0.9rem; color:var(--navy); white-space:pre-wrap; margin:0;}
+.comment-file{
+  display:inline-block; margin-top:8px; font-size:0.82rem; color:var(--teal);
+  font-weight:600; text-decoration:none;
+}
+.comment-file:hover{text-decoration:underline;}
+.comment-form textarea{
+  width:100%; padding:10px 12px; border:1px solid rgba(27,37,68,0.2); border-radius:6px;
+  font-family:inherit; font-size:0.9rem; resize:vertical; margin-bottom:10px;
+}
+.comment-form-row{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;}
+.comment-form-row input[type="file"]{font-size:0.8rem; max-width:220px;}
+.comment-form-msg{font-size:0.8rem; color:var(--teal); margin-top:8px; min-height:1.1em;}
 .empty-note{color:var(--slate); text-align:center; padding:24px !important;}
 select.status-select{
   padding:6px 10px; border-radius:5px; border:1px solid rgba(27,37,68,0.2);

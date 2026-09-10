@@ -13,6 +13,21 @@ CREATE TABLE IF NOT EXISTS customers (
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Ticket comments: the conversation thread on a ticket, from either
+-- the customer or the admin, with an optional file attachment stored
+-- in R2 (only the R2 key + original filename are stored here).
+CREATE TABLE IF NOT EXISTS ticket_comments (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  ticket_id INTEGER NOT NULL,
+  author_type TEXT NOT NULL, -- 'admin' or 'customer'
+  author_name TEXT,
+  comment TEXT,
+  file_key TEXT,
+  file_name TEXT,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (ticket_id) REFERENCES tickets(id) ON DELETE CASCADE
+);
+
 -- Tickets table: maintenance requests submitted by customers through
 -- their portal, one customer has many tickets
 CREATE TABLE IF NOT EXISTS tickets (

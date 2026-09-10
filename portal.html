@@ -229,6 +229,21 @@
 
       <label for="ticketDetailStatus" class="td-status-label">Status</label>
       <select id="ticketDetailStatus" class="status-select"></select>
+
+      <div class="ticket-comments-section">
+        <h3>Conversation</h3>
+        <div id="ticketCommentsList" class="comments-list">
+          <p class="empty-note">Loading…</p>
+        </div>
+        <div class="comment-form">
+          <textarea id="newCommentText" rows="3" placeholder="Reply to this ticket…"></textarea>
+          <div class="comment-form-row">
+            <input type="file" id="newCommentFile">
+            <button type="button" id="postCommentBtn" class="btn btn-primary btn-small">Post reply</button>
+          </div>
+          <p class="comment-form-msg" id="commentFormMsg"></p>
+        </div>
+      </div>
     </div>
   </section>
 
