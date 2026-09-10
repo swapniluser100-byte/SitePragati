@@ -2,7 +2,10 @@
 // GET   → list all tickets, joined with the customer's business name
 // PATCH → { id, status, payment_amount? } → update a ticket's status
 //         (and the amount due, when status is "Payment Pending"), and
-//         emails the customer a branded notification
+//         emails the customer a branded notification.
+//         Setting status to "Payment Received" also automatically
+//         creates a matching transaction for that customer — once only,
+//         even if the status is set to Payment Received more than once.
 
 import { json } from '../../_utils/auth.js';
 import { brandedEmailHtml, sendResendEmail } from '../../_utils/email.js';
@@ -36,21 +39,57 @@ export async function onRequestPatch(context) {
       // is a fresh payment request, not a continuation of an old one.
       await env.DB.prepare('UPDATE tickets SET status = ?, payment_amount = ?, payment_reference = NULL WHERE id = ?')
         .bind(status, Number(payment_amount), id).run();
+    } else if (status === 'Payment Received') {
+      // Validate BEFORE changing anything — a ticket with no amount due
+      // should never end up in "Payment Received" state.
+      const current = await env.DB.prepare(
+        'SELECT payment_amount FROM tickets WHERE id = ?'
+      ).bind(id).first();
+
+      if (!current || !current.payment_amount) {
+        return json({ error: 'This ticket has no amount due — set status to Payment Pending with an amount first.' }, 400);
+      }
+
+      await env.DB.prepare('UPDATE tickets SET status = ? WHERE id = ?')
+        .bind(status, id).run();
     } else {
       await env.DB.prepare('UPDATE tickets SET status = ? WHERE id = ?')
         .bind(status, id).run();
     }
 
-    // Look up the ticket + the customer's email to notify them
+    // Look up the ticket + the customer's email/id to notify them and,
+    // if applicable, create the transaction.
     const row = await env.DB.prepare(`
-      SELECT tickets.subject, tickets.description, tickets.payment_amount, customers.email, customers.business_name
+      SELECT tickets.subject, tickets.description, tickets.payment_amount,
+             tickets.payment_reference, tickets.customer_id,
+             customers.email, customers.business_name
       FROM tickets
       JOIN customers ON customers.id = tickets.customer_id
       WHERE tickets.id = ?
     `).bind(id).first();
 
+    if (status === 'Payment Received' && row) {
+      // Only create a transaction the first time this ticket reaches
+      // Payment Received — re-selecting it later won't double-count.
+      const existing = await env.DB.prepare(
+        'SELECT id FROM transactions WHERE ticket_id = ?'
+      ).bind(id).first();
+
+      if (!existing) {
+        const today = new Date().toISOString().slice(0, 10);
+        const description = `Payment for ticket: ${row.subject}` +
+          (row.payment_reference ? ` (ref: ${row.payment_reference})` : '');
+
+        await env.DB.prepare(
+          `INSERT INTO transactions (customer_id, amount, transaction_date, description, status, ticket_id)
+           VALUES (?, ?, ?, ?, 'Paid', ?)`
+        ).bind(row.customer_id, row.payment_amount, today, description, id).run();
+      }
+    }
+
     if (row && row.email) {
       const isPaymentPending = status === 'Payment Pending';
+      const isPaymentReceived = status === 'Payment Received';
       const emailSubject = isPaymentPending
         ? `Payment needed for your ticket: ${row.subject}`
         : `Your ticket status is now "${status}": ${row.subject}`;
@@ -58,17 +97,19 @@ export async function onRequestPatch(context) {
       const bodyText =
         `Your support ticket has been updated:\n\n` +
         `Subject: ${row.subject}\nNew status: ${status}` +
-        (isPaymentPending ? `\nAmount due: ₹${row.payment_amount}` : '');
+        (isPaymentPending || isPaymentReceived ? `\nAmount: ₹${row.payment_amount}` : '');
 
       const html = brandedEmailHtml({
-        badgeText: isPaymentPending ? 'Payment needed' : 'Ticket update',
+        badgeText: isPaymentPending ? 'Payment needed' : (isPaymentReceived ? 'Payment confirmed' : 'Ticket update'),
         introText: isPaymentPending
           ? `Hi ${row.business_name}, a payment is needed to proceed with your ticket. Log in to your customer portal to view the QR code and pay.`
-          : `Hi ${row.business_name}, your support ticket has been updated.`,
+          : (isPaymentReceived
+            ? `Hi ${row.business_name}, we've confirmed your payment — thank you!`
+            : `Hi ${row.business_name}, your support ticket has been updated.`),
         rows: [
           ['Subject', row.subject],
           ['New status', status],
-          isPaymentPending ? ['Amount due', `₹${row.payment_amount}`] : null,
+          (isPaymentPending || isPaymentReceived) ? ['Amount', `₹${row.payment_amount}`] : null,
           ['Description', row.description]
         ].filter(Boolean),
         footerText: 'Log in to your customer portal to view all your tickets.'

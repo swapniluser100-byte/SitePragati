@@ -165,17 +165,20 @@ Lets your paying customers log in at `/portal.html` (choose "Customer") to view 
    ```
    Existing customers won't have one until you next edit and save them (it fills in automatically at that point — no need to type anything).
 
-5. **Ticket payments (UPI):** customers can pay directly on a ticket when you mark it "Payment Pending." If you already have a live database, run this once:
+5. **Ticket payments (UPI):** customers can pay directly on a ticket when you mark it "Payment Pending." If you already have a live database, run these once:
    ```
    npx wrangler d1 execute sitepragati-db --remote --file=add-ticket-payment-fields.sql
+   npx wrangler d1 execute sitepragati-db --remote --file=add-transaction-ticket-link.sql
    ```
    **How it works:**
    - In the admin Tickets tab, when you set a ticket's status dropdown to **"Payment Pending"**, you'll be prompted to enter the amount due
    - The customer then sees, right on that ticket: the amount, a scannable UPI QR code (pre-filled with the amount), and a field to enter their transaction reference number once they've paid
-   - Submitting it changes the ticket to **"Payment Submitted"** and emails you (`NOTIFY_EMAIL`) the transaction reference — verify it landed in your bank account, then mark the ticket Resolved
+   - Submitting it changes the ticket to **"Payment Submitted"** and emails you (`NOTIFY_EMAIL`) the transaction reference
+   - **Check your bank/UPI app to confirm the money actually arrived**, then set the ticket's status to **"Payment Received"** — this automatically creates a matching entry in that customer's Transactions (visible under Customers → Transactions, and counted in their "Total paid"), and emails the customer a payment-confirmed notification
+   - Re-selecting "Payment Received" on the same ticket later won't create a duplicate transaction — it only ever creates one, the first time
    - The QR code uses UPI ID `swapnil.barad@axisbank` — to change it, edit `PAYMENT_UPI_ID` near the top of the Tickets section in `portal.js`
 
-   **Important limitation:** like the site's other UPI QR payments, this is *not* independently verified — the transaction reference is self-reported by the customer, not confirmed against your bank automatically. Always check your bank/UPI app before marking a payment ticket Resolved.
+   **Important limitation:** like the site's other UPI QR payments, this is *not* independently verified — the transaction reference is self-reported by the customer, not confirmed against your bank automatically. **"Payment Received" is a manual confirmation step you control** — the system won't mark anything paid on its own, and won't create a transaction until you've checked your bank and made that call yourself.
 
 6. Redeploy: `npx wrangler pages deploy .`
 

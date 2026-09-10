@@ -35,8 +35,10 @@ CREATE TABLE IF NOT EXISTS transactions (
   transaction_date TEXT,
   description TEXT,
   status TEXT DEFAULT 'Paid',
+  ticket_id INTEGER,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
+  FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
+  FOREIGN KEY (ticket_id) REFERENCES tickets(id) ON DELETE SET NULL
 );
 
 -- Leads table: stores every enquiry submitted through the contact form

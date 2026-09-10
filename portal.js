@@ -327,7 +327,7 @@ async function deleteCustomer(id) {
 }
 
 // ===== Tickets (admin view — all customers) =====
-const TICKET_STATUS_OPTIONS = ['Open', 'In Progress', 'Payment Pending', 'Payment Submitted', 'Resolved', 'Closed'];
+const TICKET_STATUS_OPTIONS = ['Open', 'In Progress', 'Payment Pending', 'Payment Submitted', 'Payment Received', 'Resolved', 'Closed'];
 let ticketsCache = [];
 let currentTicketId = null;
 
@@ -423,6 +423,8 @@ document.getElementById('ticketDetailStatus').addEventListener('change', async (
   const data = await res.json();
   if (!res.ok || data.error) {
     alert('Error: ' + (data.error || 'Could not update status'));
+    const t = ticketsCache.find(x => String(x.id) === String(currentTicketId));
+    if (t) e.target.value = t.status;
     return;
   }
 
@@ -779,6 +781,12 @@ function renderTicketPaymentSection(t) {
       <div class="ticket-payment ticket-payment-submitted">
         <p>Payment reference submitted: <strong>${escapeHtml(t.payment_reference || '')}</strong></p>
         <p class="payment-note">Awaiting verification from SitePragati.</p>
+      </div>`;
+  }
+  if (t.status === 'Payment Received') {
+    return `
+      <div class="ticket-payment ticket-payment-confirmed">
+        <p>✓ Payment of ₹${escapeHtml(String(t.payment_amount))} confirmed${t.payment_reference ? ` — ref: ${escapeHtml(t.payment_reference)}` : ''}</p>
       </div>`;
   }
   return '';
