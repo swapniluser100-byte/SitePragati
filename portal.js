@@ -328,60 +328,89 @@ async function deleteCustomer(id) {
 
 // ===== Tickets (admin view — all customers) =====
 const TICKET_STATUS_OPTIONS = ['Open', 'In Progress', 'Payment Pending', 'Payment Submitted', 'Resolved', 'Closed'];
+let ticketsCache = [];
+let currentTicketId = null;
 
 async function loadTickets() {
   const tbody = document.getElementById('ticketsTableBody');
-  tbody.innerHTML = '<tr><td colspan="5" class="empty-note">Loading…</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="4" class="empty-note">Loading…</td></tr>';
 
   try {
     const res = await fetch('/api/admin/tickets');
     const data = await res.json();
+    ticketsCache = data.tickets || [];
 
-    if (!data.tickets || data.tickets.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="5" class="empty-note">No tickets yet.</td></tr>';
+    if (ticketsCache.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" class="empty-note">No tickets yet.</td></tr>';
       return;
     }
 
-    tbody.innerHTML = data.tickets.map(t => `
-      <tr>
+    tbody.innerHTML = ticketsCache.map(t => `
+      <tr class="clickable-row" data-ticket-id="${t.id}">
         <td>${escapeHtml(new Date(t.created_at).toLocaleDateString())}</td>
         <td>${escapeHtml(t.business_name)}</td>
         <td>${escapeHtml(t.subject)}</td>
-        <td class="message-cell">
-          ${escapeHtml(t.description || '')}
-          ${t.payment_amount ? `<br><strong>Amount due: ₹${escapeHtml(String(t.payment_amount))}</strong>` : ''}
-          ${t.payment_reference ? `<br><span class="txn-ref">Ref: ${escapeHtml(t.payment_reference)}</span>` : ''}
-        </td>
-        <td>
-          <select class="status-select" data-ticket-id="${t.id}">
-            ${TICKET_STATUS_OPTIONS.map(s => `<option value="${s}" ${s === t.status ? 'selected' : ''}>${s}</option>`).join('')}
-          </select>
-        </td>
+        <td><span class="status-badge ${statusClass(t.status)}">${escapeHtml(t.status)}</span></td>
       </tr>
     `).join('');
 
-    tbody.querySelectorAll('.status-select').forEach(select => {
-      select.addEventListener('change', () => updateTicketStatus(select.dataset.ticketId, select.value, select));
+    tbody.querySelectorAll('.clickable-row').forEach(row => {
+      row.addEventListener('click', () => openTicketDetail(row.dataset.ticketId));
     });
   } catch (err) {
-    tbody.innerHTML = '<tr><td colspan="5" class="empty-note">Could not load tickets.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4" class="empty-note">Could not load tickets.</td></tr>';
   }
 }
 
-async function updateTicketStatus(id, status, selectEl) {
+function renderTicketDetailInfo(t) {
+  document.getElementById('ticketDetailInfo').innerHTML = `
+    <h3>${escapeHtml(t.subject)}</h3>
+    <p>${escapeHtml(t.business_name)} · ${escapeHtml(new Date(t.created_at).toLocaleDateString())}</p>
+    <p style="white-space:pre-wrap; margin-top:10px;">${escapeHtml(t.description || 'No description provided.')}</p>
+    ${t.payment_amount ? `<p class="due-amount" style="margin-top:10px;">Amount due: ₹${escapeHtml(String(t.payment_amount))}</p>` : ''}
+    ${t.payment_reference ? `<p class="txn-ref">Transaction reference: ${escapeHtml(t.payment_reference)}</p>` : ''}
+  `;
+}
+
+function openTicketDetail(id) {
+  currentTicketId = id;
+  const t = ticketsCache.find(x => String(x.id) === String(id));
+  if (!t) return;
+
+  document.getElementById('ticketsListView').hidden = true;
+  document.getElementById('ticketDetailView').hidden = false;
+
+  renderTicketDetailInfo(t);
+
+  const statusSelect = document.getElementById('ticketDetailStatus');
+  statusSelect.innerHTML = TICKET_STATUS_OPTIONS.map(s =>
+    `<option value="${s}" ${s === t.status ? 'selected' : ''}>${s}</option>`
+  ).join('');
+}
+
+document.getElementById('backToTicketsBtn').addEventListener('click', () => {
+  document.getElementById('ticketDetailView').hidden = true;
+  document.getElementById('ticketsListView').hidden = false;
+  currentTicketId = null;
+  loadTickets();
+});
+
+document.getElementById('ticketDetailStatus').addEventListener('change', async (e) => {
+  const status = e.target.value;
   let paymentAmount = null;
 
   if (status === 'Payment Pending') {
     const entered = prompt('Enter the amount due from the customer (₹):');
     if (entered === null) {
-      // Cancelled — revert the dropdown instead of sending an incomplete update.
-      loadTickets();
+      const t = ticketsCache.find(x => String(x.id) === String(currentTicketId));
+      if (t) e.target.value = t.status; // revert dropdown
       return;
     }
     paymentAmount = Number(entered);
     if (!paymentAmount || paymentAmount <= 0) {
       alert('Please enter a valid amount greater than 0.');
-      loadTickets();
+      const t = ticketsCache.find(x => String(x.id) === String(currentTicketId));
+      if (t) e.target.value = t.status;
       return;
     }
   }
@@ -389,14 +418,21 @@ async function updateTicketStatus(id, status, selectEl) {
   const res = await fetch('/api/admin/tickets', {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id: Number(id), status, payment_amount: paymentAmount })
+    body: JSON.stringify({ id: Number(currentTicketId), status, payment_amount: paymentAmount })
   });
   const data = await res.json();
   if (!res.ok || data.error) {
     alert('Error: ' + (data.error || 'Could not update status'));
+    return;
   }
-  loadTickets();
-}
+
+  // Refresh cached data and re-render the detail panel with the new state
+  const listRes = await fetch('/api/admin/tickets');
+  const listData = await listRes.json();
+  ticketsCache = listData.tickets || [];
+  const updated = ticketsCache.find(x => String(x.id) === String(currentTicketId));
+  if (updated) renderTicketDetailInfo(updated);
+});
 
 document.getElementById('refreshTickets').addEventListener('click', loadTickets);
 

@@ -85,6 +85,10 @@ th{
 td{padding:12px 14px; border-top:1px solid rgba(27,37,68,0.08); vertical-align:top;}
 td.message-cell{max-width:220px; white-space:normal; color:var(--slate);}
 .txn-ref{color:var(--teal); font-weight:600; font-size:0.85rem;}
+.clickable-row{cursor:pointer;}
+.clickable-row:hover{background:var(--paper-dim);}
+.td-status-label{display:block; font-size:0.85rem; font-weight:600; color:var(--navy); margin:20px 0 8px;}
+#ticketDetailStatus{padding:10px 14px; font-size:0.95rem; border-radius:6px; border:1px solid rgba(27,37,68,0.2); min-width:220px;}
 .empty-note{color:var(--slate); text-align:center; padding:24px !important;}
 select.status-select{
   padding:6px 10px; border-radius:5px; border:1px solid rgba(27,37,68,0.2);
