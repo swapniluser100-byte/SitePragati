@@ -1,5 +1,6 @@
 // ===== Shared: role toggle + auth =====
 let loginRole = 'customer'; // default selected tab on the login screen
+let loggedInBusinessName = ''; // set on successful customer login/session check
 
 function escapeHtml(str) {
   const div = document.createElement('div');
@@ -58,6 +59,7 @@ function showCustomerDashboard(businessName) {
   document.getElementById('adminDashboard').hidden = true;
   document.getElementById('customerDashboard').hidden = false;
   document.getElementById('welcomeLine').textContent = businessName ? `Welcome, ${businessName}` : '';
+  loggedInBusinessName = businessName || '';
   loadCustomerTickets();
 }
 
@@ -211,6 +213,7 @@ async function loadCustomers() {
     const res = await fetch('/api/admin/customers');
     const data = await res.json();
     customersCache = data.customers || [];
+    populateTicketCustomerFilter(); // keep the Tickets tab's customer filter in sync
 
     if (customersCache.length === 0) {
       list.innerHTML = '<p class="empty-note">No customers yet.</p>';
@@ -350,6 +353,81 @@ const TICKET_STATUS_OPTIONS = ['Open', 'In Progress', 'Payment Pending', 'Paymen
 let ticketsCache = [];
 let currentTicketId = null;
 
+function ticketRowHtml(t) {
+  return `
+    <tr class="clickable-row" data-ticket-id="${t.id}">
+      <td>${escapeHtml(new Date(t.created_at).toLocaleDateString())}</td>
+      <td>${escapeHtml(t.business_name)}</td>
+      <td>${escapeHtml(t.subject)}</td>
+      <td><span class="status-badge ${statusClass(t.status)}">${escapeHtml(t.status)}</span></td>
+    </tr>`;
+}
+
+function wireTicketRowClicks(container) {
+  container.querySelectorAll('.clickable-row').forEach(row => {
+    row.addEventListener('click', () => openTicketDetail(row.dataset.ticketId));
+  });
+}
+
+function populateTicketCustomerFilter() {
+  const select = document.getElementById('ticketFilterCustomer');
+  const current = select.value;
+  const options = customersCache.map(c => `<option value="${c.id}">${escapeHtml(c.business_name)}</option>`).join('');
+  select.innerHTML = '<option value="">All customers</option>' + options;
+  select.value = current; // preserve selection across refreshes, if still valid
+}
+
+function applyTicketFilters() {
+  const customerFilter = document.getElementById('ticketFilterCustomer').value;
+  const statusFilter = document.getElementById('ticketFilterStatus').value;
+
+  let filtered = ticketsCache;
+  if (customerFilter) filtered = filtered.filter(t => String(t.customer_id) === customerFilter);
+  if (statusFilter) filtered = filtered.filter(t => t.status === statusFilter);
+
+  const tbody = document.getElementById('ticketsTableBody');
+  const closedSection = document.getElementById('closedTicketsSection');
+
+  if (statusFilter === 'Closed') {
+    // Already filtered exclusively to Closed — show them directly, no need
+    // for a separate collapsed section on top of an explicit filter.
+    tbody.innerHTML = filtered.length
+      ? filtered.map(ticketRowHtml).join('')
+      : '<tr><td colspan="4" class="empty-note">No closed tickets match these filters.</td></tr>';
+    wireTicketRowClicks(tbody.parentElement);
+    closedSection.hidden = true;
+    return;
+  }
+
+  const active = filtered.filter(t => t.status !== 'Closed');
+  const closed = filtered.filter(t => t.status === 'Closed');
+
+  tbody.innerHTML = active.length
+    ? active.map(ticketRowHtml).join('')
+    : '<tr><td colspan="4" class="empty-note">No tickets match these filters.</td></tr>';
+  wireTicketRowClicks(tbody.parentElement);
+
+  document.getElementById('closedTicketsCount').textContent = closed.length;
+  closedSection.hidden = closed.length === 0;
+
+  const closedTbody = document.getElementById('closedTicketsTableBody');
+  closedTbody.innerHTML = closed.map(ticketRowHtml).join('');
+  wireTicketRowClicks(closedTbody.parentElement);
+}
+
+document.getElementById('ticketFilterCustomer').addEventListener('change', applyTicketFilters);
+document.getElementById('ticketFilterStatus').addEventListener('change', applyTicketFilters);
+
+document.getElementById('toggleClosedTickets').addEventListener('click', () => {
+  const wrap = document.getElementById('closedTicketsWrap');
+  const isHidden = wrap.hidden;
+  wrap.hidden = !isHidden;
+  const count = document.getElementById('closedTicketsCount').textContent;
+  document.getElementById('toggleClosedTickets').innerHTML = isHidden
+    ? `Hide closed tickets (<span id="closedTicketsCount">${count}</span>)`
+    : `Show closed tickets (<span id="closedTicketsCount">${count}</span>)`;
+});
+
 async function loadTickets() {
   const tbody = document.getElementById('ticketsTableBody');
   tbody.innerHTML = '<tr><td colspan="4" class="empty-note">Loading…</td></tr>';
@@ -359,23 +437,8 @@ async function loadTickets() {
     const data = await res.json();
     ticketsCache = data.tickets || [];
 
-    if (ticketsCache.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="4" class="empty-note">No tickets yet.</td></tr>';
-      return;
-    }
-
-    tbody.innerHTML = ticketsCache.map(t => `
-      <tr class="clickable-row" data-ticket-id="${t.id}">
-        <td>${escapeHtml(new Date(t.created_at).toLocaleDateString())}</td>
-        <td>${escapeHtml(t.business_name)}</td>
-        <td>${escapeHtml(t.subject)}</td>
-        <td><span class="status-badge ${statusClass(t.status)}">${escapeHtml(t.status)}</span></td>
-      </tr>
-    `).join('');
-
-    tbody.querySelectorAll('.clickable-row').forEach(row => {
-      row.addEventListener('click', () => openTicketDetail(row.dataset.ticketId));
-    });
+    populateTicketCustomerFilter();
+    applyTicketFilters();
   } catch (err) {
     tbody.innerHTML = '<tr><td colspan="4" class="empty-note">Could not load tickets.</td></tr>';
   }
@@ -878,20 +941,8 @@ function renderTicketPaymentSection(t) {
   return '';
 }
 
-async function loadCustomerTickets() {
-  const list = document.getElementById('ticketsList');
-  list.innerHTML = '<p class="empty-note">Loading…</p>';
-
-  try {
-    const res = await fetch('/api/customer/tickets');
-    const data = await res.json();
-
-    if (!data.tickets || data.tickets.length === 0) {
-      list.innerHTML = '<p class="empty-note">No tickets yet — raise one above if you need something updated or fixed.</p>';
-      return;
-    }
-
-    list.innerHTML = data.tickets.map(t => `
+function buildTicketCardHtml(t) {
+  return `
       <div class="ticket-card">
         <div class="ticket-card-head">
           <h3>${escapeHtml(t.subject)}</h3>
@@ -912,20 +963,79 @@ async function loadCustomerTickets() {
             <p class="comment-form-msg" data-ticket-id="${t.id}"></p>
           </div>
         </div>
-      </div>
-    `).join('');
+      </div>`;
+}
 
-    list.querySelectorAll('.payment-submit-btn').forEach(btn => {
-      btn.addEventListener('click', () => submitPaymentReference(btn.dataset.ticketId));
-    });
+function wireTicketCardEvents(container) {
+  container.querySelectorAll('.payment-submit-btn').forEach(btn => {
+    btn.addEventListener('click', () => submitPaymentReference(btn.dataset.ticketId));
+  });
+  container.querySelectorAll('.conversation-toggle').forEach(btn => {
+    btn.addEventListener('click', () => toggleCustomerConversation(btn.dataset.ticketId, btn));
+  });
+  container.querySelectorAll('.comment-post-btn').forEach(btn => {
+    btn.addEventListener('click', () => postCustomerComment(btn.dataset.ticketId));
+  });
+}
 
-    list.querySelectorAll('.conversation-toggle').forEach(btn => {
-      btn.addEventListener('click', () => toggleCustomerConversation(btn.dataset.ticketId, btn));
-    });
+let customerTicketsCache = [];
 
-    list.querySelectorAll('.comment-post-btn').forEach(btn => {
-      btn.addEventListener('click', () => postCustomerComment(btn.dataset.ticketId));
-    });
+function applyCustomerTicketFilters() {
+  const statusFilter = document.getElementById('customerFilterStatus').value;
+  let filtered = customerTicketsCache;
+  if (statusFilter) filtered = filtered.filter(t => t.status === statusFilter);
+
+  const list = document.getElementById('ticketsList');
+  const closedSection = document.getElementById('customerClosedSection');
+
+  if (statusFilter === 'Closed') {
+    list.innerHTML = filtered.length
+      ? filtered.map(buildTicketCardHtml).join('')
+      : '<p class="empty-note">No closed tickets match this filter.</p>';
+    wireTicketCardEvents(list);
+    closedSection.hidden = true;
+    return;
+  }
+
+  const active = filtered.filter(t => t.status !== 'Closed');
+  const closed = filtered.filter(t => t.status === 'Closed');
+
+  list.innerHTML = active.length
+    ? active.map(buildTicketCardHtml).join('')
+    : '<p class="empty-note">No tickets yet — raise one above if you need something updated or fixed.</p>';
+  wireTicketCardEvents(list);
+
+  document.getElementById('customerClosedCount').textContent = closed.length;
+  closedSection.hidden = closed.length === 0;
+
+  const closedList = document.getElementById('customerClosedList');
+  closedList.innerHTML = closed.map(buildTicketCardHtml).join('');
+  wireTicketCardEvents(closedList);
+}
+
+document.getElementById('customerFilterStatus').addEventListener('change', applyCustomerTicketFilters);
+
+document.getElementById('toggleCustomerClosed').addEventListener('click', () => {
+  const closedList = document.getElementById('customerClosedList');
+  const isHidden = closedList.hidden;
+  closedList.hidden = !isHidden;
+  const count = document.getElementById('customerClosedCount').textContent;
+  document.getElementById('toggleCustomerClosed').innerHTML = isHidden
+    ? `Hide closed tickets (<span id="customerClosedCount">${count}</span>)`
+    : `Show closed tickets (<span id="customerClosedCount">${count}</span>)`;
+});
+
+async function loadCustomerTickets() {
+  const list = document.getElementById('ticketsList');
+  list.innerHTML = '<p class="empty-note">Loading…</p>';
+
+  try {
+    const res = await fetch('/api/customer/tickets');
+    const data = await res.json();
+    customerTicketsCache = data.tickets || [];
+
+    document.getElementById('customerFilterName').value = loggedInBusinessName || '';
+    applyCustomerTicketFilters();
   } catch (err) {
     list.innerHTML = '<p class="empty-note">Could not load tickets.</p>';
   }
