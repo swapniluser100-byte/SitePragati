@@ -61,6 +61,25 @@ function showCustomerDashboard(businessName) {
   loadCustomerTickets();
 }
 
+// ===== Referral banner =====
+const REFERRAL_MESSAGE = "Hi! I've been using SitePragati for my business website — affordable, fast, with ordering and support built in. If you know a business that needs a website, tell them to check SitePragati out: https://sitepragati.pages.dev";
+
+document.getElementById('referralWhatsappBtn').addEventListener('click', () => {
+  window.open(`https://wa.me/?text=${encodeURIComponent(REFERRAL_MESSAGE)}`, '_blank');
+});
+
+document.getElementById('referralCopyBtn').addEventListener('click', async (e) => {
+  const btn = e.currentTarget;
+  const original = btn.textContent;
+  try {
+    await navigator.clipboard.writeText(REFERRAL_MESSAGE);
+    btn.textContent = 'Copied!';
+  } catch (err) {
+    alert('Could not copy automatically — here\'s the message to share:\n\n' + REFERRAL_MESSAGE);
+  }
+  setTimeout(() => { btn.textContent = original; }, 2000);
+});
+
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const password = document.getElementById('password').value;

@@ -256,6 +256,29 @@ blockquote p{font-size:1.1rem; margin-bottom:14px; color:var(--navy);}
 blockquote cite{font-size:0.88rem; color:var(--slate); font-style:normal;}
 .testimonial-note{margin-top:36px; font-size:0.85rem; color:var(--slate); font-style:italic;}
 
+/* ===== Referral ===== */
+.referral-section{padding:20px 0 60px;}
+.referral-card{
+  display:flex; align-items:center; gap:28px; flex-wrap:wrap;
+  background:linear-gradient(135deg, var(--navy) 0%, #2B3A63 100%);
+  border-radius:14px; padding:36px 40px;
+  box-shadow:0 12px 32px rgba(27,37,68,0.2);
+}
+.referral-card-icon{
+  font-size:2.4rem; flex-shrink:0;
+  background:rgba(232,163,61,0.18); width:72px; height:72px;
+  border-radius:50%; display:flex; align-items:center; justify-content:center;
+}
+.referral-card-text{flex:1; min-width:260px;}
+.referral-card-text h2{color:#FFFFFF; font-size:1.4rem; margin-bottom:8px;}
+.referral-card-text p{color:rgba(255,255,255,0.78); font-size:0.98rem; line-height:1.6; margin:0;}
+.referral-card .btn{flex-shrink:0;}
+
+@media (max-width:700px){
+  .referral-card{flex-direction:column; align-items:flex-start; text-align:left; padding:28px;}
+  .referral-card .btn{width:100%; text-align:center;}
+}
+
 @media (max-width:700px){
   .quote-grid{grid-template-columns:1fr;}
 }

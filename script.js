@@ -101,6 +101,13 @@ document.querySelectorAll('.price-cta').forEach(btn => {
   });
 });
 
+// Refer a business — scroll to contact and prefill the message
+document.getElementById('referBusinessBtn').addEventListener('click', () => {
+  document.getElementById('message').value = "I'd like to refer a business to SitePragati.";
+  document.getElementById('contact').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.getElementById('name').focus();
+});
+
 // Google Apps Script Web app URL — paste yours here (ends in /exec)
 const FORM_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyj0Aoo5McNV3ihAB47cDVH1MUFJgp30BTCpuM737nHoOsrfcTSPxp53FqiUGZZJlE1/exec';
 

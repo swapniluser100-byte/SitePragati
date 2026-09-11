@@ -16,6 +16,35 @@
   color:var(--slate); font-size:0.95rem; margin-bottom:24px;
 }
 
+.referral-banner{
+  display:flex; align-items:center; gap:20px; flex-wrap:wrap;
+  background:linear-gradient(135deg, var(--navy) 0%, #2B3A63 100%);
+  border-radius:12px; padding:20px 24px; margin-bottom:24px;
+  box-shadow:0 8px 24px rgba(27,37,68,0.18);
+}
+.referral-icon{
+  font-size:2rem; flex-shrink:0;
+  background:rgba(232,163,61,0.18); width:56px; height:56px;
+  border-radius:50%; display:flex; align-items:center; justify-content:center;
+}
+.referral-text{flex:1; min-width:220px;}
+.referral-text strong{
+  display:block; color:#FFFFFF; font-size:1.02rem; margin-bottom:4px;
+  font-family:'Space Grotesk', sans-serif;
+}
+.referral-text p{
+  color:rgba(255,255,255,0.75); font-size:0.85rem; margin:0; line-height:1.5;
+}
+.referral-actions{display:flex; gap:10px; flex-shrink:0; flex-wrap:wrap;}
+.referral-actions .btn-outline{border-color:rgba(255,255,255,0.5); color:#FFFFFF;}
+.referral-actions .btn-outline:hover{background:rgba(255,255,255,0.1);}
+
+@media (max-width:640px){
+  .referral-banner{flex-direction:column; align-items:flex-start; text-align:left;}
+  .referral-actions{width:100%;}
+  .referral-actions .btn{flex:1;}
+}
+
 .ticket-list{display:flex; flex-direction:column; gap:12px;}
 .ticket-card{
   background:var(--white); border:1px solid rgba(27,37,68,0.1); border-radius:8px;
