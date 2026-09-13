@@ -3,4 +3,4 @@ Allow: /
 Disallow: /portal.html
 Disallow: /api/
 
-Sitemap: https://sitepragati.in/sitemap.xml
+Sitemap: https://sitepragati.pages.dev/sitemap.xml
