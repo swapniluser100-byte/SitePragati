@@ -25,7 +25,7 @@ bucket_name = "sitepragati-ticket-files"
 # SESSION_SECRET is a random string used to sign login sessions — pick
 # any long random value, you never need to type it in yourself.
 [vars]
-NOTIFY_EMAIL = "swapniluser100@gmail.com"
+NOTIFY_EMAIL = "sitepragati@gmail.com"
 
 # Once you've verified a domain in Resend (Domains → Add Domain), uncomment
 # this and set it to an address on that domain. Until then, leave it
