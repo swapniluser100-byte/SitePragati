@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Raise a Request — SitePragati</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <nav class="nav">
+    <a href="/" class="brand">SitePragati</a>
+  </nav>
+</header>
+
+<main id="main">
+  <section>
+    <div class="wrap" style="max-width:600px;">
+      <h2>Raise a request</h2>
+      <p class="section-lead">Tell us what you need and we'll get back to you.</p>
+
+      <p id="loadingNote" class="form-note">Loading your account…</p>
+      <p id="errorNote" class="form-note" style="color:#B3261E;" hidden></p>
+
+      <form id="requestForm" hidden>
+        <label for="customerDisplay">Customer</label>
+        <input type="text" id="customerDisplay" readonly disabled>
+
+        <label for="reqSubject">What's this about?</label>
+        <input type="text" id="reqSubject" placeholder="e.g. Update menu prices, Fix broken image" required>
+
+        <label for="reqDescription">Details</label>
+        <textarea id="reqDescription" rows="5" placeholder="Describe what you need — the more detail, the faster we can help." required></textarea>
+
+        <label for="reqFile">Attach a file (optional, 10MB max)</label>
+        <input type="file" id="reqFile">
+
+        <button type="submit" class="btn btn-primary" id="reqSubmitBtn">Submit request</button>
+        <p class="form-note" id="reqStatusNote"></p>
+      </form>
+
+      <p id="successNote" class="form-note" hidden></p>
+    </div>
+  </section>
+</main>
+
+<script src="raise-request.js"></script>
+</body>
+</html>
