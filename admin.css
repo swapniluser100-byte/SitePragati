@@ -145,6 +145,11 @@ select.status-select{
 .customer-detail-info .due-amount{color:var(--amber-dark); font-weight:600;}
 .customer-detail-info .total-paid, .cs-card-info .total-paid{color:var(--teal); font-weight:600;}
 .unique-id{font-family:monospace; font-size:0.78rem !important; color:var(--slate); opacity:0.8;}
+.request-link-row{display:flex; gap:8px; align-items:center; margin-bottom:10px !important;}
+.request-link-field{
+  font-family:monospace; font-size:0.75rem; color:var(--slate); background:var(--paper);
+  border:1px solid rgba(27,37,68,0.15); border-radius:5px; padding:6px 8px; flex:1; min-width:0;
+}
 .back-btn{margin-bottom:20px;}
 
 /* ===== Case studies ===== */

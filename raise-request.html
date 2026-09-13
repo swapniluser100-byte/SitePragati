@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<style>form[hidden]{display:none;}</style>
 </head>
 <body>
 
@@ -24,8 +25,14 @@
       <h2>Raise a request</h2>
       <p class="section-lead">Tell us what you need and we'll get back to you.</p>
 
-      <p id="loadingNote" class="form-note">Loading your account…</p>
-      <p id="errorNote" class="form-note" style="color:#B3261E;" hidden></p>
+      <p id="loadingNote" class="form-note" hidden>Loading your account…</p>
+
+      <form id="lookupForm" hidden>
+        <label for="lookupCustomerId">Your Customer ID</label>
+        <input type="text" id="lookupCustomerId" placeholder="Paste the customer ID from your welcome email" required>
+        <p id="lookupError" class="form-note" style="color:#B3261E;" hidden></p>
+        <button type="submit" class="btn btn-primary" id="lookupBtn">Continue</button>
+      </form>
 
       <form id="requestForm" hidden>
         <label for="customerDisplay">Customer</label>

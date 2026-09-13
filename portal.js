@@ -202,6 +202,38 @@ async function deleteLead(id) {
 document.getElementById('refreshLeads').addEventListener('click', loadLeads);
 
 // ===== Customers =====
+
+// Builds the "Raise a Request" link customers put on their own website,
+// or shows a note that one isn't available yet (unique_id is only
+// generated once a customer has been saved at least once).
+function requestLinkBlockHtml(customer) {
+  if (!customer.unique_id) {
+    return `<p class="unique-id">ID: not yet assigned — edit and save to generate</p>`;
+  }
+  const url = `${window.location.origin}/raise-request?customerId=${encodeURIComponent(customer.unique_id)}`;
+  return `
+    <p class="unique-id">ID: ${escapeHtml(customer.unique_id)}</p>
+    <p class="request-link-row">
+      <input type="text" class="request-link-field" value="${escapeHtml(url)}" readonly>
+      <button type="button" class="btn btn-outline btn-small" data-copy-link="${escapeHtml(url)}">Copy request link</button>
+    </p>`;
+}
+
+function wireCopyLinkButtons(root) {
+  root.querySelectorAll('[data-copy-link]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const url = btn.dataset.copyLink;
+      const original = btn.textContent;
+      try {
+        await navigator.clipboard.writeText(url);
+        btn.textContent = 'Copied!';
+      } catch (err) {
+        alert('Could not copy automatically — here\'s the link to share:\n\n' + url);
+      }
+      setTimeout(() => { btn.textContent = original; }, 2000);
+    });
+  });
+}
 let customersCache = [];
 let currentCustomerId = null;
 
@@ -224,7 +256,7 @@ async function loadCustomers() {
       <div class="cs-card">
         <div class="cs-card-info">
           <h3>${escapeHtml(c.business_name)}</h3>
-          <p class="unique-id">${c.unique_id ? 'ID: ' + escapeHtml(c.unique_id) : 'ID: not yet assigned — edit and save to generate'}</p>
+          ${requestLinkBlockHtml(c)}
           <p>${escapeHtml(c.contact_name || '')} ${c.phone ? '· ' + escapeHtml(c.phone) : ''}</p>
           <p>${c.next_payment_due_date ? 'Next due: ' + escapeHtml(c.next_payment_due_date) : 'No due date set'}${c.next_payment_due_amount ? ' — ₹' + escapeHtml(String(c.next_payment_due_amount)) : ''}</p>
           <p class="total-paid">Total paid: ₹${escapeHtml(String(c.total_paid ?? 0))}</p>
@@ -246,6 +278,7 @@ async function loadCustomers() {
     list.querySelectorAll('[data-delete-cust]').forEach(btn => {
       btn.addEventListener('click', () => deleteCustomer(btn.dataset.deleteCust));
     });
+    wireCopyLinkButtons(list);
   } catch (err) {
     list.innerHTML = '<p class="empty-note">Could not load customers.</p>';
   }
@@ -589,14 +622,16 @@ document.getElementById('refreshTickets').addEventListener('click', loadTickets)
 
 // ===== Customer detail view (transactions) =====
 function renderCustomerDetailInfo(c) {
-  document.getElementById('customerDetailInfo').innerHTML = `
+  const info = document.getElementById('customerDetailInfo');
+  info.innerHTML = `
     <h3>${escapeHtml(c.business_name)}</h3>
-    <p class="unique-id">${c.unique_id ? 'ID: ' + escapeHtml(c.unique_id) : 'ID: not yet assigned'}</p>
+    ${requestLinkBlockHtml(c)}
     <p>${escapeHtml(c.contact_name || '')} ${c.phone ? '· ' + escapeHtml(c.phone) : ''}</p>
     <p>${escapeHtml(c.address || '')}</p>
     <p class="due-amount">${c.next_payment_due_date ? 'Next due: ' + escapeHtml(c.next_payment_due_date) : 'No due date set'}${c.next_payment_due_amount ? ' — ₹' + escapeHtml(String(c.next_payment_due_amount)) : ''}</p>
     <p class="total-paid">Total paid: ₹${escapeHtml(String(c.total_paid ?? 0))}</p>
   `;
+  wireCopyLinkButtons(info);
 }
 
 function openCustomerDetail(id) {
