@@ -112,6 +112,8 @@ header{
 section{padding:88px 0;}
 h2{font-size:clamp(1.7rem, 3.2vw, 2.3rem); margin-bottom:10px;}
 .section-lead{color:var(--slate); font-size:1.05rem; max-width:52ch; margin-bottom:44px;}
+/* Standalone page title (About/Pricing/Contact) — an <h1>, sized to match h2 */
+.page-title{font-size:clamp(1.7rem, 3.2vw, 2.3rem); margin-bottom:10px;}
 
 /* ===== Hero ===== */
 .hero{padding:70px 0 90px;}
