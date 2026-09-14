@@ -199,6 +199,11 @@ h2{font-size:clamp(1.7rem, 3.2vw, 2.3rem); margin-bottom:10px;}
 .work{background:var(--navy); color:var(--white);}
 .work h2, .work .section-lead{color:var(--white);}
 .work .section-lead{color:rgba(255,255,255,0.7);}
+.testimonials-inline{margin-top:80px; padding-top:64px; border-top:1px solid rgba(255,255,255,0.12);}
+.testimonials-inline h3{color:var(--white); font-size:1.4rem; margin-bottom:28px;}
+.work blockquote p{color:var(--white);}
+.work blockquote cite{color:rgba(255,255,255,0.6);}
+.work .testimonial-note{color:rgba(255,255,255,0.6);}
 .case-study{display:grid; grid-template-columns:1.1fr 0.9fr; gap:48px; align-items:center;}
 .case-study > *{min-width:0;}
 .case-study + .case-study{margin-top:64px; padding-top:64px; border-top:1px solid rgba(255,255,255,0.12);}
