@@ -141,8 +141,12 @@
         <button type="button" id="addCustomerBtn" class="btn btn-primary btn-small">+ Add customer</button>
       </div>
 
-      <div id="customerForm" class="cs-form" hidden>
-        <h3 id="customerFormTitle">Add customer</h3>
+      <div id="customerModalOverlay" class="modal-overlay" hidden>
+      <div id="customerForm" class="modal-box cs-form" role="dialog" aria-modal="true" aria-labelledby="customerFormTitle">
+        <div class="modal-head">
+          <h3 id="customerFormTitle">Add customer</h3>
+          <button type="button" id="customerModalCloseBtn" class="modal-close" aria-label="Close">&times;</button>
+        </div>
         <input type="hidden" id="custId">
         <div class="cs-form-grid">
           <div>
@@ -189,6 +193,7 @@
           <button type="button" id="custCancelBtn" class="btn btn-outline">Cancel</button>
         </div>
       </div>
+      </div>
 
       <div class="customer-search-bar">
         <span class="search-icon" aria-hidden="true">🔍</span>
@@ -211,8 +216,12 @@
         <button type="button" id="addTransactionBtn" class="btn btn-primary btn-small">+ Add transaction</button>
       </div>
 
-      <div id="transactionForm" class="cs-form" hidden>
-        <h3 id="transactionFormTitle">Add transaction</h3>
+      <div id="transactionModalOverlay" class="modal-overlay" hidden>
+      <div id="transactionForm" class="modal-box cs-form" role="dialog" aria-modal="true" aria-labelledby="transactionFormTitle">
+        <div class="modal-head">
+          <h3 id="transactionFormTitle">Add transaction</h3>
+          <button type="button" id="transactionModalCloseBtn" class="modal-close" aria-label="Close">&times;</button>
+        </div>
         <input type="hidden" id="txnId">
         <input type="hidden" id="txnCustomerId">
         <div class="cs-form-grid">
@@ -239,6 +248,7 @@
           <button type="button" id="txnSaveBtn" class="btn btn-primary">Save</button>
           <button type="button" id="txnCancelBtn" class="btn btn-outline">Cancel</button>
         </div>
+      </div>
       </div>
 
       <div class="table-wrap">
@@ -361,8 +371,12 @@
       <button type="button" id="addCaseStudyBtn" class="btn btn-primary btn-small">+ Add case study</button>
     </div>
 
-    <div id="caseStudyForm" class="cs-form" hidden>
-      <h3 id="csFormTitle">Add case study</h3>
+    <div id="caseStudyModalOverlay" class="modal-overlay" hidden>
+    <div id="caseStudyForm" class="modal-box cs-form" role="dialog" aria-modal="true" aria-labelledby="csFormTitle">
+      <div class="modal-head">
+        <h3 id="csFormTitle">Add case study</h3>
+        <button type="button" id="caseStudyModalCloseBtn" class="modal-close" aria-label="Close">&times;</button>
+      </div>
       <input type="hidden" id="csId">
       <div class="cs-form-grid">
         <div>
@@ -404,6 +418,7 @@
         <button type="button" id="csCancelBtn" class="btn btn-outline">Cancel</button>
       </div>
     </div>
+    </div>
 
     <div id="caseStudiesList" class="cs-list">
       <p class="empty-note">Loading…</p>
@@ -437,8 +452,12 @@
     <button type="button" id="newTicketBtn" class="btn btn-primary btn-small">+ New ticket</button>
   </div>
 
-  <div id="ticketForm" class="cs-form" hidden>
-    <h3>New ticket</h3>
+  <div id="ticketModalOverlay" class="modal-overlay" hidden>
+  <div id="ticketForm" class="modal-box cs-form" role="dialog" aria-modal="true" aria-labelledby="ticketFormTitle">
+    <div class="modal-head">
+      <h3 id="ticketFormTitle">New ticket</h3>
+      <button type="button" id="ticketModalCloseBtn" class="modal-close" aria-label="Close">&times;</button>
+    </div>
     <label for="ticketSubject">Subject</label>
     <input type="text" id="ticketSubject" placeholder="e.g. Update menu prices, Fix broken image" required>
     <label for="ticketDescription">Details</label>
@@ -447,6 +466,7 @@
       <button type="button" id="ticketSaveBtn" class="btn btn-primary">Submit ticket</button>
       <button type="button" id="ticketCancelBtn" class="btn btn-outline">Cancel</button>
     </div>
+  </div>
   </div>
 
   <div class="ticket-filters">

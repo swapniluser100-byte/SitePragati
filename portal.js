@@ -383,7 +383,19 @@ function filterCustomers() {
 
 document.getElementById('customerSearchInput').addEventListener('input', filterCustomers);
 
-const custForm = document.getElementById('customerForm');
+// Generic modal helper: wires backdrop-click and Escape-to-close for a
+// popup overlay. Each form still owns its own open (populate fields,
+// set title) and save/cancel logic — this just handles show/hide plumbing.
+function makeModal(overlayId) {
+  const overlay = document.getElementById(overlayId);
+  function show() { overlay.hidden = false; }
+  function hide() { overlay.hidden = true; }
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) hide(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !overlay.hidden) hide(); });
+  return { show, hide };
+}
+
+const custModal = makeModal('customerModalOverlay');
 const custFields = {
   id: document.getElementById('custId'),
   business_name: document.getElementById('custBusinessName'),
@@ -419,13 +431,16 @@ function openCustomerForm(id) {
     }
   }
 
-  custForm.hidden = false;
-  custForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  custModal.show();
 }
 
 document.getElementById('addCustomerBtn').addEventListener('click', () => openCustomerForm(null));
 document.getElementById('custCancelBtn').addEventListener('click', () => {
-  custForm.hidden = true;
+  custModal.hide();
+  clearCustomerForm();
+});
+document.getElementById('customerModalCloseBtn').addEventListener('click', () => {
+  custModal.hide();
   clearCustomerForm();
 });
 
@@ -464,7 +479,7 @@ document.getElementById('custSaveBtn').addEventListener('click', async () => {
       alert('Error: ' + (data.error || 'Could not save'));
       return;
     }
-    custForm.hidden = true;
+    custModal.hide();
     clearCustomerForm();
     loadCustomers();
   } catch (err) {
@@ -791,7 +806,7 @@ async function loadTransactions(customerId) {
   }
 }
 
-const txnForm = document.getElementById('transactionForm');
+const txnModal = makeModal('transactionModalOverlay');
 const txnFields = {
   id: document.getElementById('txnId'),
   customer_id: document.getElementById('txnCustomerId'),
@@ -822,13 +837,16 @@ function openTransactionForm(txn) {
     txnFields.description.value = txn.description || '';
   }
 
-  txnForm.hidden = false;
-  txnForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  txnModal.show();
 }
 
 document.getElementById('addTransactionBtn').addEventListener('click', () => openTransactionForm(null));
 document.getElementById('txnCancelBtn').addEventListener('click', () => {
-  txnForm.hidden = true;
+  txnModal.hide();
+  clearTransactionForm();
+});
+document.getElementById('transactionModalCloseBtn').addEventListener('click', () => {
+  txnModal.hide();
   clearTransactionForm();
 });
 
@@ -861,7 +879,7 @@ document.getElementById('txnSaveBtn').addEventListener('click', async () => {
       alert('Error: ' + (data.error || 'Could not save'));
       return;
     }
-    txnForm.hidden = true;
+    txnModal.hide();
     clearTransactionForm();
     loadTransactions(currentCustomerId);
     refreshCurrentCustomerTotal();
@@ -937,7 +955,7 @@ async function loadCaseStudies() {
   }
 }
 
-const csForm = document.getElementById('caseStudyForm');
+const csModal = makeModal('caseStudyModalOverlay');
 const csFields = {
   id: document.getElementById('csId'),
   business_name: document.getElementById('csBusinessName'),
@@ -973,13 +991,16 @@ function openCaseStudyForm(id) {
     }
   }
 
-  csForm.hidden = false;
-  csForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  csModal.show();
 }
 
 document.getElementById('addCaseStudyBtn').addEventListener('click', () => openCaseStudyForm(null));
 document.getElementById('csCancelBtn').addEventListener('click', () => {
-  csForm.hidden = true;
+  csModal.hide();
+  clearCaseStudyForm();
+});
+document.getElementById('caseStudyModalCloseBtn').addEventListener('click', () => {
+  csModal.hide();
   clearCaseStudyForm();
 });
 
@@ -1009,7 +1030,7 @@ document.getElementById('csSaveBtn').addEventListener('click', async () => {
       alert('Error: ' + (data.error || 'Could not save'));
       return;
     }
-    csForm.hidden = true;
+    csModal.hide();
     clearCaseStudyForm();
     loadCaseStudies();
   } catch (err) {
@@ -1265,15 +1286,19 @@ async function submitPaymentReference(ticketId) {
   }
 }
 
-const ticketForm = document.getElementById('ticketForm');
+const ticketModal = makeModal('ticketModalOverlay');
 
 document.getElementById('newTicketBtn').addEventListener('click', () => {
-  ticketForm.hidden = false;
-  ticketForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  ticketModal.show();
 });
 
 document.getElementById('ticketCancelBtn').addEventListener('click', () => {
-  ticketForm.hidden = true;
+  ticketModal.hide();
+  document.getElementById('ticketSubject').value = '';
+  document.getElementById('ticketDescription').value = '';
+});
+document.getElementById('ticketModalCloseBtn').addEventListener('click', () => {
+  ticketModal.hide();
   document.getElementById('ticketSubject').value = '';
   document.getElementById('ticketDescription').value = '';
 });
@@ -1298,7 +1323,7 @@ document.getElementById('ticketSaveBtn').addEventListener('click', async () => {
       alert('Error: ' + (data.error || 'Could not submit ticket'));
       return;
     }
-    ticketForm.hidden = true;
+    ticketModal.hide();
     document.getElementById('ticketSubject').value = '';
     document.getElementById('ticketDescription').value = '';
     loadCustomerTickets();
