@@ -219,6 +219,16 @@ function requestLinkBlockHtml(customer) {
     </p>`;
 }
 
+// Quick-access links to the customer's own live site and its admin
+// console, so you don't have to dig through old emails to find them.
+function customerLinksBlockHtml(c) {
+  const links = [];
+  if (c.website_url) links.push(`<a href="${escapeHtml(c.website_url)}" target="_blank" rel="noopener">🌐 Website</a>`);
+  if (c.admin_console_url) links.push(`<a href="${escapeHtml(c.admin_console_url)}" target="_blank" rel="noopener">🔧 Admin console</a>`);
+  if (links.length === 0) return '';
+  return `<p class="customer-links">${links.join(' &nbsp;·&nbsp; ')}</p>`;
+}
+
 function wireCopyLinkButtons(root) {
   root.querySelectorAll('[data-copy-link]').forEach(btn => {
     btn.addEventListener('click', async () => {
@@ -294,7 +304,9 @@ const custFields = {
   phone: document.getElementById('custPhone'),
   address: document.getElementById('custAddress'),
   next_payment_due_date: document.getElementById('custNextDueDate'),
-  next_payment_due_amount: document.getElementById('custNextDueAmount')
+  next_payment_due_amount: document.getElementById('custNextDueAmount'),
+  website_url: document.getElementById('custWebsiteUrl'),
+  admin_console_url: document.getElementById('custAdminConsoleUrl')
 };
 
 function clearCustomerForm() {
@@ -626,6 +638,7 @@ function renderCustomerDetailInfo(c) {
   info.innerHTML = `
     <h3>${escapeHtml(c.business_name)}</h3>
     ${requestLinkBlockHtml(c)}
+    ${customerLinksBlockHtml(c)}
     <p>${escapeHtml(c.contact_name || '')} ${c.phone ? '· ' + escapeHtml(c.phone) : ''}</p>
     <p>${escapeHtml(c.address || '')}</p>
     <p class="due-amount">${c.next_payment_due_date ? 'Next due: ' + escapeHtml(c.next_payment_due_date) : 'No due date set'}${c.next_payment_due_amount ? ' — ₹' + escapeHtml(String(c.next_payment_due_amount)) : ''}</p>

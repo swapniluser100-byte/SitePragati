@@ -165,7 +165,13 @@ Lets your paying customers log in at `/portal.html` (choose "Customer") to view 
    ```
    Existing customers won't have one until you next edit and save them (it fills in automatically at that point — no need to type anything).
 
-5. **Ticket payments (UPI):** customers can pay directly on a ticket when you mark it "Payment Pending." If you already have a live database, run these once:
+5. **Website & admin console quick links:** each customer's card and detail view can show a direct link to their live website and to their site's own admin console, so you don't have to dig through old emails to find them. If you already have a live database, run this once to add support for it:
+   ```
+   npx wrangler d1 execute sitepragati-db --remote --file=add-customer-links.sql
+   ```
+   Fill them in from the Customers tab → Edit — both are optional, and only show up once set.
+
+6. **Ticket payments (UPI):** customers can pay directly on a ticket when you mark it "Payment Pending." If you already have a live database, run these once:
    ```
    npx wrangler d1 execute sitepragati-db --remote --file=add-ticket-payment-fields.sql
    npx wrangler d1 execute sitepragati-db --remote --file=add-transaction-ticket-link.sql
@@ -180,7 +186,7 @@ Lets your paying customers log in at `/portal.html` (choose "Customer") to view 
 
    **Important limitation:** like the site's other UPI QR payments, this is *not* independently verified — the transaction reference is self-reported by the customer, not confirmed against your bank automatically. **"Payment Received" is a manual confirmation step you control** — the system won't mark anything paid on its own, and won't create a transaction until you've checked your bank and made that call yourself.
 
-6. Redeploy: `npx wrangler pages deploy .`
+7. Redeploy: `npx wrangler pages deploy .`
 
 **What your customer sees:** a simple login, then a list of their own tickets with status badges (Open / In Progress / Resolved / Closed), and a "+ New ticket" button to raise a new one.
 

@@ -152,6 +152,9 @@ select.status-select{
 .customer-detail-info p{color:var(--slate); font-size:0.88rem; margin-bottom:2px;}
 .customer-detail-info .due-amount{color:var(--amber-dark); font-weight:600;}
 .customer-detail-info .total-paid, .cs-card-info .total-paid{color:var(--teal); font-weight:600;}
+.customer-links{margin:6px 0 10px !important;}
+.customer-links a{color:var(--teal); font-weight:600; font-size:0.88rem;}
+.customer-links a:hover{text-decoration:underline;}
 .unique-id{font-family:monospace; font-size:0.78rem !important; color:var(--slate); opacity:0.8;}
 .request-link-row{display:flex; gap:8px; align-items:center; margin-bottom:10px !important;}
 .request-link-field{
