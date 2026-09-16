@@ -1,5 +1,8 @@
 // /api/admin/leads — protected by _middleware.js
 // GET    → list all leads, newest first
+// POST   → { name, business, business_type, contact, message } → add a
+//          lead manually (e.g. a phone or in-person enquiry that didn't
+//          come through the website's contact form)
 // PATCH  → { id, status } → update a lead's status
 // DELETE → { id } → remove a lead
 
@@ -12,6 +15,24 @@ export async function onRequestGet(context) {
       'SELECT * FROM leads ORDER BY created_at DESC'
     ).all();
     return json({ leads: results });
+  } catch (err) {
+    return json({ error: err.message }, 500);
+  }
+}
+
+export async function onRequestPost(context) {
+  const { request, env } = context;
+  try {
+    const body = await request.json();
+    const name = (body.name || '').trim();
+    if (!name) return json({ error: 'name is required' }, 400);
+
+    const result = await env.DB.prepare(
+      `INSERT INTO leads (name, business, business_type, contact, message)
+       VALUES (?, ?, ?, ?, ?)`
+    ).bind(name, body.business || null, body.business_type || null, body.contact || null, body.message || null).run();
+
+    return json({ result: 'success', id: result.meta.last_row_id });
   } catch (err) {
     return json({ error: err.message }, 500);
   }

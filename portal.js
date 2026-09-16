@@ -201,6 +201,59 @@ async function deleteLead(id) {
 
 document.getElementById('refreshLeads').addEventListener('click', loadLeads);
 
+// ===== Add lead manually (phone/in-person enquiries) =====
+const leadForm = document.getElementById('leadForm');
+const leadFields = {
+  name: document.getElementById('leadName'),
+  business: document.getElementById('leadBusiness'),
+  business_type: document.getElementById('leadBusinessType'),
+  contact: document.getElementById('leadContact'),
+  message: document.getElementById('leadMessage')
+};
+
+function clearLeadForm() {
+  Object.values(leadFields).forEach(el => el.value = '');
+}
+
+document.getElementById('addLeadBtn').addEventListener('click', () => {
+  clearLeadForm();
+  leadForm.hidden = false;
+  leadForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
+document.getElementById('leadCancelBtn').addEventListener('click', () => {
+  leadForm.hidden = true;
+  clearLeadForm();
+});
+
+document.getElementById('leadSaveBtn').addEventListener('click', async () => {
+  const payload = {};
+  Object.entries(leadFields).forEach(([key, el]) => { payload[key] = el.value; });
+
+  if (!payload.name.trim()) {
+    alert('Name is required.');
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/admin/leads', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (!res.ok || data.error) {
+      alert('Error: ' + (data.error || 'Could not save'));
+      return;
+    }
+    leadForm.hidden = true;
+    clearLeadForm();
+    loadLeads();
+  } catch (err) {
+    alert('Something went wrong saving this lead.');
+  }
+});
+
 // ===== Customers =====
 
 // Builds the "Raise a Request" link customers put on their own website,
