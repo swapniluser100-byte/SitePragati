@@ -1,5 +1,5 @@
 // Home page only: "Our work" case studies (loaded from D1 via
-// /api/case-studies) and the "Refer a business" CTA.
+// /api/case-studies).
 
 function escapeHtml(str) {
   const div = document.createElement('div');
@@ -57,8 +57,3 @@ async function loadCaseStudies() {
 }
 
 loadCaseStudies();
-
-// Refer a business — send them to the contact page with the message prefilled
-document.getElementById('referBusinessBtn').addEventListener('click', () => {
-  window.location.href = 'contact.html?intent=referral';
-});
