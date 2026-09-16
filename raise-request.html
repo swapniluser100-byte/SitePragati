@@ -37,7 +37,7 @@
 
       <form id="trackForm" hidden>
         <label for="trackTicketId">Request ID</label>
-        <input type="text" id="trackTicketId" inputmode="numeric" placeholder="e.g. 42 — from your confirmation" required>
+        <input type="text" id="trackTicketId" placeholder="e.g. K7XPQ2 — from your confirmation" maxlength="6" style="text-transform:uppercase;" required>
         <p id="trackError" class="form-note" style="color:#B3261E;" hidden></p>
         <button type="submit" class="btn btn-primary" id="trackBtn">Check status</button>
       </form>

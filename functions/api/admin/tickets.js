@@ -13,7 +13,7 @@
 //         creates a matching transaction for that customer — once only,
 //         even if the status is set to Payment Received more than once.
 
-import { json } from '../../_utils/auth.js';
+import { json, generateUniqueTicketCode } from '../../_utils/auth.js';
 import { brandedEmailHtml, sendResendEmail } from '../../_utils/email.js';
 
 export async function onRequestGet(context) {
@@ -47,21 +47,23 @@ export async function onRequestPost(context) {
     ).bind(customerId).first();
     if (!customer) return json({ error: 'Customer not found' }, 404);
 
+    const referenceCode = await generateUniqueTicketCode(env);
     const result = await env.DB.prepare(
-      `INSERT INTO tickets (customer_id, subject, description, status)
-       VALUES (?, ?, ?, 'Open')`
-    ).bind(customerId, subject, description).run();
+      `INSERT INTO tickets (customer_id, subject, description, status, reference_code)
+       VALUES (?, ?, ?, 'Open', ?)`
+    ).bind(customerId, subject, description, referenceCode).run();
 
     if (customer.email) {
       const emailSubject = `A support ticket was raised for you: ${subject}`;
       const bodyText =
         `A ticket has been raised on your behalf:\n\n` +
-        `Subject: ${subject}\nDescription: ${description}\nStatus: Open`;
+        `Request #: ${referenceCode}\nSubject: ${subject}\nDescription: ${description}\nStatus: Open`;
 
       const html = brandedEmailHtml({
         badgeText: 'New ticket',
         introText: `Hi ${customer.business_name}, we've raised a support ticket for you.`,
         rows: [
+          ['Request #', referenceCode],
           ['Subject', subject],
           ['Description', description],
           ['Status', 'Open']
@@ -73,7 +75,7 @@ export async function onRequestPost(context) {
       // Ticket is already saved in D1 regardless of whether the email succeeds.
     }
 
-    return json({ result: 'success', id: result.meta.last_row_id });
+    return json({ result: 'success', id: result.meta.last_row_id, reference_code: referenceCode });
   } catch (err) {
     return json({ error: err.message }, 500);
   }
@@ -87,10 +89,15 @@ export async function onRequestPut(context) {
     const subject = (body.subject || '').trim();
     if (!subject) return json({ error: 'subject is required' }, 400);
 
-    await env.DB.prepare('UPDATE tickets SET subject = ?, description = ? WHERE id = ?')
-      .bind(subject, body.description || null, body.id).run();
+    // Backfill a reference_code for older tickets that predate this
+    // feature — generated once, then left alone on every future edit.
+    const existing = await env.DB.prepare('SELECT reference_code FROM tickets WHERE id = ?').bind(body.id).first();
+    const referenceCode = (existing && existing.reference_code) ? existing.reference_code : await generateUniqueTicketCode(env);
 
-    return json({ result: 'success' });
+    await env.DB.prepare('UPDATE tickets SET subject = ?, description = ?, reference_code = ? WHERE id = ?')
+      .bind(subject, body.description || null, referenceCode, body.id).run();
+
+    return json({ result: 'success', reference_code: referenceCode });
   } catch (err) {
     return json({ error: err.message }, 500);
   }

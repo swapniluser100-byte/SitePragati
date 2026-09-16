@@ -716,6 +716,7 @@ async function loadTickets() {
 function renderTicketDetailInfo(t) {
   document.getElementById('ticketDetailInfo').innerHTML = `
     <h3>${escapeHtml(t.subject)}</h3>
+    ${t.reference_code ? `<p class="unique-id">Request ID: ${escapeHtml(t.reference_code)}</p>` : ''}
     <p>${escapeHtml(t.business_name)} · ${escapeHtml(new Date(t.created_at).toLocaleDateString())}</p>
     <p style="white-space:pre-wrap; margin-top:10px;">${escapeHtml(t.description || 'No description provided.')}</p>
     ${t.payment_amount ? `<p class="due-amount" style="margin-top:10px;">Amount due: ₹${escapeHtml(String(t.payment_amount))}</p>` : ''}
@@ -1299,7 +1300,7 @@ function buildTicketCardHtml(t) {
           <span class="status-badge ${statusClass(t.status)}">${escapeHtml(t.status)}</span>
         </div>
         <p>${escapeHtml(t.description || '')}</p>
-        <p class="ticket-date">Raised ${escapeHtml(new Date(t.created_at).toLocaleDateString())}</p>
+        <p class="ticket-date">Raised ${escapeHtml(new Date(t.created_at).toLocaleDateString())}${t.reference_code ? ` · Request ID: ${escapeHtml(t.reference_code)}` : ''}</p>
         ${renderTicketPaymentSection(t)}
         <button type="button" class="btn btn-outline btn-small conversation-toggle" data-ticket-id="${t.id}">💬 View conversation</button>
         <div class="ticket-comments-section" data-ticket-id="${t.id}" hidden>

@@ -10,7 +10,7 @@
 //         ever update their OWN ticket — the query includes customer_id
 //         from the verified session, not anything the client sends.
 
-import { json } from '../../_utils/auth.js';
+import { json, generateUniqueTicketCode } from '../../_utils/auth.js';
 import { brandedEmailHtml, sendResendEmail } from '../../_utils/email.js';
 
 export async function onRequestGet(context) {
@@ -34,10 +34,11 @@ export async function onRequestPost(context) {
 
     if (!subject) return json({ error: 'Subject is required' }, 400);
 
+    const referenceCode = await generateUniqueTicketCode(env);
     await env.DB.prepare(
-      `INSERT INTO tickets (customer_id, subject, description, status)
-       VALUES (?, ?, ?, 'Open')`
-    ).bind(data.customerId, subject, description).run();
+      `INSERT INTO tickets (customer_id, subject, description, status, reference_code)
+       VALUES (?, ?, ?, 'Open', ?)`
+    ).bind(data.customerId, subject, description, referenceCode).run();
 
     // Look up the customer's business name for the notification email
     const customer = await env.DB.prepare(
@@ -49,13 +50,14 @@ export async function onRequestPost(context) {
       const emailSubject = `New ticket from ${businessName}: ${subject}`;
       const bodyText =
         `A new support ticket was raised through the customer portal:\n\n` +
-        `Business: ${businessName}\nSubject: ${subject}\nDescription: ${description}\nStatus: Open`;
+        `Business: ${businessName}\nRequest #: ${referenceCode}\nSubject: ${subject}\nDescription: ${description}\nStatus: Open`;
 
       const html = brandedEmailHtml({
         badgeText: 'New ticket',
         introText: `${businessName} raised a new support ticket through the customer portal.`,
         rows: [
           ['Business', businessName],
+          ['Request #', referenceCode],
           ['Subject', subject],
           ['Description', description],
           ['Status', 'Open']
@@ -67,7 +69,7 @@ export async function onRequestPost(context) {
       // Ticket is already saved in D1 regardless of whether the email succeeds.
     }
 
-    return json({ result: 'success' });
+    return json({ result: 'success', reference_code: referenceCode });
   } catch (err) {
     return json({ error: err.message }, 500);
   }

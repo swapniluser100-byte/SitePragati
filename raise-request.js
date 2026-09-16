@@ -148,7 +148,7 @@ form.addEventListener('submit', async (e) => {
 
     form.hidden = true;
     successNote.hidden = false;
-    successNote.innerHTML = `Thanks — your request has been submitted. <strong>Save this ID to check its status later: #${escapeHtml(String(data.ticket_id))}</strong>`;
+    successNote.innerHTML = `Thanks — your request has been submitted. <strong>Save this ID to check its status later: ${escapeHtml(data.reference_code)}</strong>`;
   } catch (err) {
     statusNote.textContent = 'Something went wrong submitting this request. Please try again.';
     submitBtn.disabled = false;
@@ -191,7 +191,7 @@ trackForm.addEventListener('submit', async (e) => {
     const statusClass = STATUS_CLASS[t.status] || 'track-status-open';
     trackResult.innerHTML = `
       <h3>${escapeHtml(t.subject)}</h3>
-      <p>Request #${escapeHtml(String(t.id))} · ${escapeHtml(new Date(t.created_at).toLocaleDateString())}</p>
+      <p>Request ${escapeHtml(t.reference_code)} · ${escapeHtml(new Date(t.created_at).toLocaleDateString())}</p>
       <span class="track-status-badge ${statusClass}">${escapeHtml(t.status)}</span>
     `;
     trackResult.hidden = false;

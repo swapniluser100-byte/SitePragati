@@ -186,7 +186,13 @@ Lets your paying customers log in at `/portal.html` (choose "Customer") to view 
 
    **Important limitation:** like the site's other UPI QR payments, this is *not* independently verified — the transaction reference is self-reported by the customer, not confirmed against your bank automatically. **"Payment Received" is a manual confirmation step you control** — the system won't mark anything paid on its own, and won't create a transaction until you've checked your bank and made that call yourself.
 
-7. Redeploy: `npx wrangler pages deploy .`
+7. **Ticket reference codes:** every ticket now gets a short, human-readable code (e.g. `K7XPQ2`) used on the public "Raise a Request" page's "Track a request" tab, so a customer can check status without logging in and without a guessable sequential number. If you already have a live database, run this once:
+   ```
+   npx wrangler d1 execute sitepragati-db --remote --file=add-ticket-reference-code.sql
+   ```
+   Existing tickets won't have one until you next edit and save them in the admin Tickets tab (Edit → Save) — it fills in automatically at that point.
+
+8. Redeploy: `npx wrangler pages deploy .`
 
 **What your customer sees:** a simple login, then a list of their own tickets with status badges (Open / In Progress / Resolved / Closed), and a "+ New ticket" button to raise a new one.
 
