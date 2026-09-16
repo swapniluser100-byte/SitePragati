@@ -140,6 +140,8 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 // ===== Leads =====
 const STATUS_OPTIONS = ['New', 'Contacted', 'Won', 'Lost'];
 
+let leadsCache = [];
+
 async function loadLeads() {
   const tbody = document.getElementById('leadsTableBody');
   tbody.innerHTML = '<tr><td colspan="8" class="empty-note">Loading…</td></tr>';
@@ -147,13 +149,14 @@ async function loadLeads() {
   try {
     const res = await fetch('/api/admin/leads');
     const data = await res.json();
+    leadsCache = data.leads || [];
 
-    if (!data.leads || data.leads.length === 0) {
+    if (leadsCache.length === 0) {
       tbody.innerHTML = '<tr><td colspan="8" class="empty-note">No leads yet.</td></tr>';
       return;
     }
 
-    tbody.innerHTML = data.leads.map(lead => `
+    tbody.innerHTML = leadsCache.map(lead => `
       <tr data-id="${lead.id}">
         <td>${escapeHtml(new Date(lead.created_at).toLocaleDateString())}</td>
         <td>${escapeHtml(lead.name)}</td>
@@ -166,12 +169,18 @@ async function loadLeads() {
             ${STATUS_OPTIONS.map(s => `<option value="${s}" ${s === lead.status ? 'selected' : ''}>${s}</option>`).join('')}
           </select>
         </td>
-        <td><button class="btn-danger" data-delete-lead="${lead.id}">Delete</button></td>
+        <td>
+          <button class="btn btn-outline btn-small" data-edit-lead="${lead.id}">Edit</button>
+          <button class="btn-danger" data-delete-lead="${lead.id}">Delete</button>
+        </td>
       </tr>
     `).join('');
 
     tbody.querySelectorAll('.status-select').forEach(select => {
       select.addEventListener('change', () => updateLeadStatus(select.dataset.id, select.value));
+    });
+    tbody.querySelectorAll('[data-edit-lead]').forEach(btn => {
+      btn.addEventListener('click', () => openLeadModal(btn.dataset.editLead));
     });
     tbody.querySelectorAll('[data-delete-lead]').forEach(btn => {
       btn.addEventListener('click', () => deleteLead(btn.dataset.deleteLead));
@@ -201,9 +210,37 @@ async function deleteLead(id) {
 
 document.getElementById('refreshLeads').addEventListener('click', loadLeads);
 
-// ===== Add lead manually (phone/in-person enquiries) =====
-const leadModalOverlay = document.getElementById('leadModalOverlay');
+// ===== Add / edit a lead manually (phone/in-person enquiries) =====
+// Generic modal helper: wires backdrop-click and Escape-to-close for a
+// popup overlay. Each form still owns its own open (populate fields,
+// set title) and save/cancel logic — this just handles show/hide plumbing.
+function makeModal(overlayId) {
+  const overlay = document.getElementById(overlayId);
+  function show() { overlay.hidden = false; }
+  function hide() { overlay.hidden = true; }
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) hide(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !overlay.hidden) hide(); });
+  return { show, hide };
+}
+
+// Shows a spinner + label on a button for the duration of an async
+// action, disabling it to prevent double-submits, and always restores
+// it afterward regardless of success or failure.
+async function withButtonSpinner(btn, busyLabel, fn) {
+  const original = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = `<span class="btn-spinner" aria-hidden="true"></span>${busyLabel}`;
+  try {
+    await fn();
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = original;
+  }
+}
+
+const leadModal = makeModal('leadModalOverlay');
 const leadFields = {
+  id: document.getElementById('leadId'),
   name: document.getElementById('leadName'),
   business: document.getElementById('leadBusiness'),
   business_type: document.getElementById('leadBusinessType'),
@@ -216,31 +253,35 @@ function clearLeadForm() {
   Object.entries(leadFields).forEach(([key, el]) => { el.value = key === 'status' ? 'New' : ''; });
 }
 
-function openLeadModal() {
+function openLeadModal(id) {
   clearLeadForm();
-  leadModalOverlay.hidden = false;
+  document.getElementById('leadModalTitle').textContent = id ? 'Edit lead' : 'Add lead';
+
+  if (id) {
+    const lead = leadsCache.find(x => String(x.id) === String(id));
+    if (lead) {
+      Object.keys(leadFields).forEach(key => {
+        if (lead[key] != null) leadFields[key].value = lead[key];
+      });
+    }
+  }
+
+  leadModal.show();
   leadFields.name.focus();
 }
 
-function closeLeadModal() {
-  leadModalOverlay.hidden = true;
+document.getElementById('addLeadBtn').addEventListener('click', () => openLeadModal(null));
+document.getElementById('leadCancelBtn').addEventListener('click', () => {
+  leadModal.hide();
   clearLeadForm();
-}
-
-document.getElementById('addLeadBtn').addEventListener('click', openLeadModal);
-document.getElementById('leadCancelBtn').addEventListener('click', closeLeadModal);
-document.getElementById('leadModalCloseBtn').addEventListener('click', closeLeadModal);
-
-// Click on the dimmed backdrop (not the modal box itself) closes it too.
-leadModalOverlay.addEventListener('click', (e) => {
-  if (e.target === leadModalOverlay) closeLeadModal();
+});
+document.getElementById('leadModalCloseBtn').addEventListener('click', () => {
+  leadModal.hide();
+  clearLeadForm();
 });
 
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && !leadModalOverlay.hidden) closeLeadModal();
-});
-
-document.getElementById('leadSaveBtn').addEventListener('click', async () => {
+const leadSaveBtn = document.getElementById('leadSaveBtn');
+leadSaveBtn.addEventListener('click', () => {
   const payload = {};
   Object.entries(leadFields).forEach(([key, el]) => { payload[key] = el.value; });
 
@@ -249,22 +290,29 @@ document.getElementById('leadSaveBtn').addEventListener('click', async () => {
     return;
   }
 
-  try {
-    const res = await fetch('/api/admin/leads', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json();
-    if (!res.ok || data.error) {
-      alert('Error: ' + (data.error || 'Could not save'));
-      return;
+  const isEdit = !!payload.id;
+  const method = isEdit ? 'PUT' : 'POST';
+  if (!isEdit) delete payload.id;
+
+  withButtonSpinner(leadSaveBtn, 'Saving…', async () => {
+    try {
+      const res = await fetch('/api/admin/leads', {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        alert('Error: ' + (data.error || 'Could not save'));
+        return;
+      }
+      leadModal.hide();
+      clearLeadForm();
+      loadLeads();
+    } catch (err) {
+      alert('Something went wrong saving this lead.');
     }
-    closeLeadModal();
-    loadLeads();
-  } catch (err) {
-    alert('Something went wrong saving this lead.');
-  }
+  });
 });
 
 // ===== Customers =====
@@ -383,7 +431,7 @@ function filterCustomers() {
 
 document.getElementById('customerSearchInput').addEventListener('input', filterCustomers);
 
-const custForm = document.getElementById('customerForm');
+const custModal = makeModal('customerModalOverlay');
 const custFields = {
   id: document.getElementById('custId'),
   business_name: document.getElementById('custBusinessName'),
@@ -419,17 +467,21 @@ function openCustomerForm(id) {
     }
   }
 
-  custForm.hidden = false;
-  custForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  custModal.show();
 }
 
 document.getElementById('addCustomerBtn').addEventListener('click', () => openCustomerForm(null));
 document.getElementById('custCancelBtn').addEventListener('click', () => {
-  custForm.hidden = true;
+  custModal.hide();
+  clearCustomerForm();
+});
+document.getElementById('customerModalCloseBtn').addEventListener('click', () => {
+  custModal.hide();
   clearCustomerForm();
 });
 
-document.getElementById('custSaveBtn').addEventListener('click', async () => {
+const custSaveBtn = document.getElementById('custSaveBtn');
+custSaveBtn.addEventListener('click', () => {
   const payload = {};
   Object.entries(custFields).forEach(([key, el]) => { payload[key] = el.value; });
 
@@ -453,23 +505,25 @@ document.getElementById('custSaveBtn').addEventListener('click', async () => {
   if (!isEdit) delete payload.id;
   if (isEdit && !payload.password.trim()) delete payload.password; // don't overwrite existing password
 
-  try {
-    const res = await fetch('/api/admin/customers', {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json();
-    if (!res.ok || data.error) {
-      alert('Error: ' + (data.error || 'Could not save'));
-      return;
+  withButtonSpinner(custSaveBtn, 'Saving…', async () => {
+    try {
+      const res = await fetch('/api/admin/customers', {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        alert('Error: ' + (data.error || 'Could not save'));
+        return;
+      }
+      custModal.hide();
+      clearCustomerForm();
+      loadCustomers();
+    } catch (err) {
+      alert('Something went wrong saving this customer.');
     }
-    custForm.hidden = true;
-    clearCustomerForm();
-    loadCustomers();
-  } catch (err) {
-    alert('Something went wrong saving this customer.');
-  }
+  });
 });
 
 async function deleteCustomer(id) {
@@ -608,6 +662,72 @@ function openTicketDetail(id) {
   document.getElementById('commentFormMsg').textContent = '';
   loadAdminTicketComments(id);
 }
+
+// ===== Edit a ticket's subject/description (status changes use the
+// dropdown above instead — they carry payment/email side effects) =====
+const ticketEditModal = makeModal('ticketEditModalOverlay');
+const ticketEditFields = {
+  id: document.getElementById('ticketEditId'),
+  subject: document.getElementById('ticketEditSubject'),
+  description: document.getElementById('ticketEditDescription')
+};
+
+function clearTicketEditForm() {
+  Object.values(ticketEditFields).forEach(el => el.value = '');
+}
+
+document.getElementById('editTicketBtn').addEventListener('click', () => {
+  const t = ticketsCache.find(x => String(x.id) === String(currentTicketId));
+  if (!t) return;
+  ticketEditFields.id.value = t.id;
+  ticketEditFields.subject.value = t.subject || '';
+  ticketEditFields.description.value = t.description || '';
+  ticketEditModal.show();
+});
+
+document.getElementById('ticketEditCancelBtn').addEventListener('click', () => {
+  ticketEditModal.hide();
+  clearTicketEditForm();
+});
+document.getElementById('ticketEditModalCloseBtn').addEventListener('click', () => {
+  ticketEditModal.hide();
+  clearTicketEditForm();
+});
+
+const ticketEditSaveBtn = document.getElementById('ticketEditSaveBtn');
+ticketEditSaveBtn.addEventListener('click', () => {
+  const subject = ticketEditFields.subject.value.trim();
+  if (!subject) {
+    alert('Subject is required.');
+    return;
+  }
+
+  withButtonSpinner(ticketEditSaveBtn, 'Saving…', async () => {
+    try {
+      const res = await fetch('/api/admin/tickets', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: Number(ticketEditFields.id.value),
+          subject,
+          description: ticketEditFields.description.value
+        })
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        alert('Error: ' + (data.error || 'Could not save'));
+        return;
+      }
+      ticketEditModal.hide();
+      clearTicketEditForm();
+      await loadTickets();
+      const updated = ticketsCache.find(x => String(x.id) === String(currentTicketId));
+      if (updated) renderTicketDetailInfo(updated);
+    } catch (err) {
+      alert('Something went wrong saving this ticket.');
+    }
+  });
+});
 
 function renderCommentThread(comments, downloadBase) {
   if (!comments || comments.length === 0) {
@@ -791,7 +911,7 @@ async function loadTransactions(customerId) {
   }
 }
 
-const txnForm = document.getElementById('transactionForm');
+const txnModal = makeModal('transactionModalOverlay');
 const txnFields = {
   id: document.getElementById('txnId'),
   customer_id: document.getElementById('txnCustomerId'),
@@ -822,17 +942,21 @@ function openTransactionForm(txn) {
     txnFields.description.value = txn.description || '';
   }
 
-  txnForm.hidden = false;
-  txnForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  txnModal.show();
 }
 
 document.getElementById('addTransactionBtn').addEventListener('click', () => openTransactionForm(null));
 document.getElementById('txnCancelBtn').addEventListener('click', () => {
-  txnForm.hidden = true;
+  txnModal.hide();
+  clearTransactionForm();
+});
+document.getElementById('transactionModalCloseBtn').addEventListener('click', () => {
+  txnModal.hide();
   clearTransactionForm();
 });
 
-document.getElementById('txnSaveBtn').addEventListener('click', async () => {
+const txnSaveBtn = document.getElementById('txnSaveBtn');
+txnSaveBtn.addEventListener('click', () => {
   const payload = {
     id: txnFields.id.value || undefined,
     customer_id: Number(txnFields.customer_id.value),
@@ -850,24 +974,26 @@ document.getElementById('txnSaveBtn').addEventListener('click', async () => {
   const isEdit = !!payload.id;
   const method = isEdit ? 'PUT' : 'POST';
 
-  try {
-    const res = await fetch('/api/admin/transactions', {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json();
-    if (!res.ok || data.error) {
-      alert('Error: ' + (data.error || 'Could not save'));
-      return;
+  withButtonSpinner(txnSaveBtn, 'Saving…', async () => {
+    try {
+      const res = await fetch('/api/admin/transactions', {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        alert('Error: ' + (data.error || 'Could not save'));
+        return;
+      }
+      txnModal.hide();
+      clearTransactionForm();
+      loadTransactions(currentCustomerId);
+      refreshCurrentCustomerTotal();
+    } catch (err) {
+      alert('Something went wrong saving this transaction.');
     }
-    txnForm.hidden = true;
-    clearTransactionForm();
-    loadTransactions(currentCustomerId);
-    refreshCurrentCustomerTotal();
-  } catch (err) {
-    alert('Something went wrong saving this transaction.');
-  }
+  });
 });
 
 // Re-fetches customers (to get fresh total_paid) and updates the detail
@@ -937,7 +1063,7 @@ async function loadCaseStudies() {
   }
 }
 
-const csForm = document.getElementById('caseStudyForm');
+const csModal = makeModal('caseStudyModalOverlay');
 const csFields = {
   id: document.getElementById('csId'),
   business_name: document.getElementById('csBusinessName'),
@@ -973,17 +1099,21 @@ function openCaseStudyForm(id) {
     }
   }
 
-  csForm.hidden = false;
-  csForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  csModal.show();
 }
 
 document.getElementById('addCaseStudyBtn').addEventListener('click', () => openCaseStudyForm(null));
 document.getElementById('csCancelBtn').addEventListener('click', () => {
-  csForm.hidden = true;
+  csModal.hide();
+  clearCaseStudyForm();
+});
+document.getElementById('caseStudyModalCloseBtn').addEventListener('click', () => {
+  csModal.hide();
   clearCaseStudyForm();
 });
 
-document.getElementById('csSaveBtn').addEventListener('click', async () => {
+const csSaveBtn = document.getElementById('csSaveBtn');
+csSaveBtn.addEventListener('click', () => {
   const payload = {};
   Object.entries(csFields).forEach(([key, el]) => {
     payload[key] = el.value;
@@ -998,23 +1128,25 @@ document.getElementById('csSaveBtn').addEventListener('click', async () => {
   const method = isEdit ? 'PUT' : 'POST';
   if (!isEdit) delete payload.id;
 
-  try {
-    const res = await fetch('/api/admin/case-studies', {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json();
-    if (!res.ok || data.error) {
-      alert('Error: ' + (data.error || 'Could not save'));
-      return;
+  withButtonSpinner(csSaveBtn, 'Saving…', async () => {
+    try {
+      const res = await fetch('/api/admin/case-studies', {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        alert('Error: ' + (data.error || 'Could not save'));
+        return;
+      }
+      csModal.hide();
+      clearCaseStudyForm();
+      loadCaseStudies();
+    } catch (err) {
+      alert('Something went wrong saving this case study.');
     }
-    csForm.hidden = true;
-    clearCaseStudyForm();
-    loadCaseStudies();
-  } catch (err) {
-    alert('Something went wrong saving this case study.');
-  }
+  });
 });
 
 async function deleteCaseStudy(id) {
@@ -1265,20 +1397,25 @@ async function submitPaymentReference(ticketId) {
   }
 }
 
-const ticketForm = document.getElementById('ticketForm');
+const ticketModal = makeModal('ticketModalOverlay');
 
 document.getElementById('newTicketBtn').addEventListener('click', () => {
-  ticketForm.hidden = false;
-  ticketForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  ticketModal.show();
 });
 
 document.getElementById('ticketCancelBtn').addEventListener('click', () => {
-  ticketForm.hidden = true;
+  ticketModal.hide();
+  document.getElementById('ticketSubject').value = '';
+  document.getElementById('ticketDescription').value = '';
+});
+document.getElementById('ticketModalCloseBtn').addEventListener('click', () => {
+  ticketModal.hide();
   document.getElementById('ticketSubject').value = '';
   document.getElementById('ticketDescription').value = '';
 });
 
-document.getElementById('ticketSaveBtn').addEventListener('click', async () => {
+const ticketSaveBtn = document.getElementById('ticketSaveBtn');
+ticketSaveBtn.addEventListener('click', () => {
   const subject = document.getElementById('ticketSubject').value.trim();
   const description = document.getElementById('ticketDescription').value.trim();
 
@@ -1287,24 +1424,26 @@ document.getElementById('ticketSaveBtn').addEventListener('click', async () => {
     return;
   }
 
-  try {
-    const res = await fetch('/api/customer/tickets', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ subject, description })
-    });
-    const data = await res.json();
-    if (!res.ok || data.error) {
-      alert('Error: ' + (data.error || 'Could not submit ticket'));
-      return;
+  withButtonSpinner(ticketSaveBtn, 'Submitting…', async () => {
+    try {
+      const res = await fetch('/api/customer/tickets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subject, description })
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        alert('Error: ' + (data.error || 'Could not submit ticket'));
+        return;
+      }
+      ticketModal.hide();
+      document.getElementById('ticketSubject').value = '';
+      document.getElementById('ticketDescription').value = '';
+      loadCustomerTickets();
+    } catch (err) {
+      alert('Something went wrong submitting this ticket.');
     }
-    ticketForm.hidden = true;
-    document.getElementById('ticketSubject').value = '';
-    document.getElementById('ticketDescription').value = '';
-    loadCustomerTickets();
-  } catch (err) {
-    alert('Something went wrong submitting this ticket.');
-  }
+  });
 });
 
 

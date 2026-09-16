@@ -1,5 +1,8 @@
 // /api/admin/tickets — protected by _middleware.js
 // GET   → list all tickets, joined with the customer's business name
+// PUT   → { id, subject, description } → edit a ticket's subject/details.
+//         Status changes go through PATCH instead (they carry payment
+//         and email side effects this endpoint doesn't touch).
 // PATCH → { id, status, payment_amount? } → update a ticket's status
 //         (and the amount due, when status is "Payment Pending"), and
 //         emails the customer a branded notification.
@@ -20,6 +23,23 @@ export async function onRequestGet(context) {
       ORDER BY tickets.created_at DESC
     `).all();
     return json({ tickets: results });
+  } catch (err) {
+    return json({ error: err.message }, 500);
+  }
+}
+
+export async function onRequestPut(context) {
+  const { request, env } = context;
+  try {
+    const body = await request.json();
+    if (!body.id) return json({ error: 'id is required' }, 400);
+    const subject = (body.subject || '').trim();
+    if (!subject) return json({ error: 'subject is required' }, 400);
+
+    await env.DB.prepare('UPDATE tickets SET subject = ?, description = ? WHERE id = ?')
+      .bind(subject, body.description || null, body.id).run();
+
+    return json({ result: 'success' });
   } catch (err) {
     return json({ error: err.message }, 500);
   }
