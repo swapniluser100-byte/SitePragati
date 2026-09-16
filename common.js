@@ -1,4 +1,4 @@
-// Shared across every marketing page (index, about, pricing, contact):
+// Shared across every marketing page (index, pricing, contact):
 // footer year, mobile nav toggle, the Login dropdown, and the "Refer a
 // business" CTA.
 
