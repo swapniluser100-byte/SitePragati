@@ -3,7 +3,10 @@
 // POST   → { name, business, business_type, contact, status, message } →
 //          add a lead manually (e.g. a phone or in-person enquiry that
 //          didn't come through the website's contact form)
-// PATCH  → { id, status } → update a lead's status
+// PUT    → { id, name, business, business_type, contact, status, message }
+//          → edit an existing lead's full details
+// PATCH  → { id, status } → update just a lead's status (used by the
+//          inline status dropdown in the leads table)
 // DELETE → { id } → remove a lead
 
 import { json } from '../../_utils/auth.js';
@@ -37,6 +40,27 @@ export async function onRequestPost(context) {
     ).bind(name, body.business || null, body.business_type || null, body.contact || null, status, body.message || null).run();
 
     return json({ result: 'success', id: result.meta.last_row_id });
+  } catch (err) {
+    return json({ error: err.message }, 500);
+  }
+}
+
+export async function onRequestPut(context) {
+  const { request, env } = context;
+  try {
+    const body = await request.json();
+    if (!body.id) return json({ error: 'id is required' }, 400);
+    const name = (body.name || '').trim();
+    if (!name) return json({ error: 'name is required' }, 400);
+
+    const status = STATUS_OPTIONS.includes(body.status) ? body.status : 'New';
+
+    await env.DB.prepare(
+      `UPDATE leads SET name = ?, business = ?, business_type = ?, contact = ?, status = ?, message = ?
+       WHERE id = ?`
+    ).bind(name, body.business || null, body.business_type || null, body.contact || null, status, body.message || null, body.id).run();
+
+    return json({ result: 'success' });
   } catch (err) {
     return json({ error: err.message }, 500);
   }

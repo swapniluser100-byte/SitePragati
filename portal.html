@@ -68,6 +68,7 @@
           <h3 id="leadModalTitle">Add lead</h3>
           <button type="button" id="leadModalCloseBtn" class="modal-close" aria-label="Close">&times;</button>
         </div>
+        <input type="hidden" id="leadId">
         <div class="cs-form-grid">
           <div>
             <label for="leadName">Name</label>
@@ -340,9 +341,30 @@
 
     <!-- Detail view: one ticket -->
     <div id="ticketDetailView" hidden>
-      <button type="button" id="backToTicketsBtn" class="btn btn-outline btn-small back-btn">&larr; Back to tickets</button>
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <button type="button" id="backToTicketsBtn" class="btn btn-outline btn-small back-btn">&larr; Back to tickets</button>
+        <button type="button" id="editTicketBtn" class="btn btn-outline btn-small back-btn">Edit</button>
+      </div>
 
       <div id="ticketDetailInfo" class="customer-detail-info"></div>
+
+      <div id="ticketEditModalOverlay" class="modal-overlay" hidden>
+        <div class="modal-box cs-form" role="dialog" aria-modal="true" aria-labelledby="ticketEditModalTitle">
+          <div class="modal-head">
+            <h3 id="ticketEditModalTitle">Edit ticket</h3>
+            <button type="button" id="ticketEditModalCloseBtn" class="modal-close" aria-label="Close">&times;</button>
+          </div>
+          <input type="hidden" id="ticketEditId">
+          <label for="ticketEditSubject">Subject</label>
+          <input type="text" id="ticketEditSubject" required>
+          <label for="ticketEditDescription">Details</label>
+          <textarea id="ticketEditDescription" rows="4"></textarea>
+          <div class="cs-form-actions">
+            <button type="button" id="ticketEditSaveBtn" class="btn btn-primary">Save</button>
+            <button type="button" id="ticketEditCancelBtn" class="btn btn-outline">Cancel</button>
+          </div>
+        </div>
+      </div>
 
       <label for="ticketDetailStatus" class="td-status-label">Status</label>
       <select id="ticketDetailStatus" class="status-select"></select>
