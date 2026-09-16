@@ -2,10 +2,17 @@
 // straight to /raise-request.html?customerId=<unique_id> and let them
 // raise a support ticket without logging into the portal.
 //
-// GET  ?customerId=<unique_id>  -> { business_name } if the ID is valid
+// GET  ?customerId=<unique_id>              -> { business_name } if valid
+// GET  ?customerId=<unique_id>&ticketId=<n> -> { business_name, ticket }
+//      so a customer can check status without logging in. Scoped to
+//      BOTH ids together — a ticket's numeric id alone is guessable/
+//      sequential, so it's only ever looked up joined against the
+//      customer_id it belongs to, never on its own.
 // POST multipart form { customerId, subject, description, file? }
 //      -> creates a ticket for that customer (+ a ticket_comments row
-//         with the file, if one was attached) and notifies the admin.
+//         with the file, if one was attached), notifies the admin, and
+//         returns the new ticket's id so the customer can save it to
+//         check status later.
 //
 // customerId here is always the customer's public `unique_id` (a random
 // 15-char string from generateRandomId, shown in the admin Customers
@@ -28,9 +35,19 @@ export async function onRequestGet(context) {
   const { request, env } = context;
   const url = new URL(request.url);
   const uniqueId = (url.searchParams.get('customerId') || '').trim();
+  const ticketId = (url.searchParams.get('ticketId') || '').trim();
 
   const customer = await findCustomer(env, uniqueId);
   if (!customer) return json({ error: 'Customer not found' }, 404);
+
+  if (ticketId) {
+    const ticket = await env.DB.prepare(
+      'SELECT id, subject, status, created_at FROM tickets WHERE id = ? AND customer_id = ?'
+    ).bind(Number(ticketId), customer.id).first();
+
+    if (!ticket) return json({ error: 'No request found with that ID for this customer' }, 404);
+    return json({ business_name: customer.business_name, ticket });
+  }
 
   return json({ business_name: customer.business_name });
 }
@@ -96,7 +113,7 @@ export async function onRequestPost(context) {
       // Ticket is already saved in D1 regardless of whether the email succeeds.
     }
 
-    return json({ result: 'success' });
+    return json({ result: 'success', ticket_id: ticketId });
   } catch (err) {
     return json({ error: err.message }, 500);
   }

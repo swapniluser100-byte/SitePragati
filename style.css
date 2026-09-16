@@ -247,6 +247,35 @@ textarea{resize:vertical;}
 form .btn{margin-top:6px; align-self:flex-start;}
 .form-note{font-size:0.82rem; color:var(--slate);}
 
+.mode-toggle{
+  display:flex; gap:0; margin-bottom:20px;
+  border:1px solid rgba(27,37,68,0.15); border-radius:var(--radius-sm); overflow:hidden;
+}
+.mode-toggle-btn{
+  flex:1; padding:10px 0; background:var(--paper); border:none; cursor:pointer;
+  font-family:inherit; font-size:0.9rem; font-weight:600; color:var(--slate);
+}
+.mode-toggle-btn.active{background:var(--navy); color:var(--white);}
+.mode-toggle-btn:not(.active):hover{background:var(--paper-dim);}
+
+.track-result{
+  margin-top:4px; padding:20px 24px; background:var(--white);
+  border:1px solid rgba(27,37,68,0.1); border-radius:var(--radius-md);
+}
+.track-result h3{font-size:1.05rem; margin-bottom:6px;}
+.track-result p{color:var(--slate); font-size:0.9rem; margin-bottom:2px;}
+.track-status-badge{
+  display:inline-block; padding:4px 12px; border-radius:20px;
+  font-size:0.82rem; font-weight:600; margin-top:10px;
+}
+.track-status-open{background:rgba(232,163,61,0.15); color:var(--amber-dark);}
+.track-status-in-progress{background:rgba(47,111,98,0.15); color:var(--teal);}
+.track-status-payment-pending{background:rgba(176,69,58,0.15); color:#B0453A;}
+.track-status-payment-submitted{background:rgba(47,111,98,0.15); color:var(--teal);}
+.track-status-payment-received{background:rgba(47,111,98,0.25); color:var(--teal); font-weight:700;}
+.track-status-resolved{background:rgba(27,37,68,0.1); color:var(--navy);}
+.track-status-closed{background:rgba(84,91,112,0.15); color:var(--slate);}
+
 @media (max-width:860px){
   .contact-grid{grid-template-columns:1fr;}
 }

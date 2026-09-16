@@ -15,6 +15,31 @@ const lookupForm = document.getElementById('lookupForm');
 const lookupError = document.getElementById('lookupError');
 const form = document.getElementById('requestForm');
 const successNote = document.getElementById('successNote');
+const modeToggle = document.getElementById('modeToggle');
+const trackForm = document.getElementById('trackForm');
+const trackError = document.getElementById('trackError');
+const trackResult = document.getElementById('trackResult');
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str == null ? '' : str;
+  return div.innerHTML;
+}
+
+function setMode(mode) {
+  modeToggle.querySelectorAll('.mode-toggle-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.mode === mode);
+  });
+  form.hidden = mode !== 'raise';
+  trackForm.hidden = mode !== 'track';
+  trackResult.hidden = true;
+  trackError.hidden = true;
+  successNote.hidden = true;
+}
+
+modeToggle.querySelectorAll('.mode-toggle-btn').forEach(btn => {
+  btn.addEventListener('click', () => setMode(btn.dataset.mode));
+});
 
 function showLookupForm(message) {
   loadingNote.hidden = true;
@@ -53,7 +78,8 @@ async function init() {
   document.getElementById('customerDisplay').value = customer.business_name;
   loadingNote.hidden = true;
   lookupForm.hidden = true;
-  form.hidden = false;
+  modeToggle.hidden = false;
+  setMode('raise');
 }
 
 lookupForm.addEventListener('submit', async (e) => {
@@ -78,7 +104,8 @@ lookupForm.addEventListener('submit', async (e) => {
   currentCustomerId = id;
   document.getElementById('customerDisplay').value = customer.business_name;
   lookupForm.hidden = true;
-  form.hidden = false;
+  modeToggle.hidden = false;
+  setMode('raise');
 
   // Keep the URL shareable/refreshable once we know a valid ID.
   const url = new URL(window.location.href);
@@ -121,10 +148,57 @@ form.addEventListener('submit', async (e) => {
 
     form.hidden = true;
     successNote.hidden = false;
-    successNote.textContent = "Thanks — your request has been submitted. We'll be in touch soon.";
+    successNote.innerHTML = `Thanks — your request has been submitted. <strong>Save this ID to check its status later: #${escapeHtml(String(data.ticket_id))}</strong>`;
   } catch (err) {
     statusNote.textContent = 'Something went wrong submitting this request. Please try again.';
     submitBtn.disabled = false;
+  }
+});
+
+const STATUS_CLASS = {
+  'Open': 'track-status-open',
+  'In Progress': 'track-status-in-progress',
+  'Payment Pending': 'track-status-payment-pending',
+  'Payment Submitted': 'track-status-payment-submitted',
+  'Payment Received': 'track-status-payment-received',
+  'Resolved': 'track-status-resolved',
+  'Closed': 'track-status-closed'
+};
+
+trackForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const ticketId = document.getElementById('trackTicketId').value.trim();
+  const trackBtn = document.getElementById('trackBtn');
+
+  if (!ticketId) return;
+
+  trackBtn.disabled = true;
+  trackError.hidden = true;
+  trackResult.hidden = true;
+
+  try {
+    const res = await fetch(`/api/public/raise-request?customerId=${encodeURIComponent(currentCustomerId)}&ticketId=${encodeURIComponent(ticketId)}`);
+    const data = await res.json();
+    trackBtn.disabled = false;
+
+    if (!res.ok || data.error || !data.ticket) {
+      trackError.hidden = false;
+      trackError.textContent = data.error || 'No request found with that ID.';
+      return;
+    }
+
+    const t = data.ticket;
+    const statusClass = STATUS_CLASS[t.status] || 'track-status-open';
+    trackResult.innerHTML = `
+      <h3>${escapeHtml(t.subject)}</h3>
+      <p>Request #${escapeHtml(String(t.id))} · ${escapeHtml(new Date(t.created_at).toLocaleDateString())}</p>
+      <span class="track-status-badge ${statusClass}">${escapeHtml(t.status)}</span>
+    `;
+    trackResult.hidden = false;
+  } catch (err) {
+    trackBtn.disabled = false;
+    trackError.hidden = false;
+    trackError.textContent = 'Something went wrong checking this request. Please try again.';
   }
 });
 
