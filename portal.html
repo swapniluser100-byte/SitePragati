@@ -56,8 +56,46 @@
   <section id="leadsTab" class="tab-panel active">
     <div class="panel-head">
       <h2>Leads</h2>
-      <button type="button" id="refreshLeads" class="btn btn-outline btn-small">Refresh</button>
+      <div style="display:flex; gap:8px;">
+        <button type="button" id="addLeadBtn" class="btn btn-primary btn-small">+ Add lead</button>
+        <button type="button" id="refreshLeads" class="btn btn-outline btn-small">Refresh</button>
+      </div>
     </div>
+
+    <div id="leadForm" class="cs-form" hidden>
+      <h3>Add lead</h3>
+      <div class="cs-form-grid">
+        <div>
+          <label for="leadName">Name</label>
+          <input type="text" id="leadName" required>
+        </div>
+        <div>
+          <label for="leadBusiness">Business</label>
+          <input type="text" id="leadBusiness">
+        </div>
+        <div>
+          <label for="leadBusinessType">Business type</label>
+          <select id="leadBusinessType">
+            <option value="">— Select —</option>
+            <option value="Café/Restaurant">Café / Restaurant</option>
+            <option value="Retail/Shop">Retail / Shop</option>
+            <option value="Services">Services (salon, consulting, repair, etc.)</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div>
+          <label for="leadContact">Contact <span class="field-note">(phone or email)</span></label>
+          <input type="text" id="leadContact">
+        </div>
+      </div>
+      <label for="leadMessage">Message</label>
+      <textarea id="leadMessage" rows="2"></textarea>
+      <div class="cs-form-actions">
+        <button type="button" id="leadSaveBtn" class="btn btn-primary">Save</button>
+        <button type="button" id="leadCancelBtn" class="btn btn-outline">Cancel</button>
+      </div>
+    </div>
+
     <div class="table-wrap">
       <table id="leadsTable">
         <thead>
