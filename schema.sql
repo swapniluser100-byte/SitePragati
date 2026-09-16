@@ -10,6 +10,8 @@ CREATE TABLE IF NOT EXISTS customers (
   address TEXT,
   next_payment_due_date TEXT,
   next_payment_due_amount REAL,
+  website_url TEXT,
+  admin_console_url TEXT,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
