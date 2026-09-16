@@ -77,6 +77,9 @@ export async function sendResendEmail(env, { to, subject, text, html }) {
         // to Resend's shared test address otherwise, which can only send
         // to your own Resend account email. See DEPLOY-GUIDE.md.
         from: env.FROM_EMAIL || 'SitePragati <onboarding@resend.dev>',
+        // Replies land in NOTIFY_EMAIL's inbox even though the email is
+        // sent from FROM_EMAIL's domain address.
+        reply_to: env.NOTIFY_EMAIL || undefined,
         to: [to],
         subject,
         text,

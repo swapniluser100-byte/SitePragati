@@ -27,8 +27,4 @@ bucket_name = "sitepragati-ticket-files"
 [vars]
 NOTIFY_EMAIL = "sitepragati@gmail.com"
 
-# Once you've verified a domain in Resend (Domains → Add Domain), uncomment
-# this and set it to an address on that domain. Until then, leave it
-# commented out — emails will use Resend's shared test address, which can
-# only send to your own Resend account email (not to customers).
-# FROM_EMAIL = "SitePragati <hello@yourdomain.in>"
+FROM_EMAIL = "SitePragati <noreply@sitepragati.in>"
