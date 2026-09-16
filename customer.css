@@ -3,7 +3,7 @@
 }
 .role-toggle{
   display:flex; gap:0; margin-bottom:18px; border:1px solid rgba(27,37,68,0.15);
-  border-radius:6px; overflow:hidden;
+  border-radius:var(--radius-sm); overflow:hidden;
 }
 .role-btn{
   flex:1; padding:10px 0; background:var(--paper); border:none; cursor:pointer;
@@ -19,7 +19,7 @@
 .referral-banner{
   display:flex; align-items:center; gap:20px; flex-wrap:wrap;
   background:linear-gradient(135deg, var(--navy) 0%, #2B3A63 100%);
-  border-radius:12px; padding:20px 24px; margin-bottom:24px;
+  border-radius:var(--radius-md); padding:20px 24px; margin-bottom:24px;
   box-shadow:0 8px 24px rgba(27,37,68,0.18);
 }
 .referral-icon{
@@ -30,7 +30,7 @@
 .referral-text{flex:1; min-width:220px;}
 .referral-text strong{
   display:block; color:#FFFFFF; font-size:1.02rem; margin-bottom:4px;
-  font-family:'Space Grotesk', sans-serif;
+  font-family:'Sora', sans-serif;
 }
 .referral-text p{
   color:rgba(255,255,255,0.75); font-size:0.85rem; margin:0; line-height:1.5;
@@ -47,7 +47,7 @@
 
 .ticket-list{display:flex; flex-direction:column; gap:12px;}
 .ticket-card{
-  background:var(--white); border:1px solid rgba(27,37,68,0.1); border-radius:8px;
+  background:var(--white); border:1px solid rgba(27,37,68,0.1); border-radius:var(--radius-sm);
   padding:18px 20px;
 }
 .ticket-card-head{
@@ -70,7 +70,7 @@
 .status-closed{background:rgba(84,91,112,0.15); color:var(--slate);}
 
 .ticket-payment{
-  margin-top:16px; padding:16px; border-radius:8px;
+  margin-top:16px; padding:16px; border-radius:var(--radius-sm);
   background:var(--paper-dim); border:1px dashed rgba(27,37,68,0.25);
   text-align:center;
 }
@@ -83,10 +83,10 @@
 }
 .ticket-payment-confirmed p{color:var(--teal); font-weight:600; margin:0;}
 .payment-due{font-weight:700; color:#B0453A; font-size:1rem; margin-bottom:10px;}
-.payment-qr{background:#fff; padding:6px; border-radius:6px; margin:0 auto 10px;}
+.payment-qr{background:#fff; padding:6px; border-radius:var(--radius-sm); margin:0 auto 10px;}
 .payment-note{font-size:0.82rem; color:var(--slate); margin-bottom:12px;}
 .payment-ref-input{
   width:100%; max-width:280px; padding:9px 12px; margin-bottom:10px;
-  border:1px solid rgba(27,37,68,0.25); border-radius:6px; font-family:inherit; font-size:0.9rem;
+  border:1px solid rgba(27,37,68,0.25); border-radius:var(--radius-sm); font-family:inherit; font-size:0.9rem;
 }
 .payment-status-msg{font-size:0.82rem; color:var(--teal); margin-top:8px; min-height:1.1em;}
