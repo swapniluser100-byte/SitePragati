@@ -151,6 +151,10 @@ h2{font-size:clamp(1.7rem, 3.2vw, 2.3rem); margin-bottom:10px;}
 .service-list h3{font-size:1.15rem; margin-bottom:6px;}
 .service-list p{color:var(--slate); max-width:60ch;}
 
+.app-dev-section{background:var(--paper-dim);}
+.app-dev-section .service-list li{align-items:flex-start;}
+.app-dev-section .btn{margin-top:36px;}
+
 /* ===== Pricing ===== */
 .price-grid{display:grid; grid-template-columns:1fr 1fr 1fr; gap:24px; align-items:stretch; margin-bottom:40px;}
 .price-grid > *{min-width:0;}

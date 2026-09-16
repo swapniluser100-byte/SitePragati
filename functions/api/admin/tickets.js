@@ -12,6 +12,9 @@
 //         Setting status to "Payment Received" also automatically
 //         creates a matching transaction for that customer — once only,
 //         even if the status is set to Payment Received more than once.
+// DELETE → { id } → remove a ticket (its comments cascade with it; any
+//         transaction created from it is kept, just unlinked — payment
+//         history shouldn't disappear because the ticket was deleted).
 
 import { json, generateUniqueTicketCode } from '../../_utils/auth.js';
 import { brandedEmailHtml, sendResendEmail } from '../../_utils/email.js';
@@ -196,6 +199,23 @@ export async function onRequestPatch(context) {
       await sendResendEmail(env, { to: row.email, subject: emailSubject, text: bodyText, html });
       // Status is already updated in D1 regardless of whether the email succeeds.
     }
+
+    return json({ result: 'success' });
+  } catch (err) {
+    return json({ error: err.message }, 500);
+  }
+}
+
+export async function onRequestDelete(context) {
+  const { request, env } = context;
+  try {
+    const { id } = await request.json();
+    if (!id) return json({ error: 'id is required' }, 400);
+
+    // Explicit, in case FK cascade isn't enforced depending on D1's
+    // pragma settings — same defensive pattern as customer deletion.
+    await env.DB.prepare('DELETE FROM ticket_comments WHERE ticket_id = ?').bind(id).run();
+    await env.DB.prepare('DELETE FROM tickets WHERE id = ?').bind(id).run();
 
     return json({ result: 'success' });
   } catch (err) {

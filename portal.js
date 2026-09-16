@@ -880,6 +880,21 @@ document.getElementById('backToTicketsBtn').addEventListener('click', () => {
   loadTickets();
 });
 
+document.getElementById('deleteTicketBtn').addEventListener('click', async () => {
+  if (!confirm('Delete this ticket and its conversation? This cannot be undone.')) return;
+
+  await fetch('/api/admin/tickets', {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: Number(currentTicketId) })
+  });
+
+  document.getElementById('ticketDetailView').hidden = true;
+  document.getElementById('ticketsListView').hidden = false;
+  currentTicketId = null;
+  loadTickets();
+});
+
 document.getElementById('ticketDetailStatus').addEventListener('change', async (e) => {
   const status = e.target.value;
   let paymentAmount = null;
