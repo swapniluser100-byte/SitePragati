@@ -565,6 +565,75 @@ function populateTicketCustomerFilter() {
   select.value = current; // preserve selection across refreshes, if still valid
 }
 
+// ===== Add a ticket on a customer's behalf (e.g. a phone request) =====
+const addTicketModal = makeModal('addTicketModalOverlay');
+const addTicketFields = {
+  customer_id: document.getElementById('addTicketCustomer'),
+  subject: document.getElementById('addTicketSubject'),
+  description: document.getElementById('addTicketDescription')
+};
+
+function clearAddTicketForm() {
+  addTicketFields.subject.value = '';
+  addTicketFields.description.value = '';
+  addTicketFields.customer_id.value = '';
+}
+
+document.getElementById('addTicketBtn').addEventListener('click', () => {
+  clearAddTicketForm();
+  const options = customersCache.map(c => `<option value="${c.id}">${escapeHtml(c.business_name)}</option>`).join('');
+  addTicketFields.customer_id.innerHTML = '<option value="">— Select a customer —</option>' + options;
+  addTicketModal.show();
+});
+
+document.getElementById('addTicketCancelBtn').addEventListener('click', () => {
+  addTicketModal.hide();
+  clearAddTicketForm();
+});
+document.getElementById('addTicketModalCloseBtn').addEventListener('click', () => {
+  addTicketModal.hide();
+  clearAddTicketForm();
+});
+
+const addTicketSaveBtn = document.getElementById('addTicketSaveBtn');
+addTicketSaveBtn.addEventListener('click', () => {
+  const customerId = addTicketFields.customer_id.value;
+  const subject = addTicketFields.subject.value.trim();
+
+  if (!customerId) {
+    alert('Please select a customer.');
+    return;
+  }
+  if (!subject) {
+    alert('Subject is required.');
+    return;
+  }
+
+  withButtonSpinner(addTicketSaveBtn, 'Saving…', async () => {
+    try {
+      const res = await fetch('/api/admin/tickets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customer_id: Number(customerId),
+          subject,
+          description: addTicketFields.description.value
+        })
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        alert('Error: ' + (data.error || 'Could not save'));
+        return;
+      }
+      addTicketModal.hide();
+      clearAddTicketForm();
+      loadTickets();
+    } catch (err) {
+      alert('Something went wrong saving this ticket.');
+    }
+  });
+});
+
 function applyTicketFilters() {
   const customerFilter = document.getElementById('ticketFilterCustomer').value;
   const statusFilter = document.getElementById('ticketFilterStatus').value;
