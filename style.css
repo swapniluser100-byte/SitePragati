@@ -215,60 +215,6 @@ h2{font-size:clamp(1.7rem, 3.2vw, 2.3rem); margin-bottom:10px;}
   .care-plan-price{text-align:left;}
 }
 
-/* ===== Work / Case study ===== */
-.work{background:var(--navy); color:var(--white);}
-.work h2, .work .section-lead{color:var(--white);}
-.work .section-lead{color:rgba(255,255,255,0.7);}
-.testimonials-inline{margin-top:80px; padding-top:64px; border-top:1px solid rgba(255,255,255,0.12);}
-.testimonials-inline h3{color:var(--white); font-size:1.4rem; margin-bottom:28px;}
-.work blockquote::before{color:var(--amber); opacity:0.25;}
-.work blockquote p{color:var(--white);}
-.work blockquote cite{color:rgba(255,255,255,0.6);}
-.work .testimonial-note{color:rgba(255,255,255,0.6);}
-.case-study{display:grid; grid-template-columns:1.1fr 0.9fr; gap:48px; align-items:center;}
-.case-study > *{min-width:0;}
-.case-study + .case-study{margin-top:64px; padding-top:64px; border-top:1px solid rgba(255,255,255,0.12);}
-.work-status{color:rgba(255,255,255,0.6); font-size:0.95rem;}
-.browser-frame{
-  background:var(--white); border-radius:var(--radius-md); overflow:hidden;
-  box-shadow:0 20px 50px rgba(0,0,0,0.35);
-  transition:transform 0.25s ease, box-shadow 0.25s ease;
-}
-.browser-frame:hover{transform:translateY(-4px); box-shadow:0 26px 60px rgba(0,0,0,0.4);}
-.browser-bar{
-  display:flex; align-items:center; gap:6px; padding:10px 14px;
-  background:var(--paper-dim);
-}
-.browser-bar span{width:9px; height:9px; border-radius:50%; background:rgba(27,37,68,0.25);}
-.browser-url{
-  margin-left:12px; font-size:0.75rem; color:var(--slate);
-  background:var(--white); padding:3px 10px; border-radius:4px;
-}
-.case-kicker{color:var(--amber); font-weight:600; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:10px;}
-.case-copy h3{font-size:1.6rem; color:var(--white); margin-bottom:14px;}
-.case-copy p{color:rgba(255,255,255,0.78); margin-bottom:26px;}
-.case-stats{display:flex; gap:32px; list-style:none; flex-wrap:wrap;}
-.case-stats li{display:flex; flex-direction:column;}
-.case-stats strong{font-family:'Sora', sans-serif; font-size:1.3rem; color:var(--amber);}
-.case-stats span{font-size:0.82rem; color:rgba(255,255,255,0.6);}
-
-@media (max-width:860px){
-  .case-study{grid-template-columns:1fr;}
-}
-
-/* ===== Testimonials ===== */
-.quote-grid{display:grid; grid-template-columns:1fr 1fr; gap:40px;}
-.quote-grid > *{min-width:0;}
-blockquote{border-left:3px solid var(--teal); padding-left:24px; position:relative;}
-blockquote::before{
-  content:'"'; position:absolute; left:20px; top:-30px;
-  font-family:'Sora', sans-serif; font-size:3.4rem; font-weight:700;
-  color:var(--teal); opacity:0.18; line-height:1;
-}
-blockquote p{font-size:1.1rem; margin-bottom:14px; color:var(--navy); position:relative;}
-blockquote cite{font-size:0.88rem; color:var(--slate); font-style:normal;}
-.testimonial-note{margin-top:36px; font-size:0.85rem; color:var(--slate); font-style:italic;}
-
 /* ===== Referral ===== */
 .referral-section{padding:20px 0 60px;}
 .referral-card{
@@ -290,10 +236,6 @@ blockquote cite{font-size:0.88rem; color:var(--slate); font-style:normal;}
 @media (max-width:700px){
   .referral-card{flex-direction:column; align-items:flex-start; text-align:left; padding:28px;}
   .referral-card .btn{width:100%; text-align:center;}
-}
-
-@media (max-width:700px){
-  .quote-grid{grid-template-columns:1fr;}
 }
 
 /* ===== Contact ===== */
