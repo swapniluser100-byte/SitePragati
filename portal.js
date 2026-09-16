@@ -267,6 +267,7 @@ async function loadCustomers() {
         <div class="cs-card-info">
           <h3>${escapeHtml(c.business_name)}</h3>
           ${requestLinkBlockHtml(c)}
+          ${customerLinksBlockHtml(c)}
           <p>${escapeHtml(c.contact_name || '')} ${c.phone ? '· ' + escapeHtml(c.phone) : ''}</p>
           <p>${c.next_payment_due_date ? 'Next due: ' + escapeHtml(c.next_payment_due_date) : 'No due date set'}${c.next_payment_due_amount ? ' — ₹' + escapeHtml(String(c.next_payment_due_amount)) : ''}</p>
           <p class="total-paid">Total paid: ₹${escapeHtml(String(c.total_paid ?? 0))}</p>
