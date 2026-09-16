@@ -256,44 +256,66 @@ async function loadCustomers() {
     const data = await res.json();
     customersCache = data.customers || [];
     populateTicketCustomerFilter(); // keep the Tickets tab's customer filter in sync
-
-    if (customersCache.length === 0) {
-      list.innerHTML = '<p class="empty-note">No customers yet.</p>';
-      return;
-    }
-
-    list.innerHTML = customersCache.map(c => `
-      <div class="cs-card">
-        <div class="cs-card-info">
-          <h3>${escapeHtml(c.business_name)}</h3>
-          ${requestLinkBlockHtml(c)}
-          ${customerLinksBlockHtml(c)}
-          <p>${escapeHtml(c.contact_name || '')} ${c.phone ? '· ' + escapeHtml(c.phone) : ''}</p>
-          <p>${c.next_payment_due_date ? 'Next due: ' + escapeHtml(c.next_payment_due_date) : 'No due date set'}${c.next_payment_due_amount ? ' — ₹' + escapeHtml(String(c.next_payment_due_amount)) : ''}</p>
-          <p class="total-paid">Total paid: ₹${escapeHtml(String(c.total_paid ?? 0))}</p>
-        </div>
-        <div class="cs-card-actions">
-          <button class="btn btn-outline btn-small" data-view-txns="${c.id}">Transactions</button>
-          <button class="btn btn-outline btn-small" data-edit-cust="${c.id}">Edit</button>
-          <button class="btn-danger" data-delete-cust="${c.id}">Delete</button>
-        </div>
-      </div>
-    `).join('');
-
-    list.querySelectorAll('[data-view-txns]').forEach(btn => {
-      btn.addEventListener('click', () => openCustomerDetail(btn.dataset.viewTxns));
-    });
-    list.querySelectorAll('[data-edit-cust]').forEach(btn => {
-      btn.addEventListener('click', () => openCustomerForm(btn.dataset.editCust));
-    });
-    list.querySelectorAll('[data-delete-cust]').forEach(btn => {
-      btn.addEventListener('click', () => deleteCustomer(btn.dataset.deleteCust));
-    });
-    wireCopyLinkButtons(list);
+    filterCustomers(); // re-render, keeping whatever search term is already typed in
   } catch (err) {
     list.innerHTML = '<p class="empty-note">Could not load customers.</p>';
   }
 }
+
+function renderCustomersList(customers) {
+  const list = document.getElementById('customersList');
+
+  if (customersCache.length === 0) {
+    list.innerHTML = '<p class="empty-note">No customers yet.</p>';
+    return;
+  }
+  if (customers.length === 0) {
+    list.innerHTML = '<p class="empty-note">No customers match your search.</p>';
+    return;
+  }
+
+  list.innerHTML = customers.map(c => `
+    <div class="cs-card">
+      <div class="cs-card-info">
+        <h3>${escapeHtml(c.business_name)}</h3>
+        ${requestLinkBlockHtml(c)}
+        ${customerLinksBlockHtml(c)}
+        <p>${escapeHtml(c.contact_name || '')} ${c.phone ? '· ' + escapeHtml(c.phone) : ''}</p>
+        <p>${c.next_payment_due_date ? 'Next due: ' + escapeHtml(c.next_payment_due_date) : 'No due date set'}${c.next_payment_due_amount ? ' — ₹' + escapeHtml(String(c.next_payment_due_amount)) : ''}</p>
+        <p class="total-paid">Total paid: ₹${escapeHtml(String(c.total_paid ?? 0))}</p>
+      </div>
+      <div class="cs-card-actions">
+        <button class="btn btn-outline btn-small" data-view-txns="${c.id}">Transactions</button>
+        <button class="btn btn-outline btn-small" data-edit-cust="${c.id}">Edit</button>
+        <button class="btn-danger" data-delete-cust="${c.id}">Delete</button>
+      </div>
+    </div>
+  `).join('');
+
+  list.querySelectorAll('[data-view-txns]').forEach(btn => {
+    btn.addEventListener('click', () => openCustomerDetail(btn.dataset.viewTxns));
+  });
+  list.querySelectorAll('[data-edit-cust]').forEach(btn => {
+    btn.addEventListener('click', () => openCustomerForm(btn.dataset.editCust));
+  });
+  list.querySelectorAll('[data-delete-cust]').forEach(btn => {
+    btn.addEventListener('click', () => deleteCustomer(btn.dataset.deleteCust));
+  });
+  wireCopyLinkButtons(list);
+}
+
+// Client-side search across name, contact, phone, and email — the
+// customer list is already fetched in full, so no need to round-trip
+// to the server for something this small.
+function filterCustomers() {
+  const term = document.getElementById('customerSearchInput').value.trim().toLowerCase();
+  const filtered = !term ? customersCache : customersCache.filter(c =>
+    [c.business_name, c.contact_name, c.phone, c.email].some(v => v && String(v).toLowerCase().includes(term))
+  );
+  renderCustomersList(filtered);
+}
+
+document.getElementById('customerSearchInput').addEventListener('input', filterCustomers);
 
 const custForm = document.getElementById('customerForm');
 const custFields = {
