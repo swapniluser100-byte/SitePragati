@@ -40,9 +40,11 @@ CREATE TABLE IF NOT EXISTS tickets (
   status TEXT DEFAULT 'Open',
   payment_amount REAL,
   payment_reference TEXT,
+  reference_code TEXT,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
 );
+CREATE UNIQUE INDEX IF NOT EXISTS idx_tickets_reference_code ON tickets(reference_code);
 
 -- Transactions table: payment history, one customer has many transactions
 CREATE TABLE IF NOT EXISTS transactions (

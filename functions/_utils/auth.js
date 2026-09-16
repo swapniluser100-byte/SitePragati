@@ -111,6 +111,34 @@ export function generateRandomId(length = 15) {
   return Array.from(bytes, b => chars[b % chars.length]).join('');
 }
 
+// Generates a short, human-readable random code — uppercase letters and
+// digits only, with visually ambiguous characters (I, O, 0, 1) removed —
+// for reference numbers a customer might read aloud, type back in, or
+// quote over the phone (e.g. a support ticket/request number). At length
+// 6 this has ~33^6 (~1.3 billion) possibilities, plenty to make guessing
+// impractical without being unreadable.
+export function generateReadableCode(length = 6) {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const bytes = crypto.getRandomValues(new Uint8Array(length));
+  return Array.from(bytes, b => chars[b % chars.length]).join('');
+}
+
+// Generates a generateReadableCode() that isn't already used by another
+// ticket. Collisions are astronomically unlikely at this scale (~1.3
+// billion possibilities), but this guards against them rather than
+// assuming they can't happen. Used wherever a ticket is created or
+// backfilled with a reference_code.
+export async function generateUniqueTicketCode(env) {
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const code = generateReadableCode();
+    const existing = await env.DB.prepare(
+      'SELECT id FROM tickets WHERE reference_code = ?'
+    ).bind(code).first();
+    if (!existing) return code;
+  }
+  throw new Error('Could not generate a unique reference code — please try again.');
+}
+
 export function json(obj, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(obj), {
     status,
