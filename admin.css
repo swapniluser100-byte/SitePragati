@@ -168,6 +168,28 @@ select.status-select{
 }
 .customer-search-bar input:focus{border-color:var(--teal); outline:none;}
 .customer-search-bar input::placeholder{color:var(--slate);}
+
+/* ===== Modal (Add lead) ===== */
+.modal-overlay{
+  position:fixed; inset:0; background:rgba(27,37,68,0.5);
+  display:flex; align-items:flex-start; justify-content:center;
+  padding:60px 20px; overflow-y:auto; z-index:300;
+}
+.modal-box{
+  background:var(--white); border-radius:var(--radius-md); padding:28px;
+  width:100%; max-width:640px; box-shadow:0 24px 60px rgba(0,0,0,0.3);
+}
+.modal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;}
+.modal-head h3{margin:0;}
+.modal-close{
+  background:none; border:none; font-size:1.6rem; line-height:1; cursor:pointer;
+  color:var(--slate); padding:0 4px;
+}
+.modal-close:hover{color:var(--navy);}
+
+@media (max-width:640px){
+  .modal-overlay{padding:24px 16px;}
+}
 .unique-id{font-family:monospace; font-size:0.78rem !important; color:var(--slate); opacity:0.8;}
 .request-link-row{display:flex; gap:8px; align-items:center; margin-bottom:10px !important;}
 .request-link-field{
