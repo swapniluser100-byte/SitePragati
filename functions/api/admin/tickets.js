@@ -1,5 +1,8 @@
 // /api/admin/tickets — protected by _middleware.js
 // GET   → list all tickets, joined with the customer's business name
+// POST  → { customer_id, subject, description } → raise a ticket on a
+//         customer's behalf (e.g. a phone request), and emails that
+//         customer a notification if they have an email on file
 // PUT   → { id, subject, description } → edit a ticket's subject/details.
 //         Status changes go through PATCH instead (they carry payment
 //         and email side effects this endpoint doesn't touch).
@@ -23,6 +26,54 @@ export async function onRequestGet(context) {
       ORDER BY tickets.created_at DESC
     `).all();
     return json({ tickets: results });
+  } catch (err) {
+    return json({ error: err.message }, 500);
+  }
+}
+
+export async function onRequestPost(context) {
+  const { request, env } = context;
+  try {
+    const body = await request.json();
+    const customerId = Number(body.customer_id);
+    const subject = (body.subject || '').toString().trim();
+    const description = (body.description || '').toString().trim();
+
+    if (!customerId) return json({ error: 'customer_id is required' }, 400);
+    if (!subject) return json({ error: 'subject is required' }, 400);
+
+    const customer = await env.DB.prepare(
+      'SELECT business_name, email FROM customers WHERE id = ?'
+    ).bind(customerId).first();
+    if (!customer) return json({ error: 'Customer not found' }, 404);
+
+    const result = await env.DB.prepare(
+      `INSERT INTO tickets (customer_id, subject, description, status)
+       VALUES (?, ?, ?, 'Open')`
+    ).bind(customerId, subject, description).run();
+
+    if (customer.email) {
+      const emailSubject = `A support ticket was raised for you: ${subject}`;
+      const bodyText =
+        `A ticket has been raised on your behalf:\n\n` +
+        `Subject: ${subject}\nDescription: ${description}\nStatus: Open`;
+
+      const html = brandedEmailHtml({
+        badgeText: 'New ticket',
+        introText: `Hi ${customer.business_name}, we've raised a support ticket for you.`,
+        rows: [
+          ['Subject', subject],
+          ['Description', description],
+          ['Status', 'Open']
+        ],
+        footerText: 'Log in to your customer portal to view or follow up on this ticket.'
+      });
+
+      await sendResendEmail(env, { to: customer.email, subject: emailSubject, text: bodyText, html });
+      // Ticket is already saved in D1 regardless of whether the email succeeds.
+    }
+
+    return json({ result: 'success', id: result.meta.last_row_id });
   } catch (err) {
     return json({ error: err.message }, 500);
   }

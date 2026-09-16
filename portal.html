@@ -278,7 +278,31 @@
     <div id="ticketsListView">
       <div class="panel-head">
         <h2>Tickets</h2>
-        <button type="button" id="refreshTickets" class="btn btn-outline btn-small">Refresh</button>
+        <div style="display:flex; gap:8px;">
+          <button type="button" id="addTicketBtn" class="btn btn-primary btn-small">+ Add ticket</button>
+          <button type="button" id="refreshTickets" class="btn btn-outline btn-small">Refresh</button>
+        </div>
+      </div>
+
+      <div id="addTicketModalOverlay" class="modal-overlay" hidden>
+        <div class="modal-box cs-form" role="dialog" aria-modal="true" aria-labelledby="addTicketModalTitle">
+          <div class="modal-head">
+            <h3 id="addTicketModalTitle">Add ticket</h3>
+            <button type="button" id="addTicketModalCloseBtn" class="modal-close" aria-label="Close">&times;</button>
+          </div>
+          <label for="addTicketCustomer">Customer</label>
+          <select id="addTicketCustomer" required>
+            <option value="">— Select a customer —</option>
+          </select>
+          <label for="addTicketSubject">Subject</label>
+          <input type="text" id="addTicketSubject" placeholder="e.g. Update menu prices, Fix broken image" required>
+          <label for="addTicketDescription">Details</label>
+          <textarea id="addTicketDescription" rows="3" placeholder="Describe what the customer needs."></textarea>
+          <div class="cs-form-actions">
+            <button type="button" id="addTicketSaveBtn" class="btn btn-primary">Save</button>
+            <button type="button" id="addTicketCancelBtn" class="btn btn-outline">Cancel</button>
+          </div>
+        </div>
       </div>
 
       <div class="ticket-filters">
