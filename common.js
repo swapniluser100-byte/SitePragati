@@ -1,5 +1,6 @@
 // Shared across every marketing page (index, about, pricing, contact):
-// footer year, mobile nav toggle, and the Login dropdown.
+// footer year, mobile nav toggle, the Login dropdown, and the "Refer a
+// business" CTA.
 
 document.getElementById('year').textContent = new Date().getFullYear();
 
@@ -33,3 +34,11 @@ document.addEventListener('click', (e) => {
     loginDropdownBtn.setAttribute('aria-expanded', 'false');
   }
 });
+
+// Refer a business — send them to the contact page with the message prefilled
+const referBusinessBtn = document.getElementById('referBusinessBtn');
+if (referBusinessBtn) {
+  referBusinessBtn.addEventListener('click', () => {
+    window.location.href = 'contact.html?intent=referral';
+  });
+}
