@@ -61,8 +61,14 @@ input, textarea, select, button{font-family:inherit;}
   display:flex; align-items:center; justify-content:space-between;
   padding:24px 0; border-bottom:1px solid rgba(27,37,68,0.1); margin-bottom:24px;
 }
-.admin-header .brand{font-family:'Sora', sans-serif; font-weight:700; font-size:1.2rem;}
+.admin-header .brand{font-family:'Sora', sans-serif; font-weight:700; font-size:1.2rem; display:flex; align-items:center; gap:10px;}
 .admin-header .brand span{color:var(--amber); font-weight:500; font-size:0.9rem; margin-left:6px;}
+.admin-header .brand-mark{
+  display:flex; align-items:center; justify-content:center;
+  width:28px; height:28px; border-radius:var(--radius-sm);
+  background:var(--navy); color:var(--amber);
+  font-size:0.72rem; font-weight:700; margin-left:0; flex-shrink:0;
+}
 
 .admin-tabs{display:flex; gap:8px; margin-bottom:28px; border-bottom:1px solid rgba(27,37,68,0.1);}
 .tab-btn{
