@@ -155,6 +155,19 @@ select.status-select{
 .customer-links{margin:6px 0 10px !important;}
 .customer-links a{color:var(--teal); font-weight:600; font-size:0.88rem;}
 .customer-links a:hover{text-decoration:underline;}
+
+.customer-search-bar{position:relative; margin-bottom:18px;}
+.customer-search-bar .search-icon{
+  position:absolute; left:16px; top:50%; transform:translateY(-50%);
+  font-size:1rem; opacity:0.45; pointer-events:none;
+}
+.customer-search-bar input{
+  width:100%; padding:13px 16px 13px 44px;
+  border:1px solid rgba(27,37,68,0.15); border-radius:var(--radius-sm);
+  font-family:inherit; font-size:0.98rem; background:var(--white); color:var(--navy);
+}
+.customer-search-bar input:focus{border-color:var(--teal); outline:none;}
+.customer-search-bar input::placeholder{color:var(--slate);}
 .unique-id{font-family:monospace; font-size:0.78rem !important; color:var(--slate); opacity:0.8;}
 .request-link-row{display:flex; gap:8px; align-items:center; margin-bottom:10px !important;}
 .request-link-field{
