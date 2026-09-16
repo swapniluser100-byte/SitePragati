@@ -8,6 +8,18 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+// Shared icon-only Edit/Delete button markup, used across the admin
+// console's Leads, Customers, Transactions, and Case Studies lists.
+const EDIT_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
+const DELETE_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>';
+
+function editButtonHtml(dataAttr, id) {
+  return `<button class="btn btn-outline btn-small btn-icon" ${dataAttr}="${id}" aria-label="Edit" title="Edit">${EDIT_ICON_SVG}</button>`;
+}
+function deleteButtonHtml(dataAttr, id) {
+  return `<button class="btn-danger btn-icon" ${dataAttr}="${id}" aria-label="Delete" title="Delete">${DELETE_ICON_SVG}</button>`;
+}
+
 function setRole(role) {
   loginRole = role;
   document.getElementById('roleCustomerBtn').classList.toggle('active', role === 'customer');
@@ -170,8 +182,8 @@ async function loadLeads() {
           </select>
         </td>
         <td>
-          <button class="btn btn-outline btn-small" data-edit-lead="${lead.id}">Edit</button>
-          <button class="btn-danger" data-delete-lead="${lead.id}">Delete</button>
+          ${editButtonHtml('data-edit-lead', lead.id)}
+          ${deleteButtonHtml('data-delete-lead', lead.id)}
         </td>
       </tr>
     `).join('');
@@ -400,8 +412,8 @@ function renderCustomersList(customers) {
       </div>
       <div class="cs-card-actions">
         <button class="btn btn-outline btn-small" data-view-txns="${c.id}">Transactions</button>
-        <button class="btn btn-outline btn-small" data-edit-cust="${c.id}">Edit</button>
-        <button class="btn-danger" data-delete-cust="${c.id}">Delete</button>
+        ${editButtonHtml('data-edit-cust', c.id)}
+        ${deleteButtonHtml('data-delete-cust', c.id)}
       </div>
     </div>
   `).join('');
@@ -963,8 +975,8 @@ async function loadTransactions(customerId) {
         <td>${escapeHtml(t.description || '')}</td>
         <td>${escapeHtml(t.status)}</td>
         <td>
-          <button class="btn btn-outline btn-small" data-edit-txn="${t.id}">Edit</button>
-          <button class="btn-danger" data-delete-txn="${t.id}">Delete</button>
+          ${editButtonHtml('data-edit-txn', t.id)}
+          ${deleteButtonHtml('data-delete-txn', t.id)}
         </td>
       </tr>
     `).join('');
@@ -1115,8 +1127,8 @@ async function loadCaseStudies() {
           <p>${escapeHtml((cs.description || '').slice(0, 120))}${(cs.description || '').length > 120 ? '…' : ''}</p>
         </div>
         <div class="cs-card-actions">
-          <button class="btn btn-outline btn-small" data-edit-cs="${cs.id}">Edit</button>
-          <button class="btn-danger" data-delete-cs="${cs.id}">Delete</button>
+          ${editButtonHtml('data-edit-cs', cs.id)}
+          ${deleteButtonHtml('data-delete-cs', cs.id)}
         </div>
       </div>
     `).join('');
