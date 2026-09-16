@@ -1,12 +1,14 @@
 // /api/admin/leads — protected by _middleware.js
 // GET    → list all leads, newest first
-// POST   → { name, business, business_type, contact, message } → add a
-//          lead manually (e.g. a phone or in-person enquiry that didn't
-//          come through the website's contact form)
+// POST   → { name, business, business_type, contact, status, message } →
+//          add a lead manually (e.g. a phone or in-person enquiry that
+//          didn't come through the website's contact form)
 // PATCH  → { id, status } → update a lead's status
 // DELETE → { id } → remove a lead
 
 import { json } from '../../_utils/auth.js';
+
+const STATUS_OPTIONS = ['New', 'Contacted', 'Won', 'Lost'];
 
 export async function onRequestGet(context) {
   const { env } = context;
@@ -27,10 +29,12 @@ export async function onRequestPost(context) {
     const name = (body.name || '').trim();
     if (!name) return json({ error: 'name is required' }, 400);
 
+    const status = STATUS_OPTIONS.includes(body.status) ? body.status : 'New';
+
     const result = await env.DB.prepare(
-      `INSERT INTO leads (name, business, business_type, contact, message)
-       VALUES (?, ?, ?, ?, ?)`
-    ).bind(name, body.business || null, body.business_type || null, body.contact || null, body.message || null).run();
+      `INSERT INTO leads (name, business, business_type, contact, status, message)
+       VALUES (?, ?, ?, ?, ?, ?)`
+    ).bind(name, body.business || null, body.business_type || null, body.contact || null, status, body.message || null).run();
 
     return json({ result: 'success', id: result.meta.last_row_id });
   } catch (err) {

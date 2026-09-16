@@ -202,28 +202,42 @@ async function deleteLead(id) {
 document.getElementById('refreshLeads').addEventListener('click', loadLeads);
 
 // ===== Add lead manually (phone/in-person enquiries) =====
-const leadForm = document.getElementById('leadForm');
+const leadModalOverlay = document.getElementById('leadModalOverlay');
 const leadFields = {
   name: document.getElementById('leadName'),
   business: document.getElementById('leadBusiness'),
   business_type: document.getElementById('leadBusinessType'),
   contact: document.getElementById('leadContact'),
+  status: document.getElementById('leadStatus'),
   message: document.getElementById('leadMessage')
 };
 
 function clearLeadForm() {
-  Object.values(leadFields).forEach(el => el.value = '');
+  Object.entries(leadFields).forEach(([key, el]) => { el.value = key === 'status' ? 'New' : ''; });
 }
 
-document.getElementById('addLeadBtn').addEventListener('click', () => {
+function openLeadModal() {
   clearLeadForm();
-  leadForm.hidden = false;
-  leadForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  leadModalOverlay.hidden = false;
+  leadFields.name.focus();
+}
+
+function closeLeadModal() {
+  leadModalOverlay.hidden = true;
+  clearLeadForm();
+}
+
+document.getElementById('addLeadBtn').addEventListener('click', openLeadModal);
+document.getElementById('leadCancelBtn').addEventListener('click', closeLeadModal);
+document.getElementById('leadModalCloseBtn').addEventListener('click', closeLeadModal);
+
+// Click on the dimmed backdrop (not the modal box itself) closes it too.
+leadModalOverlay.addEventListener('click', (e) => {
+  if (e.target === leadModalOverlay) closeLeadModal();
 });
 
-document.getElementById('leadCancelBtn').addEventListener('click', () => {
-  leadForm.hidden = true;
-  clearLeadForm();
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !leadModalOverlay.hidden) closeLeadModal();
 });
 
 document.getElementById('leadSaveBtn').addEventListener('click', async () => {
@@ -246,8 +260,7 @@ document.getElementById('leadSaveBtn').addEventListener('click', async () => {
       alert('Error: ' + (data.error || 'Could not save'));
       return;
     }
-    leadForm.hidden = true;
-    clearLeadForm();
+    closeLeadModal();
     loadLeads();
   } catch (err) {
     alert('Something went wrong saving this lead.');

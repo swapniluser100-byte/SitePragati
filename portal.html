@@ -62,37 +62,51 @@
       </div>
     </div>
 
-    <div id="leadForm" class="cs-form" hidden>
-      <h3>Add lead</h3>
-      <div class="cs-form-grid">
-        <div>
-          <label for="leadName">Name</label>
-          <input type="text" id="leadName" required>
+    <div id="leadModalOverlay" class="modal-overlay" hidden>
+      <div class="modal-box cs-form" role="dialog" aria-modal="true" aria-labelledby="leadModalTitle">
+        <div class="modal-head">
+          <h3 id="leadModalTitle">Add lead</h3>
+          <button type="button" id="leadModalCloseBtn" class="modal-close" aria-label="Close">&times;</button>
         </div>
-        <div>
-          <label for="leadBusiness">Business</label>
-          <input type="text" id="leadBusiness">
+        <div class="cs-form-grid">
+          <div>
+            <label for="leadName">Name</label>
+            <input type="text" id="leadName" required>
+          </div>
+          <div>
+            <label for="leadBusiness">Business</label>
+            <input type="text" id="leadBusiness">
+          </div>
+          <div>
+            <label for="leadBusinessType">Business type</label>
+            <select id="leadBusinessType">
+              <option value="">— Select —</option>
+              <option value="Café/Restaurant">Café / Restaurant</option>
+              <option value="Retail/Shop">Retail / Shop</option>
+              <option value="Services">Services (salon, consulting, repair, etc.)</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div>
+            <label for="leadContact">Contact <span class="field-note">(phone or email)</span></label>
+            <input type="text" id="leadContact">
+          </div>
+          <div>
+            <label for="leadStatus">Status</label>
+            <select id="leadStatus">
+              <option value="New">New</option>
+              <option value="Contacted">Contacted</option>
+              <option value="Won">Won</option>
+              <option value="Lost">Lost</option>
+            </select>
+          </div>
         </div>
-        <div>
-          <label for="leadBusinessType">Business type</label>
-          <select id="leadBusinessType">
-            <option value="">— Select —</option>
-            <option value="Café/Restaurant">Café / Restaurant</option>
-            <option value="Retail/Shop">Retail / Shop</option>
-            <option value="Services">Services (salon, consulting, repair, etc.)</option>
-            <option value="Other">Other</option>
-          </select>
+        <label for="leadMessage">Message</label>
+        <textarea id="leadMessage" rows="2"></textarea>
+        <div class="cs-form-actions">
+          <button type="button" id="leadSaveBtn" class="btn btn-primary">Save</button>
+          <button type="button" id="leadCancelBtn" class="btn btn-outline">Cancel</button>
         </div>
-        <div>
-          <label for="leadContact">Contact <span class="field-note">(phone or email)</span></label>
-          <input type="text" id="leadContact">
-        </div>
-      </div>
-      <label for="leadMessage">Message</label>
-      <textarea id="leadMessage" rows="2"></textarea>
-      <div class="cs-form-actions">
-        <button type="button" id="leadSaveBtn" class="btn btn-primary">Save</button>
-        <button type="button" id="leadCancelBtn" class="btn btn-outline">Cancel</button>
       </div>
     </div>
 
