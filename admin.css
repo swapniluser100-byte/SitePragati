@@ -35,6 +35,9 @@ input, textarea, select, button{font-family:inherit;}
 .btn-danger{background:none; border:1.5px solid var(--danger); color:var(--danger); padding:6px 12px; font-size:0.8rem; border-radius:5px; cursor:pointer;}
 .btn-danger:hover{background:rgba(176,69,58,0.08);}
 
+.btn-icon{display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; padding:0;}
+.btn-icon svg{width:15px; height:15px; display:block;}
+
 /* ===== Login ===== */
 .login-screen{
   min-height:100vh; display:flex; align-items:center; justify-content:center;
