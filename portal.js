@@ -181,7 +181,7 @@ async function loadLeads() {
             ${STATUS_OPTIONS.map(s => `<option value="${s}" ${s === lead.status ? 'selected' : ''}>${s}</option>`).join('')}
           </select>
         </td>
-        <td>
+        <td class="actions-col">
           ${editButtonHtml('data-edit-lead', lead.id)}
           ${deleteButtonHtml('data-delete-lead', lead.id)}
         </td>
@@ -974,7 +974,7 @@ async function loadTransactions(customerId) {
         <td>₹${escapeHtml(String(t.amount))}</td>
         <td>${escapeHtml(t.description || '')}</td>
         <td>${escapeHtml(t.status)}</td>
-        <td>
+        <td class="actions-col">
           ${editButtonHtml('data-edit-txn', t.id)}
           ${deleteButtonHtml('data-delete-txn', t.id)}
         </td>

@@ -37,6 +37,9 @@ input, textarea, select, button{font-family:inherit;}
 
 .btn-icon{display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; padding:0;}
 .btn-icon svg{width:15px; height:15px; display:block;}
+.actions-col{white-space:nowrap; width:1%;}
+.actions-col .btn-icon{display:inline-flex;}
+.actions-col .btn-icon + .btn-icon{margin-left:6px;}
 
 /* ===== Login ===== */
 .login-screen{
