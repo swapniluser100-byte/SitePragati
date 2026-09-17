@@ -13,7 +13,7 @@ import { json, hashPassword, generateRandomId } from '../../_utils/auth.js';
 const FIELDS = [
   'business_name', 'contact_name', 'email', 'phone', 'address',
   'next_payment_due_date', 'next_payment_due_amount',
-  'website_url', 'admin_console_url'
+  'website_url', 'admin_console_url', 'notes'
 ];
 
 export async function onRequestGet(context) {
@@ -27,7 +27,7 @@ export async function onRequestGet(context) {
         customers.id, customers.unique_id, customers.business_name, customers.contact_name,
         customers.email, customers.phone, customers.address,
         customers.next_payment_due_date, customers.next_payment_due_amount,
-        customers.website_url, customers.admin_console_url,
+        customers.website_url, customers.admin_console_url, customers.notes,
         customers.created_at,
         COALESCE(SUM(CASE WHEN transactions.status = 'Paid' THEN transactions.amount ELSE 0 END), 0) AS total_paid
       FROM customers
