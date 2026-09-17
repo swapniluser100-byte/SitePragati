@@ -455,7 +455,8 @@ const custFields = {
   next_payment_due_date: document.getElementById('custNextDueDate'),
   next_payment_due_amount: document.getElementById('custNextDueAmount'),
   website_url: document.getElementById('custWebsiteUrl'),
-  admin_console_url: document.getElementById('custAdminConsoleUrl')
+  admin_console_url: document.getElementById('custAdminConsoleUrl'),
+  notes: document.getElementById('custNotes')
 };
 
 function clearCustomerForm() {
@@ -949,6 +950,7 @@ function renderCustomerDetailInfo(c) {
     <p>${escapeHtml(c.address || '')}</p>
     <p class="due-amount">${c.next_payment_due_date ? 'Next due: ' + escapeHtml(c.next_payment_due_date) : 'No due date set'}${c.next_payment_due_amount ? ' — ₹' + escapeHtml(String(c.next_payment_due_amount)) : ''}</p>
     <p class="total-paid">Total paid: ₹${escapeHtml(String(c.total_paid ?? 0))}</p>
+    ${c.notes ? `<p><strong>Notes:</strong></p><p style="white-space:pre-wrap;">${escapeHtml(c.notes)}</p>` : ''}
   `;
   wireCopyLinkButtons(info);
 }
