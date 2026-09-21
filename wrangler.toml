@@ -27,4 +27,4 @@ bucket_name = "sitepragati-ticket-files"
 [vars]
 NOTIFY_EMAIL = "sitepragati@gmail.com"
 
-FROM_EMAIL = "SitePragati <noreply@sitepragati.in>"
+FROM_EMAIL = "SitePragati <support@sitepragati.in>"
