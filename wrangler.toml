@@ -28,3 +28,8 @@ bucket_name = "sitepragati-ticket-files"
 NOTIFY_EMAIL = "support@sitepragati.in"
 
 FROM_EMAIL = "SitePragati <support@sitepragati.in>"
+
+# Your own UPI collection ID — also hardcoded in portal.js as
+# PAYMENT_UPI_ID for the ticket-payment QR code. Keep both in sync if
+# you ever change your UPI ID.
+PAYMENT_UPI_ID = "swapnil.barad@axisbank"
