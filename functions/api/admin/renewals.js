@@ -20,11 +20,14 @@
 //          cascade only happens via PATCH (the "Renew" button).
 // PATCH  → { id } → mark a renewal "Renewed" (flips its linked
 //          transaction from Pending to Paid — no new transaction is
-//          created here), and automatically creates the next cycle's
-//          renewal for the same customer (due_date advanced by
-//          `frequency`, same amount) along with ITS OWN new Pending
-//          transaction. Returns the just-renewed record and the newly
-//          created next-cycle record.
+//          created here), and creates the next cycle's renewal for the
+//          same customer (due_date advanced by `frequency`, same
+//          amount) along with ITS OWN new Pending transaction — unless
+//          a renewal at that due_date already exists (e.g. queued up
+//          earlier by the "Refresh Renewals" catch-up), in which case
+//          that existing one is reused instead of duplicated. Returns
+//          the just-renewed record and the next-cycle record (new or
+//          existing).
 // DELETE → { id } → remove a renewal record and its linked transaction
 
 import { json } from '../../_utils/auth.js';
@@ -306,21 +309,49 @@ export async function onRequestPatch(context) {
     });
 
     const nextDueDate = advanceDueDate(current.due_date, current.frequency);
-    const insertResult = await env.DB.prepare(
-      `INSERT INTO renewals (customer_id, frequency, due_date, amount, status)
-       VALUES (?, ?, ?, ?, 'Pending')`
-    ).bind(current.customer_id, current.frequency, nextDueDate, current.amount).run();
 
-    // The next cycle starts life Pending, with its own new transaction.
-    await syncRenewalTransaction(env, {
-      id: insertResult.meta.last_row_id, customer_id: current.customer_id, frequency: current.frequency,
-      due_date: nextDueDate, amount: current.amount, status: 'Pending', renewed_at: null
-    });
+    // A cycle for this same target month may already exist — e.g. the
+    // "Refresh Renewals" catch-up can queue up several future cycles
+    // (Jun, Jul, Aug...) while an older one (May) is still sitting
+    // unresolved. Renewing that older one must not duplicate a cycle
+    // that's already there, so reuse it instead of inserting a new one.
+    //
+    // Matched by year+month rather than the exact due_date: this single
+    // chained step and the catch-up loop's anchor-based math always
+    // agree on the target MONTH, but can land on a different DAY within
+    // it once a short month (e.g. June) has clamped the day-of-month
+    // down at some earlier point in the chain — an exact-date match
+    // would miss that and create a near-duplicate in the same month.
+    const nextYearMonth = nextDueDate.slice(0, 7);
+    const existingNext = await env.DB.prepare(
+      `SELECT id, due_date, amount, status FROM renewals
+       WHERE customer_id = ? AND substr(due_date, 1, 7) = ? AND id != ?`
+    ).bind(current.customer_id, nextYearMonth, current.id).first();
+
+    let nextRecord;
+    if (existingNext) {
+      // Report the existing record's own actual due_date, not the
+      // freshly-computed one — they can differ by a day or two (see
+      // above) even though they're the same target month.
+      nextRecord = { id: existingNext.id, due_date: existingNext.due_date, amount: existingNext.amount, status: existingNext.status };
+    } else {
+      const insertResult = await env.DB.prepare(
+        `INSERT INTO renewals (customer_id, frequency, due_date, amount, status)
+         VALUES (?, ?, ?, ?, 'Pending')`
+      ).bind(current.customer_id, current.frequency, nextDueDate, current.amount).run();
+
+      // The next cycle starts life Pending, with its own new transaction.
+      await syncRenewalTransaction(env, {
+        id: insertResult.meta.last_row_id, customer_id: current.customer_id, frequency: current.frequency,
+        due_date: nextDueDate, amount: current.amount, status: 'Pending', renewed_at: null
+      });
+      nextRecord = { id: insertResult.meta.last_row_id, due_date: nextDueDate, amount: current.amount, status: 'Pending' };
+    }
 
     return json({
       result: 'success',
       renewed: { id: current.id, due_date: current.due_date, amount: current.amount, status: 'Renewed' },
-      next: { id: insertResult.meta.last_row_id, due_date: nextDueDate, amount: current.amount, status: 'Pending' }
+      next: nextRecord
     });
   } catch (err) {
     return json({ error: err.message }, 500);
