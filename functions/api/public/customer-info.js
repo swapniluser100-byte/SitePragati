@@ -1,8 +1,14 @@
 // Public, unauthenticated endpoint so another application can look up a
-// customer's renewal info by their unique_id.
+// customer's next renewal by their unique_id.
 //
-// GET ?customerId=<unique_id> -> { business_name, next_payment_due_date,
-//   next_payment_due_amount, upi_id }
+// GET ?customerId=<unique_id> -> { business_name, frequency,
+//   next_payment_due_date, next_payment_due_amount, upi_id }
+//
+// Renewal info now comes from the `renewals` table (added for the
+// admin console's Renewal tab) — specifically the customer's nearest
+// still-Pending renewal — rather than the old ad-hoc fields on
+// customers. If a customer has no pending renewal on file, those
+// three fields come back null.
 //
 // customerId here is always the customer's public `unique_id` (a random
 // 15-char string from generateRandomId, shown in the admin Customers
@@ -22,15 +28,22 @@ export async function onRequestGet(context) {
   if (!uniqueId) return json({ error: 'customerId is required' }, 400);
 
   const customer = await env.DB.prepare(
-    'SELECT business_name, next_payment_due_date, next_payment_due_amount FROM customers WHERE unique_id = ?'
+    'SELECT id, business_name FROM customers WHERE unique_id = ?'
   ).bind(uniqueId).first();
 
   if (!customer) return json({ error: 'Customer not found' }, 404);
 
+  const renewal = await env.DB.prepare(
+    `SELECT frequency, due_date, amount FROM renewals
+     WHERE customer_id = ? AND status = 'Pending'
+     ORDER BY due_date ASC LIMIT 1`
+  ).bind(customer.id).first();
+
   return json({
     business_name: customer.business_name,
-    next_payment_due_date: customer.next_payment_due_date,
-    next_payment_due_amount: customer.next_payment_due_amount,
+    frequency: renewal ? renewal.frequency : null,
+    next_payment_due_date: renewal ? renewal.due_date : null,
+    next_payment_due_amount: renewal ? renewal.amount : null,
     upi_id: env.PAYMENT_UPI_ID || null
   });
 }
