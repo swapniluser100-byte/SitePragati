@@ -62,19 +62,42 @@
 </div>
 
 <!-- ===================== ADMIN DASHBOARD ===================== -->
-<div id="adminDashboard" class="dashboard" hidden>
-  <header class="admin-header">
-    <span class="brand"><img src="images/logo-horizontal-color.png" alt="SitePragati" class="brand-logo"> <span>Admin</span></span>
-    <button type="button" id="adminLogoutBtn" class="btn btn-outline btn-small">Log out</button>
-  </header>
+<div id="adminDashboard" class="dashboard-shell" hidden>
+  <aside class="admin-sidebar">
+    <div class="sidebar-brand">
+      <span class="sidebar-brand-avatar">S</span>
+      <span>SitePragati</span>
+    </div>
 
-  <nav class="admin-tabs">
-    <button type="button" class="tab-btn active" data-tab="leads">Leads</button>
-    <button type="button" class="tab-btn" data-tab="customers">Customers</button>
-    <button type="button" class="tab-btn" data-tab="tickets">Tickets</button>
-    <button type="button" class="tab-btn" data-tab="caseStudies">Case Studies</button>
-    <button type="button" class="tab-btn" data-tab="renewals">Renewal</button>
-  </nav>
+    <nav class="sidebar-nav">
+      <button type="button" class="sidebar-nav-item active" data-tab="leads">
+        <span class="sidebar-nav-icon">👥</span> Leads
+      </button>
+      <button type="button" class="sidebar-nav-item" data-tab="tickets">
+        <span class="sidebar-nav-icon">🎫</span> Tickets
+      </button>
+      <button type="button" class="sidebar-nav-item" data-tab="customers">
+        <span class="sidebar-nav-icon">👤</span> Customers
+      </button>
+      <button type="button" class="sidebar-nav-item" data-tab="caseStudies">
+        <span class="sidebar-nav-icon">📄</span> Case Studies
+      </button>
+      <button type="button" class="sidebar-nav-item" data-tab="renewals">
+        <span class="sidebar-nav-icon">📅</span> Renewal
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <p class="sidebar-footer-label">Signed in as</p>
+      <p class="sidebar-footer-value">Admin</p>
+      <button type="button" id="adminLogoutBtn" class="btn btn-outline btn-small sidebar-logout-btn">↪ Log out</button>
+    </div>
+  </aside>
+
+  <div class="admin-main">
+    <header class="admin-topbar">🏪 SitePragati Admin</header>
+
+    <div class="admin-content">
 
   <!-- Leads tab -->
   <section id="leadsTab" class="tab-panel active">
@@ -800,6 +823,9 @@
       </table>
     </div>
   </section>
+
+    </div>
+  </div>
 </div>
 
 <!-- ===================== CUSTOMER DASHBOARD ===================== -->
