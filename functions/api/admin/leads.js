@@ -14,7 +14,7 @@
 import { json } from '../../_utils/auth.js';
 import { brandedEmailHtml, sendResendEmail } from '../../_utils/email.js';
 
-const STATUS_OPTIONS = ['New', 'Contacted', 'Won', 'Lost'];
+const STATUS_OPTIONS = ['New', 'Contacted', 'In Progress', 'Converted', 'Lost'];
 
 export async function onRequestGet(context) {
   const { env } = context;
