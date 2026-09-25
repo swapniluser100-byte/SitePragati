@@ -156,7 +156,7 @@ function showCustomerDashboard(businessName) {
 }
 
 // ===== Referral banner =====
-const REFERRAL_MESSAGE = "Hi! I've been using SitePragati for my business website — affordable, fast, with ordering and support built in. If you know a business that needs a website, tell them to check SitePragati out: https://sitepragati.pages.dev";
+const REFERRAL_MESSAGE = "Hi! I've been using SitePragati for my business website — affordable, fast, with ordering and support built in. If you know a business that needs a website, tell them to check SitePragati out: https://sitepragati.in";
 
 document.getElementById('referralWhatsappBtn').addEventListener('click', () => {
   window.open(`https://wa.me/?text=${encodeURIComponent(REFERRAL_MESSAGE)}`, '_blank');
