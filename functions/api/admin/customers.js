@@ -13,8 +13,17 @@ import { json, hashPassword, generateRandomId } from '../../_utils/auth.js';
 const FIELDS = [
   'business_name', 'contact_name', 'email', 'phone', 'address',
   'next_payment_due_date', 'next_payment_due_amount',
-  'website_url', 'admin_console_url', 'notes'
+  'website_url', 'admin_console_url', 'notes',
+  'renewal_required', 'renewal_frequency'
 ];
+const FREQUENCY_OPTIONS = ['Monthly', 'Half Yearly', 'Yearly'];
+
+function validateRenewalFields(body) {
+  if (body.renewal_required && !FREQUENCY_OPTIONS.includes(body.renewal_frequency)) {
+    return 'Select a frequency (Monthly, Half Yearly, or Yearly) since Renewal required is checked';
+  }
+  return null;
+}
 
 export async function onRequestGet(context) {
   const { env } = context;
@@ -28,6 +37,7 @@ export async function onRequestGet(context) {
         customers.email, customers.phone, customers.address,
         customers.next_payment_due_date, customers.next_payment_due_amount,
         customers.website_url, customers.admin_console_url, customers.notes,
+        customers.renewal_required, customers.renewal_frequency,
         customers.created_at,
         COALESCE(SUM(CASE WHEN transactions.status = 'Paid' THEN transactions.amount ELSE 0 END), 0) AS total_paid
       FROM customers
@@ -49,7 +59,14 @@ export async function onRequestPost(context) {
     if (!body.email) return json({ error: 'email is required (used for portal login)' }, 400);
     if (!body.password) return json({ error: 'password is required for a new customer' }, 400);
 
-    const values = FIELDS.map(f => f === 'email' ? body.email.trim().toLowerCase() : (body[f] ?? null));
+    const renewalError = validateRenewalFields(body);
+    if (renewalError) return json({ error: renewalError }, 400);
+
+    const values = FIELDS.map(f => {
+      if (f === 'email') return body.email.trim().toLowerCase();
+      if (f === 'renewal_required') return body.renewal_required ? 1 : 0;
+      return body[f] ?? null;
+    });
     const placeholders = FIELDS.map(() => '?').join(', ');
     const passwordHash = await hashPassword(body.password);
 
@@ -72,8 +89,15 @@ export async function onRequestPut(context) {
     const body = await request.json();
     if (!body.id) return json({ error: 'id is required' }, 400);
 
+    const renewalError = validateRenewalFields(body);
+    if (renewalError) return json({ error: renewalError }, 400);
+
     const setClause = FIELDS.map(f => `${f} = ?`).join(', ');
-    const values = FIELDS.map(f => f === 'email' && body.email ? body.email.trim().toLowerCase() : (body[f] ?? null));
+    const values = FIELDS.map(f => {
+      if (f === 'email') return body.email ? body.email.trim().toLowerCase() : null;
+      if (f === 'renewal_required') return body.renewal_required ? 1 : 0;
+      return body[f] ?? null;
+    });
 
     // Backfill a unique_id for older customers that predate this feature —
     // generated once, then left alone on every future edit.
