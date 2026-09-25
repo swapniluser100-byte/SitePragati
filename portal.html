@@ -58,12 +58,56 @@
 
   <!-- Leads tab -->
   <section id="leadsTab" class="tab-panel active">
-    <div class="panel-head">
-      <h2>Leads</h2>
-      <div style="display:flex; gap:8px;">
-        <button type="button" id="addLeadBtn" class="btn btn-primary btn-small">+ Add lead</button>
-        <button type="button" id="refreshLeads" class="btn btn-outline btn-small">Refresh</button>
+    <div class="panel-head panel-head-leads">
+      <div class="panel-head-icon-row">
+        <span class="panel-head-icon">👥</span>
+        <div>
+          <h2>Leads</h2>
+          <p class="panel-head-subtitle">Manage and track your sales leads</p>
+        </div>
       </div>
+      <div class="panel-head-actions">
+        <div class="table-search">
+          <span class="search-icon" aria-hidden="true">🔍</span>
+          <input type="search" id="leadSearchInput" placeholder="Search by name, business, contact or email…" aria-label="Search leads">
+        </div>
+        <button type="button" id="addLeadBtn" class="btn btn-primary btn-small">+ Add lead</button>
+      </div>
+    </div>
+
+    <div class="lead-stats">
+      <button type="button" class="lead-stat-card lead-stat-blue active" data-lead-filter="">
+        <span class="lead-stat-icon">👥</span>
+        <span class="lead-stat-text">
+          <span class="lead-stat-label">Total Leads</span>
+          <span class="lead-stat-value" id="leadStatTotal">0</span>
+        </span>
+        <span class="lead-stat-chevron">&rsaquo;</span>
+      </button>
+      <button type="button" class="lead-stat-card lead-stat-green" data-lead-filter="Contacted">
+        <span class="lead-stat-icon">🧑</span>
+        <span class="lead-stat-text">
+          <span class="lead-stat-label">Contacted</span>
+          <span class="lead-stat-value" id="leadStatContacted">0</span>
+        </span>
+        <span class="lead-stat-chevron">&rsaquo;</span>
+      </button>
+      <button type="button" class="lead-stat-card lead-stat-amber" data-lead-filter="In Progress">
+        <span class="lead-stat-icon">📅</span>
+        <span class="lead-stat-text">
+          <span class="lead-stat-label">In Progress</span>
+          <span class="lead-stat-value" id="leadStatInProgress">0</span>
+        </span>
+        <span class="lead-stat-chevron">&rsaquo;</span>
+      </button>
+      <button type="button" class="lead-stat-card lead-stat-purple" data-lead-filter="Converted">
+        <span class="lead-stat-icon">✅</span>
+        <span class="lead-stat-text">
+          <span class="lead-stat-label">Converted</span>
+          <span class="lead-stat-value" id="leadStatConverted">0</span>
+        </span>
+        <span class="lead-stat-chevron">&rsaquo;</span>
+      </button>
     </div>
 
     <div id="leadModalOverlay" class="modal-overlay" hidden>
@@ -101,7 +145,8 @@
             <select id="leadStatus">
               <option value="New">New</option>
               <option value="Contacted">Contacted</option>
-              <option value="Won">Won</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Converted">Converted</option>
               <option value="Lost">Lost</option>
             </select>
           </div>
@@ -119,14 +164,14 @@
       <table id="leadsTable">
         <thead>
           <tr>
-            <th>Date</th>
-            <th>Name</th>
-            <th>Business</th>
-            <th>Type</th>
-            <th>Contact</th>
-            <th>Message</th>
-            <th>Status</th>
-            <th class="actions-col"></th>
+            <th class="sortable-th" data-sort-field="created_at">Date <span class="sort-icon">⇅</span></th>
+            <th class="sortable-th" data-sort-field="name">Name <span class="sort-icon">⇅</span></th>
+            <th class="sortable-th" data-sort-field="business">Business <span class="sort-icon">⇅</span></th>
+            <th class="sortable-th" data-sort-field="business_type">Type <span class="sort-icon">⇅</span></th>
+            <th class="sortable-th" data-sort-field="contact">Contact <span class="sort-icon">⇅</span></th>
+            <th class="sortable-th" data-sort-field="message">Message <span class="sort-icon">⇅</span></th>
+            <th class="sortable-th" data-sort-field="status">Status <span class="sort-icon">⇅</span></th>
+            <th class="actions-col">Actions</th>
           </tr>
         </thead>
         <tbody id="leadsTableBody">

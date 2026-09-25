@@ -151,9 +151,26 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 });
 
 // ===== Leads =====
-const STATUS_OPTIONS = ['New', 'Contacted', 'Won', 'Lost'];
+const STATUS_OPTIONS = ['New', 'Contacted', 'In Progress', 'Converted', 'Lost'];
+// Cycled by row position to color each name avatar — purely decorative,
+// doesn't need to be stable per-lead across reloads.
+const LEAD_AVATAR_COLORS = ['#2F6F62', '#1B2544', '#C77F1F', '#B0453A', '#6D4AAE'];
+
+function leadStatusClass(status) {
+  return 'lead-status-' + String(status || 'New').toLowerCase().replace(/\s+/g, '-');
+}
+
+function leadInitials(name) {
+  const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+  const initials = (parts[0]?.[0] || '') + (parts[1]?.[0] || '');
+  return initials.toUpperCase() || '?';
+}
 
 let leadsCache = [];
+let leadSearchTerm = '';
+let leadStatusFilter = ''; // '' = all — set by clicking a stat card
+let leadSortField = 'created_at';
+let leadSortDir = 'desc';
 
 async function loadLeads() {
   const tbody = document.getElementById('leadsTableBody');
@@ -163,45 +180,114 @@ async function loadLeads() {
     const res = await fetch('/api/admin/leads');
     const data = await res.json();
     leadsCache = data.leads || [];
-
-    if (leadsCache.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="8" class="empty-note">No leads yet.</td></tr>';
-      return;
-    }
-
-    tbody.innerHTML = leadsCache.map(lead => `
-      <tr data-id="${lead.id}">
-        <td>${escapeHtml(new Date(lead.created_at).toLocaleDateString())}</td>
-        <td>${escapeHtml(lead.name)}</td>
-        <td>${escapeHtml(lead.business)}</td>
-        <td>${escapeHtml(lead.business_type)}</td>
-        <td>${escapeHtml(lead.contact)}</td>
-        <td class="message-cell">${escapeHtml(lead.message)}</td>
-        <td>
-          <select class="status-select" data-id="${lead.id}">
-            ${STATUS_OPTIONS.map(s => `<option value="${s}" ${s === lead.status ? 'selected' : ''}>${s}</option>`).join('')}
-          </select>
-        </td>
-        <td class="actions-col">
-          ${editButtonHtml('data-edit-lead', lead.id)}
-          ${deleteButtonHtml('data-delete-lead', lead.id)}
-        </td>
-      </tr>
-    `).join('');
-
-    tbody.querySelectorAll('.status-select').forEach(select => {
-      select.addEventListener('change', () => updateLeadStatus(select.dataset.id, select.value));
-    });
-    tbody.querySelectorAll('[data-edit-lead]').forEach(btn => {
-      btn.addEventListener('click', () => openLeadModal(btn.dataset.editLead));
-    });
-    tbody.querySelectorAll('[data-delete-lead]').forEach(btn => {
-      btn.addEventListener('click', () => deleteLead(btn.dataset.deleteLead));
-    });
+    computeLeadStats(leadsCache);
+    renderLeadsTable();
   } catch (err) {
     tbody.innerHTML = '<tr><td colspan="8" class="empty-note">Could not load leads.</td></tr>';
   }
 }
+
+// The stat row always reflects every lead, regardless of the current
+// search term or status filter — same convention as the Customers tab.
+function computeLeadStats(leads) {
+  document.getElementById('leadStatTotal').textContent = leads.length;
+  document.getElementById('leadStatContacted').textContent = leads.filter(l => l.status === 'Contacted').length;
+  document.getElementById('leadStatInProgress').textContent = leads.filter(l => l.status === 'In Progress').length;
+  document.getElementById('leadStatConverted').textContent = leads.filter(l => l.status === 'Converted').length;
+}
+
+function renderLeadsTable() {
+  const tbody = document.getElementById('leadsTableBody');
+
+  if (leadsCache.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-note">No leads yet.</td></tr>';
+    return;
+  }
+
+  const term = leadSearchTerm.trim().toLowerCase();
+  let rows = !term ? leadsCache : leadsCache.filter(l =>
+    [l.name, l.business, l.contact].some(v => v && String(v).toLowerCase().includes(term))
+  );
+  if (leadStatusFilter) rows = rows.filter(l => l.status === leadStatusFilter);
+
+  rows = rows.slice().sort((a, b) => {
+    const va = (a[leadSortField] ?? '').toString().toLowerCase();
+    const vb = (b[leadSortField] ?? '').toString().toLowerCase();
+    if (va < vb) return leadSortDir === 'asc' ? -1 : 1;
+    if (va > vb) return leadSortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  if (rows.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-note">No leads match your search.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map((lead, i) => `
+    <tr data-id="${lead.id}">
+      <td>${escapeHtml(new Date(lead.created_at).toLocaleDateString())}</td>
+      <td>
+        <span class="lead-name-cell">
+          <span class="lead-avatar" style="background:${LEAD_AVATAR_COLORS[i % LEAD_AVATAR_COLORS.length]}">${escapeHtml(leadInitials(lead.name))}</span>
+          ${escapeHtml(lead.name)}
+        </span>
+      </td>
+      <td>${escapeHtml(lead.business || '-')}</td>
+      <td>${lead.business_type ? `<span class="type-pill">${escapeHtml(lead.business_type)}</span>` : '-'}</td>
+      <td>${escapeHtml(lead.contact || '-')}</td>
+      <td class="message-cell">${escapeHtml(lead.message || '-')}</td>
+      <td>
+        <select class="lead-status-select ${leadStatusClass(lead.status)}" data-id="${lead.id}">
+          ${STATUS_OPTIONS.map(s => `<option value="${s}" ${s === lead.status ? 'selected' : ''}>${s}</option>`).join('')}
+        </select>
+      </td>
+      <td class="actions-col">
+        ${editButtonHtml('data-edit-lead', lead.id)}
+        ${deleteButtonHtml('data-delete-lead', lead.id)}
+      </td>
+    </tr>
+  `).join('');
+
+  tbody.querySelectorAll('.lead-status-select').forEach(select => {
+    select.addEventListener('change', () => {
+      select.className = 'lead-status-select ' + leadStatusClass(select.value);
+      updateLeadStatus(select.dataset.id, select.value);
+    });
+  });
+  tbody.querySelectorAll('[data-edit-lead]').forEach(btn => {
+    btn.addEventListener('click', () => openLeadModal(btn.dataset.editLead));
+  });
+  tbody.querySelectorAll('[data-delete-lead]').forEach(btn => {
+    btn.addEventListener('click', () => deleteLead(btn.dataset.deleteLead));
+  });
+}
+
+document.getElementById('leadSearchInput').addEventListener('input', (e) => {
+  leadSearchTerm = e.target.value;
+  renderLeadsTable();
+});
+
+document.querySelectorAll('.lead-stat-card').forEach(card => {
+  card.addEventListener('click', () => {
+    leadStatusFilter = card.dataset.leadFilter;
+    document.querySelectorAll('.lead-stat-card').forEach(c => c.classList.toggle('active', c === card));
+    renderLeadsTable();
+  });
+});
+
+document.querySelectorAll('#leadsTable .sortable-th').forEach(th => {
+  th.addEventListener('click', () => {
+    const field = th.dataset.sortField;
+    if (leadSortField === field) {
+      leadSortDir = leadSortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      leadSortField = field;
+      leadSortDir = 'asc';
+    }
+    document.querySelectorAll('#leadsTable .sortable-th').forEach(h => h.classList.toggle('sorted', h === th));
+    renderLeadsTable();
+  });
+});
 
 async function updateLeadStatus(id, status) {
   await fetch('/api/admin/leads', {
@@ -209,6 +295,9 @@ async function updateLeadStatus(id, status) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ id: Number(id), status })
   });
+  const lead = leadsCache.find(l => String(l.id) === String(id));
+  if (lead) lead.status = status;
+  computeLeadStats(leadsCache);
 }
 
 async function deleteLead(id) {
@@ -220,8 +309,6 @@ async function deleteLead(id) {
   });
   loadLeads();
 }
-
-document.getElementById('refreshLeads').addEventListener('click', loadLeads);
 
 // ===== Add / edit a lead manually (phone/in-person enquiries) =====
 // Generic modal helper: wires backdrop-click and Escape-to-close for a
