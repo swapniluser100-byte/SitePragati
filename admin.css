@@ -328,3 +328,54 @@ select.status-select{
 @media (max-width:640px){
   .cust-info-card{flex-direction:column;}
 }
+
+/* ===== Customers list: top stats + redesigned card ===== */
+.cust-stats{display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:16px; margin-bottom:20px;}
+.cust-stat-card{
+  display:flex; align-items:center; gap:14px;
+  background:var(--white); border:1px solid rgba(27,37,68,0.1); border-radius:var(--radius-sm);
+  padding:18px 20px;
+}
+.cust-stat-icon{
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  width:44px; height:44px; border-radius:50%; font-size:1.2rem;
+}
+.cust-stat-icon-blue{background:rgba(47,111,98,0.12);}
+.cust-stat-icon-green{background:rgba(47,111,98,0.18);}
+.cust-stat-icon-amber{background:rgba(232,163,61,0.18);}
+.cust-stat-icon-red{background:rgba(176,69,58,0.12);}
+.cust-stat-label{font-size:0.8rem; color:var(--slate); margin-bottom:4px;}
+.cust-stat-value{font-size:1.3rem; font-weight:700; color:var(--navy); font-family:'Sora', sans-serif;}
+
+.cust-card{align-items:center; flex-wrap:wrap;}
+.cust-card-avatar{
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  width:48px; height:48px; border-radius:50%;
+  background:rgba(47,111,98,0.12); font-size:1.3rem;
+}
+.cust-card .cs-card-info{flex:1; min-width:200px;}
+.cust-card-stat{
+  flex-shrink:0; min-width:150px; border-radius:var(--radius-sm); padding:10px 16px;
+}
+.cust-card-stat-paid{background:rgba(47,111,98,0.12);}
+.cust-card-stat-pending{background:rgba(232,163,61,0.15);}
+.cust-card-stat-label{font-size:0.78rem; font-weight:600; color:var(--slate);}
+.cust-card-stat-paid .cust-card-stat-label{color:var(--teal);}
+.cust-card-stat-pending .cust-card-stat-label{color:var(--amber-dark);}
+.cust-card-stat-value{font-size:1.1rem; font-weight:700; color:var(--navy); font-family:'Sora', sans-serif; margin:2px 0;}
+.cust-card-stat-count{font-size:0.75rem; color:var(--slate);}
+
+.status-pill{
+  display:inline-block; padding:6px 16px; border-radius:20px; flex-shrink:0;
+  font-size:0.8rem; font-weight:600; white-space:nowrap;
+}
+.status-pill-paid{background:rgba(47,111,98,0.15); color:var(--teal);}
+.status-pill-pending{background:rgba(232,163,61,0.18); color:var(--amber-dark);}
+
+@media (max-width:768px){
+  .cust-stats{grid-template-columns:1fr;}
+}
+@media (max-width:640px){
+  .cust-card{flex-direction:column; align-items:stretch;}
+  .cust-card-stat{width:100%;}
+}

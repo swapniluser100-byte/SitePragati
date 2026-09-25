@@ -382,11 +382,26 @@ async function loadCustomers() {
     const res = await fetch('/api/admin/customers');
     const data = await res.json();
     customersCache = data.customers || [];
+    computeCustomerStats(customersCache);
     populateTicketCustomerFilter(); // keep the Tickets tab's customer filter in sync
     filterCustomers(); // re-render, keeping whatever search term is already typed in
   } catch (err) {
     list.innerHTML = '<p class="empty-note">Could not load customers.</p>';
   }
+}
+
+// The top stat row always reflects every customer, not just the ones a
+// search term currently matches — same convention as the Renewals tab.
+// "Active" has no separate concept in this app yet (there's no way to
+// deactivate a customer short of deleting them), so it mirrors the total.
+function computeCustomerStats(customers) {
+  const totalPaid = customers.reduce((sum, c) => sum + Number(c.total_paid || 0), 0);
+  const totalPending = customers.reduce((sum, c) => sum + Number(c.total_pending || 0), 0);
+
+  document.getElementById('custStatTotal').textContent = customers.length;
+  document.getElementById('custStatActive').textContent = customers.length;
+  document.getElementById('custStatPaid').textContent = '₹' + totalPaid.toLocaleString('en-IN');
+  document.getElementById('custStatPending').textContent = '₹' + totalPending.toLocaleString('en-IN');
 }
 
 function renderCustomersList(customers) {
@@ -401,22 +416,36 @@ function renderCustomersList(customers) {
     return;
   }
 
-  list.innerHTML = customers.map(c => `
-    <div class="cs-card">
+  list.innerHTML = customers.map(c => {
+    // A customer with any Pending/Overdue balance shows that instead of
+    // what's already been paid — that's the number that needs attention.
+    const isPending = Number(c.total_pending || 0) > 0;
+    const boxAmount = isPending ? Number(c.total_pending || 0) : Number(c.total_paid || 0);
+    const boxCount = isPending ? Number(c.pending_txn_count || 0) : Number(c.paid_txn_count || 0);
+
+    return `
+    <div class="cs-card cust-card">
+      <span class="cust-card-avatar">🏢</span>
       <div class="cs-card-info">
         <h3>${escapeHtml(c.business_name)}</h3>
         ${requestLinkBlockHtml(c)}
         ${customerLinksBlockHtml(c)}
         <p>${escapeHtml(c.contact_name || '')} ${c.phone ? '· ' + escapeHtml(c.phone) : ''}</p>
-        <p class="total-paid">Total paid: ₹${escapeHtml(String(c.total_paid ?? 0))}</p>
       </div>
+      <div class="cust-card-stat ${isPending ? 'cust-card-stat-pending' : 'cust-card-stat-paid'}">
+        <p class="cust-card-stat-label">${isPending ? 'Pending Amount' : 'Total Paid'}</p>
+        <p class="cust-card-stat-value">₹${boxAmount.toLocaleString('en-IN')}</p>
+        <p class="cust-card-stat-count">${boxCount} transaction${boxCount === 1 ? '' : 's'}</p>
+      </div>
+      <span class="status-pill ${isPending ? 'status-pill-pending' : 'status-pill-paid'}">${isPending ? 'Pending' : 'Paid'}</span>
       <div class="cs-card-actions">
-        <button class="btn btn-outline btn-small" data-view-txns="${c.id}">Transactions</button>
+        <button class="btn btn-outline btn-small" data-view-txns="${c.id}">📎 Transactions</button>
         ${editButtonHtml('data-edit-cust', c.id)}
         ${deleteButtonHtml('data-delete-cust', c.id)}
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 
   list.querySelectorAll('[data-view-txns]').forEach(btn => {
     btn.addEventListener('click', () => openCustomerDetail(btn.dataset.viewTxns));
