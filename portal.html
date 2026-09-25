@@ -146,6 +146,37 @@
         <button type="button" id="addCustomerBtn" class="btn btn-primary btn-small">+ Add customer</button>
       </div>
 
+      <div class="cust-stats">
+        <div class="cust-stat-card">
+          <span class="cust-stat-icon cust-stat-icon-blue">👥</span>
+          <div>
+            <p class="cust-stat-label">Total Customers</p>
+            <p class="cust-stat-value" id="custStatTotal">0</p>
+          </div>
+        </div>
+        <div class="cust-stat-card">
+          <span class="cust-stat-icon cust-stat-icon-green">✅</span>
+          <div>
+            <p class="cust-stat-label">Active Customers</p>
+            <p class="cust-stat-value" id="custStatActive">0</p>
+          </div>
+        </div>
+        <div class="cust-stat-card">
+          <span class="cust-stat-icon cust-stat-icon-amber">💰</span>
+          <div>
+            <p class="cust-stat-label">Total Paid</p>
+            <p class="cust-stat-value" id="custStatPaid">₹0</p>
+          </div>
+        </div>
+        <div class="cust-stat-card">
+          <span class="cust-stat-icon cust-stat-icon-red">⏳</span>
+          <div>
+            <p class="cust-stat-label">Pending Amount</p>
+            <p class="cust-stat-value" id="custStatPending">₹0</p>
+          </div>
+        </div>
+      </div>
+
       <div id="customerModalOverlay" class="modal-overlay" hidden>
       <div id="customerForm" class="modal-box cs-form" role="dialog" aria-modal="true" aria-labelledby="customerFormTitle">
         <div class="modal-head">

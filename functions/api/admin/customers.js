@@ -27,9 +27,10 @@ function validateRenewalFields(body) {
 export async function onRequestGet(context) {
   const { env } = context;
   try {
-    // total_paid is computed live from transactions — never stored, so it
-    // can't drift out of sync with the actual transaction history.
-    // password_hash is deliberately excluded from what's sent to the browser.
+    // total_paid/total_pending are computed live from transactions — never
+    // stored, so they can't drift out of sync with the actual transaction
+    // history. password_hash is deliberately excluded from what's sent to
+    // the browser.
     const { results } = await env.DB.prepare(`
       SELECT
         customers.id, customers.unique_id, customers.business_name, customers.contact_name,
@@ -37,7 +38,10 @@ export async function onRequestGet(context) {
         customers.website_url, customers.admin_console_url, customers.notes,
         customers.renewal_required, customers.renewal_frequency,
         customers.created_at,
-        COALESCE(SUM(CASE WHEN transactions.status = 'Paid' THEN transactions.amount ELSE 0 END), 0) AS total_paid
+        COALESCE(SUM(CASE WHEN transactions.status = 'Paid' THEN transactions.amount ELSE 0 END), 0) AS total_paid,
+        COALESCE(SUM(CASE WHEN transactions.status IN ('Pending', 'Overdue') THEN transactions.amount ELSE 0 END), 0) AS total_pending,
+        COUNT(CASE WHEN transactions.status = 'Paid' THEN 1 END) AS paid_txn_count,
+        COUNT(CASE WHEN transactions.status IN ('Pending', 'Overdue') THEN 1 END) AS pending_txn_count
       FROM customers
       LEFT JOIN transactions ON transactions.customer_id = customers.id
       GROUP BY customers.id
