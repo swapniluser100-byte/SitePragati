@@ -28,11 +28,90 @@ function setRole(role) {
   document.getElementById('email').required = (role === 'customer');
   document.getElementById('loginSub').textContent = role === 'admin' ? 'Admin console' : 'Customer portal';
   document.getElementById('loginHelp').hidden = (role === 'admin');
+  document.getElementById('adminForgotPasswordRow').hidden = (role !== 'admin');
   document.getElementById('loginError').textContent = '';
 }
 
 document.getElementById('roleCustomerBtn').addEventListener('click', () => setRole('customer'));
 document.getElementById('roleAdminBtn').addEventListener('click', () => setRole('admin'));
+
+// ===== Admin: forgot password / reset password =====
+function showLoginCard(cardId) {
+  ['loginForm', 'forgotPasswordCard', 'resetPasswordCard'].forEach(id => {
+    document.getElementById(id).hidden = (id !== cardId);
+  });
+}
+
+document.getElementById('forgotPasswordLink').addEventListener('click', (e) => {
+  e.preventDefault();
+  document.getElementById('forgotPasswordMsg').textContent = '';
+  document.getElementById('forgotPasswordMsg').classList.remove('success');
+  showLoginCard('forgotPasswordCard');
+});
+
+document.getElementById('backToLoginFromForgot').addEventListener('click', (e) => {
+  e.preventDefault();
+  showLoginCard('loginForm');
+});
+
+const sendResetEmailBtn = document.getElementById('sendResetEmailBtn');
+sendResetEmailBtn.addEventListener('click', () => {
+  withButtonSpinner(sendResetEmailBtn, 'Sending…', async () => {
+    const msg = document.getElementById('forgotPasswordMsg');
+    try {
+      await fetch('/api/admin/forgot-password', { method: 'POST' });
+      msg.textContent = 'If email is configured, a reset link has been sent — check your inbox.';
+      msg.classList.add('success');
+    } catch (err) {
+      msg.textContent = 'Something went wrong. Please try again.';
+      msg.classList.remove('success');
+    }
+  });
+});
+
+let adminResetToken = null;
+
+const submitResetPasswordBtn = document.getElementById('submitResetPasswordBtn');
+submitResetPasswordBtn.addEventListener('click', () => {
+  const password = document.getElementById('resetNewPassword').value;
+  const confirmPassword = document.getElementById('resetConfirmPassword').value;
+  const msg = document.getElementById('resetPasswordMsg');
+  msg.classList.remove('success');
+
+  if (password.length < 8) {
+    msg.textContent = 'Password must be at least 8 characters.';
+    return;
+  }
+  if (password !== confirmPassword) {
+    msg.textContent = 'Passwords do not match.';
+    return;
+  }
+
+  withButtonSpinner(submitResetPasswordBtn, 'Saving…', async () => {
+    try {
+      const res = await fetch('/api/admin/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: adminResetToken, password })
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        msg.textContent = data.error || 'Could not reset the password.';
+        return;
+      }
+      msg.textContent = 'Password updated — you can log in now.';
+      msg.classList.add('success');
+      document.getElementById('resetNewPassword').value = '';
+      document.getElementById('resetConfirmPassword').value = '';
+      setTimeout(() => {
+        setRole('admin');
+        showLoginCard('loginForm');
+      }, 1500);
+    } catch (err) {
+      msg.textContent = 'Something went wrong. Please try again.';
+    }
+  });
+});
 
 async function checkSession() {
   try {
@@ -2149,7 +2228,6 @@ ticketSaveBtn.addEventListener('click', () => {
 
 
 // ===== Init =====
-// ===== Init =====
 // If arriving via a link like portal.html?role=admin, pre-select that tab
 // on the login screen (only matters if not already logged in).
 const requestedRole = new URLSearchParams(window.location.search).get('role');
@@ -2157,4 +2235,17 @@ if (requestedRole === 'admin' || requestedRole === 'customer') {
   setRole(requestedRole);
 }
 
-checkSession();
+// A password-reset email link (?admin_reset_token=...) always wins over
+// whatever checkSession() would otherwise show — even an existing admin
+// session shouldn't hide an explicit reset request.
+const resetTokenFromUrl = new URLSearchParams(window.location.search).get('admin_reset_token');
+
+checkSession().then(() => {
+  if (resetTokenFromUrl) {
+    adminResetToken = resetTokenFromUrl;
+    showLogin();
+    setRole('admin');
+    showLoginCard('resetPasswordCard');
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+});

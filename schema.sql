@@ -1,3 +1,15 @@
+-- Admin auth: a single row (id = 1) holding the current admin
+-- password's hash, once "Forgot password?" has ever been used to set
+-- one — until then, login falls back to comparing against the
+-- ADMIN_PASSWORD secret directly. Also holds an in-flight password
+-- reset token/expiry, if a reset email was just sent.
+CREATE TABLE IF NOT EXISTS admin_auth (
+  id INTEGER PRIMARY KEY,
+  password_hash TEXT,
+  reset_token TEXT,
+  reset_token_expires TEXT
+);
+
 -- Customers table: your actual paying clients (not website leads)
 CREATE TABLE IF NOT EXISTS customers (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -61,6 +61,7 @@ input, textarea, select, button{font-family:inherit;}
 }
 .login-card input:focus{border-color:var(--teal);}
 .login-error{color:var(--danger); font-size:0.85rem; min-height:1.2em; margin-top:10px;}
+.login-error.success{color:var(--teal);}
 
 /* ===== Dashboard ===== */
 .dashboard{max-width:1100px; margin:0 auto; padding:0 24px 60px;}

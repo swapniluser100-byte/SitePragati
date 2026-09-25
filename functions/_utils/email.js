@@ -12,7 +12,10 @@ export function esc(str) {
 }
 
 // rows: array of [label, value] pairs. Rows with an empty value are skipped.
-export function brandedEmailHtml({ badgeText, introText, rows, footerText }) {
+// ctaText/ctaUrl: optional — renders a button-styled link (e.g. for a
+// password reset link, which needs to actually be clickable, unlike a
+// plain escaped-text row).
+export function brandedEmailHtml({ badgeText, introText, rows, footerText, ctaText, ctaUrl }) {
   const rowsHtml = rows
     .filter(([, value]) => !!value)
     .map(([label, value]) => `
@@ -21,6 +24,11 @@ export function brandedEmailHtml({ badgeText, introText, rows, footerText }) {
         <td style="padding:10px 0; border-top:1px solid #EBEDF2; font-size:14px; color:#1B2544; vertical-align:top;">${esc(value)}</td>
       </tr>`)
     .join('');
+
+  const ctaHtml = ctaUrl ? `
+          <p style="text-align:center; margin:24px 0 4px;">
+            <a href="${esc(ctaUrl)}" style="display:inline-block; background:#E8A33D; color:#1B2544; font-weight:700; font-size:14px; padding:12px 28px; border-radius:8px; text-decoration:none;">${esc(ctaText || 'Continue')}</a>
+          </p>` : '';
 
   return `<!DOCTYPE html>
 <html>
@@ -43,6 +51,7 @@ export function brandedEmailHtml({ badgeText, introText, rows, footerText }) {
           <table role="presentation" width="100%" style="border-collapse:collapse;">
             ${rowsHtml}
           </table>
+          ${ctaHtml}
         </td>
       </tr>
       <tr>

@@ -38,7 +38,27 @@
     <button type="submit" class="btn btn-primary">Log in</button>
     <p class="login-error" id="loginError"></p>
     <p class="login-help" id="loginHelp">Don't have login details? Contact SitePragati to get set up.</p>
+    <p class="login-help" id="adminForgotPasswordRow" hidden><a href="#" id="forgotPasswordLink">Forgot password?</a></p>
   </form>
+
+  <div id="forgotPasswordCard" class="login-card" hidden>
+    <h1>Reset admin password</h1>
+    <p class="login-sub">We'll email a reset link to the admin notification address on file.</p>
+    <button type="button" id="sendResetEmailBtn" class="btn btn-primary" style="width:100%; margin-top:6px;">Send reset email</button>
+    <p class="login-error" id="forgotPasswordMsg"></p>
+    <p class="login-help"><a href="#" id="backToLoginFromForgot">&larr; Back to login</a></p>
+  </div>
+
+  <div id="resetPasswordCard" class="login-card" hidden>
+    <h1>Set a new password</h1>
+    <p class="login-sub">Choose a new password for the admin console.</p>
+    <label for="resetNewPassword">New password</label>
+    <input type="password" id="resetNewPassword" placeholder="At least 8 characters">
+    <label for="resetConfirmPassword">Confirm password</label>
+    <input type="password" id="resetConfirmPassword" placeholder="Re-enter password">
+    <button type="button" id="submitResetPasswordBtn" class="btn btn-primary" style="width:100%; margin-top:6px;">Set new password</button>
+    <p class="login-error" id="resetPasswordMsg"></p>
+  </div>
 </div>
 
 <!-- ===================== ADMIN DASHBOARD ===================== -->
