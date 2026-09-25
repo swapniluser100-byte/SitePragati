@@ -2,15 +2,15 @@
   margin-top:14px; font-size:0.82rem; color:var(--slate); text-align:center;
 }
 .role-toggle{
-  display:flex; gap:0; margin-bottom:18px; border:1px solid rgba(27,37,68,0.15);
-  border-radius:var(--radius-sm); overflow:hidden;
+  display:flex; gap:4px; margin-bottom:18px; background:var(--paper-dim);
+  border-radius:12px; padding:4px;
 }
 .role-btn{
-  flex:1; padding:10px 0; background:var(--paper); border:none; cursor:pointer;
-  font-size:0.85rem; font-weight:600; color:var(--slate);
+  flex:1; padding:11px 0; background:none; border:none; border-radius:9px; cursor:pointer;
+  font-size:0.9rem; font-weight:700; color:var(--slate);
 }
-.role-btn.active{background:var(--navy); color:var(--white);}
-.role-btn:not(.active):hover{background:var(--paper-dim);}
+.role-btn.active{background:var(--navy); color:var(--white); box-shadow:0 4px 12px rgba(27,37,68,0.25);}
+.role-btn:not(.active):hover{background:rgba(255,255,255,0.7);}
 
 .welcome-line{
   color:var(--slate); font-size:0.95rem; margin-bottom:24px;
