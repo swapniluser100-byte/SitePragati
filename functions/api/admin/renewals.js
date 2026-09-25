@@ -1,6 +1,9 @@
 // /api/admin/renewals — protected by _middleware.js
 // GET    → list all renewals, joined with the customer's business name,
-//          contact name, email, phone, and unique_id (for search/display)
+//          contact name, email, phone, and unique_id (for search/display).
+//          Also opportunistically auto-creates a Pending renewal for any
+//          renewal_required customer who doesn't already have one — see
+//          autoCreateMissingRenewals below.
 // POST   → { customer_id, frequency, due_date, amount, status? } →
 //          create a new renewal record (status defaults to 'Pending';
 //          pass 'Renewed' only when backfilling an already-paid cycle)
@@ -41,9 +44,68 @@ function advanceDueDate(dateStr, frequency) {
   return `${newYear}-${mm}-${dd}`;
 }
 
+// For every customer with renewal_required checked, makes sure at
+// least one Pending renewal is queued up for them. Skips a customer
+// entirely if they already have ANY Pending renewal (whether created
+// manually, by the Renew button's own next-cycle cascade, or by a
+// previous run of this same check) — that's what stops this from ever
+// creating a duplicate.
+//
+// When a customer has no Pending renewal, prefer advancing from their
+// most recently Renewed cycle (same due-date math the Renew button
+// uses) — this matters when a renewal was marked Renewed directly via
+// the edit form instead of the Renew button, which doesn't create a
+// next cycle on its own; advancing from history here avoids reseeding
+// the same stale due date. Only customers with no renewal history at
+// all fall back to their static next_payment_due_date/amount fields,
+// and only customers missing a frequency or those seed fields are
+// skipped, since there's nothing to create a renewal from.
+async function autoCreateMissingRenewals(env) {
+  const { results: candidates } = await env.DB.prepare(`
+    SELECT id, next_payment_due_date, next_payment_due_amount, renewal_frequency
+    FROM customers
+    WHERE renewal_required = 1
+  `).all();
+
+  for (const c of candidates) {
+    if (!FREQUENCY_MONTHS[c.renewal_frequency]) continue;
+
+    const existingPending = await env.DB.prepare(
+      `SELECT id FROM renewals WHERE customer_id = ? AND status = 'Pending' LIMIT 1`
+    ).bind(c.id).first();
+    if (existingPending) continue;
+
+    const lastRenewed = await env.DB.prepare(
+      `SELECT due_date, amount, frequency FROM renewals
+       WHERE customer_id = ? AND status = 'Renewed'
+       ORDER BY due_date DESC LIMIT 1`
+    ).bind(c.id).first();
+
+    let dueDate, amount, frequency;
+    if (lastRenewed) {
+      frequency = lastRenewed.frequency;
+      dueDate = advanceDueDate(lastRenewed.due_date, frequency);
+      amount = lastRenewed.amount;
+    } else if (c.next_payment_due_date && c.next_payment_due_amount) {
+      frequency = c.renewal_frequency;
+      dueDate = c.next_payment_due_date;
+      amount = c.next_payment_due_amount;
+    } else {
+      continue;
+    }
+
+    await env.DB.prepare(
+      `INSERT INTO renewals (customer_id, frequency, due_date, amount, status)
+       VALUES (?, ?, ?, ?, 'Pending')`
+    ).bind(c.id, frequency, dueDate, amount).run();
+  }
+}
+
 export async function onRequestGet(context) {
   const { env } = context;
   try {
+    await autoCreateMissingRenewals(env);
+
     const { results } = await env.DB.prepare(`
       SELECT
         renewals.*,
@@ -102,9 +164,24 @@ export async function onRequestPut(context) {
     if (!dueDate) return json({ error: 'due_date is required' }, 400);
     if (!amount || amount <= 0) return json({ error: 'amount must be greater than 0' }, 400);
 
+    // Setting status to Renewed directly here (rather than via the
+    // Renew button) still needs a renewed_at timestamp, or this record
+    // would silently vanish from the "Renewed this month/year" stats,
+    // which key off renewed_at. Only stamp it the moment it FIRST
+    // becomes Renewed — leave an already-Renewed record's original
+    // timestamp alone on later edits, and clear it if reverted back to
+    // Pending.
+    const existing = await env.DB.prepare('SELECT status, renewed_at FROM renewals WHERE id = ?').bind(body.id).first();
+    let renewedAt = existing ? existing.renewed_at : null;
+    if (status === 'Renewed' && (!existing || existing.status !== 'Renewed')) {
+      renewedAt = new Date().toISOString();
+    } else if (status === 'Pending') {
+      renewedAt = null;
+    }
+
     await env.DB.prepare(
-      `UPDATE renewals SET customer_id = ?, frequency = ?, due_date = ?, amount = ?, status = ? WHERE id = ?`
-    ).bind(customerId, frequency, dueDate, amount, status, body.id).run();
+      `UPDATE renewals SET customer_id = ?, frequency = ?, due_date = ?, amount = ?, status = ?, renewed_at = ? WHERE id = ?`
+    ).bind(customerId, frequency, dueDate, amount, status, renewedAt, body.id).run();
 
     return json({ result: 'success' });
   } catch (err) {

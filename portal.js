@@ -457,11 +457,16 @@ const custFields = {
   next_payment_due_amount: document.getElementById('custNextDueAmount'),
   website_url: document.getElementById('custWebsiteUrl'),
   admin_console_url: document.getElementById('custAdminConsoleUrl'),
-  notes: document.getElementById('custNotes')
+  notes: document.getElementById('custNotes'),
+  renewal_frequency: document.getElementById('custRenewalFrequency')
 };
+// Handled separately from custFields — a checkbox's .value isn't its
+// checked state, so the generic value-based loops below don't apply to it.
+const custRenewalRequiredField = document.getElementById('custRenewalRequired');
 
 function clearCustomerForm() {
   Object.values(custFields).forEach(el => el.value = '');
+  custRenewalRequiredField.checked = false;
 }
 
 function openCustomerForm(id) {
@@ -478,6 +483,7 @@ function openCustomerForm(id) {
         // Never pre-fill the password field — it's write-only from the UI's perspective.
         if (key !== 'password' && c[key] != null) custFields[key].value = c[key];
       });
+      custRenewalRequiredField.checked = !!c.renewal_required;
     }
   }
 
@@ -498,6 +504,7 @@ const custSaveBtn = document.getElementById('custSaveBtn');
 custSaveBtn.addEventListener('click', () => {
   const payload = {};
   Object.entries(custFields).forEach(([key, el]) => { payload[key] = el.value; });
+  payload.renewal_required = custRenewalRequiredField.checked;
 
   if (!payload.business_name.trim()) {
     alert('Business name is required.');
@@ -512,6 +519,10 @@ custSaveBtn.addEventListener('click', () => {
   }
   if (!isEdit && !payload.password.trim()) {
     alert('Password is required for a new customer.');
+    return;
+  }
+  if (payload.renewal_required && !payload.renewal_frequency) {
+    alert('Please select a frequency since Renewal required is checked.');
     return;
   }
 

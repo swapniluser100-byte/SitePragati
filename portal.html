@@ -193,6 +193,20 @@
         </div>
         <label for="custAddress">Address</label>
         <textarea id="custAddress" rows="2"></textarea>
+        <div class="cs-form-grid">
+          <div>
+            <label for="custRenewalRequired"><input type="checkbox" id="custRenewalRequired" style="width:auto; margin-right:6px; vertical-align:middle;"> Renewal required?</label>
+          </div>
+          <div>
+            <label for="custRenewalFrequency">Frequency</label>
+            <select id="custRenewalFrequency">
+              <option value="">— None —</option>
+              <option value="Monthly">Monthly</option>
+              <option value="Half Yearly">Half Yearly</option>
+              <option value="Yearly">Yearly</option>
+            </select>
+          </div>
+        </div>
         <label for="custNotes">Notes <span class="field-note">(internal — not shown to the customer)</span></label>
         <textarea id="custNotes" rows="6"></textarea>
         <div class="cs-form-actions">

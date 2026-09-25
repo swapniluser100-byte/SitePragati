@@ -13,6 +13,8 @@ CREATE TABLE IF NOT EXISTS customers (
   website_url TEXT,
   admin_console_url TEXT,
   notes TEXT,
+  renewal_required INTEGER DEFAULT 0,
+  renewal_frequency TEXT, -- 'Monthly' | 'Half Yearly' | 'Yearly' — required when renewal_required is set
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
