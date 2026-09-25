@@ -516,6 +516,20 @@
           <p class="renewal-stat-value" id="renewalStatCount">0</p>
         </div>
       </div>
+      <div class="renewal-stat-card">
+        <span class="renewal-stat-icon renewal-stat-icon-green">✅</span>
+        <div>
+          <p class="renewal-stat-label">Total Amount Renewed This Month</p>
+          <p class="renewal-stat-value" id="renewalStatRenewedMonth">₹0</p>
+        </div>
+      </div>
+      <div class="renewal-stat-card">
+        <span class="renewal-stat-icon renewal-stat-icon-green">✅</span>
+        <div>
+          <p class="renewal-stat-label">Total Amount Renewed This Year</p>
+          <p class="renewal-stat-value" id="renewalStatRenewedYear">₹0</p>
+        </div>
+      </div>
     </div>
 
     <div id="renewalModalOverlay" class="modal-overlay" hidden>
@@ -543,8 +557,19 @@
             <input type="date" id="renewalDueDate" required>
           </div>
         </div>
-        <label for="renewalAmount">Amount (₹)</label>
-        <input type="number" id="renewalAmount" step="0.01" min="0" required>
+        <div class="cs-form-grid">
+          <div>
+            <label for="renewalStatus">Status <span class="field-note">(use Renew on the list to process a renewal + log a transaction)</span></label>
+            <select id="renewalStatus">
+              <option value="Pending">Pending</option>
+              <option value="Renewed">Renewed</option>
+            </select>
+          </div>
+          <div>
+            <label for="renewalAmount">Amount (₹)</label>
+            <input type="number" id="renewalAmount" step="0.01" min="0" required>
+          </div>
+        </div>
         <div class="cs-form-actions">
           <button type="button" id="renewalSaveBtn" class="btn btn-primary">Save</button>
           <button type="button" id="renewalCancelBtn" class="btn btn-outline">Cancel</button>

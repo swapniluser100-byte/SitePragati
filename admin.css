@@ -241,7 +241,7 @@ select.status-select{
 }
 
 /* ===== Renewals ===== */
-.renewal-stats{display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; margin-bottom:20px;}
+.renewal-stats{display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:16px; margin-bottom:20px;}
 .renewal-stat-card{
   display:flex; align-items:center; gap:14px;
   background:var(--white); border:1px solid rgba(27,37,68,0.1); border-radius:var(--radius-sm);

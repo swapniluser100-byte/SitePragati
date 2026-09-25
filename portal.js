@@ -1327,9 +1327,19 @@ function computeRenewalStats(list) {
 
   let dueThisMonth = 0;
   let dueThisYear = 0;
+  let renewedThisMonth = 0;
+  let renewedThisYear = 0;
 
   list.forEach(r => {
-    if (r.status === 'Renewed') return;
+    if (r.status === 'Renewed') {
+      if (!r.renewed_at) return;
+      const renewedDate = new Date(r.renewed_at);
+      if (renewedDate.getFullYear() === currentYear) {
+        renewedThisYear += Number(r.amount);
+        if (renewedDate.getMonth() === currentMonth) renewedThisMonth += Number(r.amount);
+      }
+      return;
+    }
     const [y, m] = r.due_date.split('-').map(Number);
     if (y === currentYear) {
       dueThisYear += Number(r.amount);
@@ -1340,6 +1350,8 @@ function computeRenewalStats(list) {
   document.getElementById('renewalStatMonth').textContent = '₹' + dueThisMonth.toLocaleString('en-IN');
   document.getElementById('renewalStatYear').textContent = '₹' + dueThisYear.toLocaleString('en-IN');
   document.getElementById('renewalStatCount').textContent = list.length;
+  document.getElementById('renewalStatRenewedMonth').textContent = '₹' + renewedThisMonth.toLocaleString('en-IN');
+  document.getElementById('renewalStatRenewedYear').textContent = '₹' + renewedThisYear.toLocaleString('en-IN');
 }
 
 function applyRenewalFilters() {
@@ -1416,7 +1428,8 @@ const renewalFields = {
   customer_id: document.getElementById('renewalCustomer'),
   frequency: document.getElementById('renewalFrequency'),
   due_date: document.getElementById('renewalDueDate'),
-  amount: document.getElementById('renewalAmount')
+  amount: document.getElementById('renewalAmount'),
+  status: document.getElementById('renewalStatus')
 };
 
 function clearRenewalForm() {
@@ -1425,6 +1438,7 @@ function clearRenewalForm() {
   renewalFields.frequency.value = 'Yearly';
   renewalFields.due_date.value = '';
   renewalFields.amount.value = '';
+  renewalFields.status.value = 'Pending';
 }
 
 function openRenewalModal(id) {
@@ -1440,6 +1454,7 @@ function openRenewalModal(id) {
       renewalFields.frequency.value = r.frequency;
       renewalFields.due_date.value = r.due_date;
       renewalFields.amount.value = r.amount;
+      renewalFields.status.value = r.status;
     }
   }
 
@@ -1463,7 +1478,8 @@ renewalSaveBtn.addEventListener('click', () => {
     customer_id: Number(renewalFields.customer_id.value),
     frequency: renewalFields.frequency.value,
     due_date: renewalFields.due_date.value,
-    amount: Number(renewalFields.amount.value)
+    amount: Number(renewalFields.amount.value),
+    status: renewalFields.status.value
   };
 
   if (!payload.customer_id) {
