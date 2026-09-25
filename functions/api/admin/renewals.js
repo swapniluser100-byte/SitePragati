@@ -6,19 +6,24 @@
 //          autoCreateMissingRenewals below.
 // POST   → { customer_id, frequency, due_date, amount, status? } →
 //          create a new renewal record (status defaults to 'Pending';
-//          pass 'Renewed' only when backfilling an already-paid cycle)
+//          pass 'Renewed' only when backfilling an already-paid cycle).
+//          Also creates a matching transaction — 'Pending' unless the
+//          renewal itself was created 'Renewed', in which case 'Paid'.
 // PUT    → { id, customer_id, frequency, due_date, amount, status } →
 //          edit an existing renewal record's details, including a
-//          direct status correction. This is a plain field update —
-//          it does NOT create a next-cycle renewal or a transaction
-//          even if status is set to 'Renewed' here; that cascade only
-//          happens via PATCH (the "Renew" button).
-// PATCH  → { id } → mark a renewal "Renewed", automatically create the
-//          next cycle's renewal for the same customer (due_date
-//          advanced by `frequency`, same amount), and log a matching
-//          'Paid' transaction for the customer. Returns the just-
-//          renewed record and the newly created next-cycle record.
-// DELETE → { id } → remove a renewal record
+//          direct status correction. Keeps the renewal's linked
+//          transaction (by renewal_id) in sync: same amount/frequency/
+//          due date, and status mirrors Pending -> Pending, Renewed ->
+//          Paid. This does NOT create a next-cycle renewal; that
+//          cascade only happens via PATCH (the "Renew" button).
+// PATCH  → { id } → mark a renewal "Renewed" (flips its linked
+//          transaction from Pending to Paid — no new transaction is
+//          created here), and automatically creates the next cycle's
+//          renewal for the same customer (due_date advanced by
+//          `frequency`, same amount) along with ITS OWN new Pending
+//          transaction. Returns the just-renewed record and the newly
+//          created next-cycle record.
+// DELETE → { id } → remove a renewal record and its linked transaction
 
 import { json } from '../../_utils/auth.js';
 
@@ -42,6 +47,34 @@ function advanceDueDate(dateStr, frequency) {
   const mm = String(newMonthIndex + 1).padStart(2, '0');
   const dd = String(newDay).padStart(2, '0');
   return `${newYear}-${mm}-${dd}`;
+}
+
+// Keeps a renewal's linked transaction (matched by renewal_id) mirroring
+// the renewal itself: Pending renewal -> Pending transaction dated its
+// due_date; Renewed renewal -> Paid transaction dated when it was
+// renewed. Creates the transaction if this renewal doesn't have one yet
+// (every renewal-writing path below calls this, so in practice one
+// always exists after the first call) — this keeps the two rows in
+// sync regardless of which endpoint changed the renewal.
+async function syncRenewalTransaction(env, renewal) {
+  const isRenewed = renewal.status === 'Renewed';
+  const txnStatus = isRenewed ? 'Paid' : 'Pending';
+  const transactionDate = isRenewed
+    ? (renewal.renewed_at ? renewal.renewed_at.slice(0, 10) : new Date().toISOString().slice(0, 10))
+    : renewal.due_date;
+  const description = `Renewal payment (${renewal.frequency}) — due ${renewal.due_date}`;
+
+  const existing = await env.DB.prepare('SELECT id FROM transactions WHERE renewal_id = ?').bind(renewal.id).first();
+  if (existing) {
+    await env.DB.prepare(
+      `UPDATE transactions SET customer_id = ?, amount = ?, transaction_date = ?, description = ?, status = ? WHERE id = ?`
+    ).bind(renewal.customer_id, renewal.amount, transactionDate, description, txnStatus, existing.id).run();
+  } else {
+    await env.DB.prepare(
+      `INSERT INTO transactions (customer_id, amount, transaction_date, description, status, renewal_id)
+       VALUES (?, ?, ?, ?, ?, ?)`
+    ).bind(renewal.customer_id, renewal.amount, transactionDate, description, txnStatus, renewal.id).run();
+  }
 }
 
 // For every customer with renewal_required checked, makes sure at
@@ -98,10 +131,14 @@ async function autoCreateMissingRenewals(env) {
       continue;
     }
 
-    await env.DB.prepare(
+    const insertResult = await env.DB.prepare(
       `INSERT INTO renewals (customer_id, frequency, due_date, amount, status)
        VALUES (?, ?, ?, ?, 'Pending')`
     ).bind(c.id, frequency, dueDate, amount).run();
+
+    await syncRenewalTransaction(env, {
+      id: insertResult.meta.last_row_id, customer_id: c.id, frequency, due_date: dueDate, amount, status: 'Pending', renewed_at: null
+    });
   }
 }
 
@@ -140,10 +177,16 @@ export async function onRequestPost(context) {
     if (!dueDate) return json({ error: 'due_date is required' }, 400);
     if (!amount || amount <= 0) return json({ error: 'amount must be greater than 0' }, 400);
 
+    const renewedAt = status === 'Renewed' ? new Date().toISOString() : null;
+
     const result = await env.DB.prepare(
-      `INSERT INTO renewals (customer_id, frequency, due_date, amount, status)
-       VALUES (?, ?, ?, ?, ?)`
-    ).bind(customerId, frequency, dueDate, amount, status).run();
+      `INSERT INTO renewals (customer_id, frequency, due_date, amount, status, renewed_at)
+       VALUES (?, ?, ?, ?, ?, ?)`
+    ).bind(customerId, frequency, dueDate, amount, status, renewedAt).run();
+
+    await syncRenewalTransaction(env, {
+      id: result.meta.last_row_id, customer_id: customerId, frequency, due_date: dueDate, amount, status, renewed_at: renewedAt
+    });
 
     return json({ result: 'success', id: result.meta.last_row_id });
   } catch (err) {
@@ -187,6 +230,10 @@ export async function onRequestPut(context) {
       `UPDATE renewals SET customer_id = ?, frequency = ?, due_date = ?, amount = ?, status = ?, renewed_at = ? WHERE id = ?`
     ).bind(customerId, frequency, dueDate, amount, status, renewedAt, body.id).run();
 
+    await syncRenewalTransaction(env, {
+      id: body.id, customer_id: customerId, frequency, due_date: dueDate, amount, status, renewed_at: renewedAt
+    });
+
     return json({ result: 'success' });
   } catch (err) {
     return json({ error: err.message }, 500);
@@ -208,18 +255,24 @@ export async function onRequestPatch(context) {
       `UPDATE renewals SET status = 'Renewed', renewed_at = ? WHERE id = ?`
     ).bind(now, id).run();
 
+    // Flips this renewal's existing linked transaction from Pending to
+    // Paid — no new transaction is created here.
+    await syncRenewalTransaction(env, {
+      id: current.id, customer_id: current.customer_id, frequency: current.frequency,
+      due_date: current.due_date, amount: current.amount, status: 'Renewed', renewed_at: now
+    });
+
     const nextDueDate = advanceDueDate(current.due_date, current.frequency);
     const insertResult = await env.DB.prepare(
       `INSERT INTO renewals (customer_id, frequency, due_date, amount, status)
        VALUES (?, ?, ?, ?, 'Pending')`
     ).bind(current.customer_id, current.frequency, nextDueDate, current.amount).run();
 
-    const transactionDate = now.slice(0, 10);
-    const description = `Renewal payment (${current.frequency}) — due ${current.due_date}`;
-    await env.DB.prepare(
-      `INSERT INTO transactions (customer_id, amount, transaction_date, description, status)
-       VALUES (?, ?, ?, ?, 'Paid')`
-    ).bind(current.customer_id, current.amount, transactionDate, description).run();
+    // The next cycle starts life Pending, with its own new transaction.
+    await syncRenewalTransaction(env, {
+      id: insertResult.meta.last_row_id, customer_id: current.customer_id, frequency: current.frequency,
+      due_date: nextDueDate, amount: current.amount, status: 'Pending', renewed_at: null
+    });
 
     return json({
       result: 'success',
@@ -237,6 +290,9 @@ export async function onRequestDelete(context) {
     const { id } = await request.json();
     if (!id) return json({ error: 'id is required' }, 400);
 
+    // Explicit, in case FK cascade isn't enforced depending on D1's
+    // pragma settings — same defensive pattern used elsewhere.
+    await env.DB.prepare('DELETE FROM transactions WHERE renewal_id = ?').bind(id).run();
     await env.DB.prepare('DELETE FROM renewals WHERE id = ?').bind(id).run();
 
     return json({ result: 'success' });
