@@ -61,6 +61,22 @@ CREATE TABLE IF NOT EXISTS transactions (
   FOREIGN KEY (ticket_id) REFERENCES tickets(id) ON DELETE SET NULL
 );
 
+-- Renewals table: recurring payment cycles for a customer (e.g. yearly
+-- hosting/maintenance renewal). Marking one "Renewed" via the admin
+-- console automatically inserts the next cycle's row (due_date advanced
+-- by `frequency`, same amount) — see functions/api/admin/renewals.js.
+CREATE TABLE IF NOT EXISTS renewals (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  customer_id INTEGER NOT NULL,
+  frequency TEXT NOT NULL, -- 'Monthly' | 'Half Yearly' | 'Yearly'
+  due_date TEXT NOT NULL, -- ISO date, e.g. '2026-10-01'
+  amount REAL NOT NULL,
+  status TEXT NOT NULL DEFAULT 'Pending', -- 'Pending' | 'Renewed'
+  renewed_at TEXT,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
+);
+
 -- Leads table: stores every enquiry submitted through the contact form
 CREATE TABLE IF NOT EXISTS leads (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

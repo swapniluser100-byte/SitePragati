@@ -64,6 +64,7 @@ function showAdminDashboard() {
   loadCustomers();
   loadTickets();
   loadCaseStudies();
+  loadRenewals();
 }
 
 function showCustomerDashboard(businessName) {
@@ -1257,6 +1258,305 @@ async function deleteCaseStudy(id) {
   });
   loadCaseStudies();
 }
+
+// ===== Renewals =====
+const RENEWAL_DUE_SOON_DAYS = 7;
+
+function todayISODate() {
+  const d = new Date();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${mm}-${dd}`;
+}
+
+function addDaysISO(isoDate, days) {
+  const [y, m, d] = isoDate.split('-').map(Number);
+  const date = new Date(y, m - 1, d + days);
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return `${date.getFullYear()}-${mm}-${dd}`;
+}
+
+// Renewed is stored; Due / Due Soon are computed live from due_date vs
+// today every time this renders, so the badge never goes stale.
+function renewalDisplayStatus(r) {
+  if (r.status === 'Renewed') return 'Renewed';
+  const today = todayISODate();
+  const dueSoonCutoff = addDaysISO(today, RENEWAL_DUE_SOON_DAYS);
+  if (r.due_date >= today && r.due_date <= dueSoonCutoff) return 'Due Soon';
+  return 'Due';
+}
+
+let renewalsCache = [];
+
+function renewalFrequencyBadge(frequency) {
+  const cls = 'freq-' + (frequency || '').toLowerCase().replace(/\s+/g, '-');
+  return `<span class="freq-badge ${cls}">${escapeHtml(frequency)}</span>`;
+}
+
+function renewalRowHtml(r) {
+  const displayStatus = renewalDisplayStatus(r);
+  const actionBtn = displayStatus === 'Renewed'
+    ? `<button type="button" class="btn btn-outline btn-small" data-view-renewal="${r.id}">View</button>`
+    : `<button type="button" class="btn btn-primary btn-small" data-renew="${r.id}">Renew</button>`;
+
+  return `
+    <tr data-id="${r.id}">
+      <td>
+        <strong>${escapeHtml(r.business_name)}</strong><br>
+        <span class="renewal-subtext">${escapeHtml(r.email || r.phone || '')}</span>
+      </td>
+      <td class="unique-id">${escapeHtml(r.customer_unique_id || '')}</td>
+      <td>${renewalFrequencyBadge(r.frequency)}</td>
+      <td>${escapeHtml(r.due_date)}</td>
+      <td>₹${escapeHtml(String(r.amount))}</td>
+      <td><span class="status-badge ${statusClass(displayStatus)}">${escapeHtml(displayStatus)}</span></td>
+      <td class="actions-col">
+        ${actionBtn}
+        ${editButtonHtml('data-edit-renewal', r.id)}
+        ${deleteButtonHtml('data-delete-renewal', r.id)}
+      </td>
+    </tr>
+  `;
+}
+
+function computeRenewalStats(list) {
+  const today = new Date();
+  const currentMonth = today.getMonth();
+  const currentYear = today.getFullYear();
+
+  let dueThisMonth = 0;
+  let dueThisYear = 0;
+
+  list.forEach(r => {
+    if (r.status === 'Renewed') return;
+    const [y, m] = r.due_date.split('-').map(Number);
+    if (y === currentYear) {
+      dueThisYear += Number(r.amount);
+      if (m - 1 === currentMonth) dueThisMonth += Number(r.amount);
+    }
+  });
+
+  document.getElementById('renewalStatMonth').textContent = '₹' + dueThisMonth.toLocaleString('en-IN');
+  document.getElementById('renewalStatYear').textContent = '₹' + dueThisYear.toLocaleString('en-IN');
+  document.getElementById('renewalStatCount').textContent = list.length;
+}
+
+function applyRenewalFilters() {
+  const term = document.getElementById('renewalSearchInput').value.trim().toLowerCase();
+  const statusFilter = document.getElementById('renewalFilterStatus').value;
+  const freqFilter = document.getElementById('renewalFilterFrequency').value;
+  const fromFilter = document.getElementById('renewalFilterFrom').value;
+  const toFilter = document.getElementById('renewalFilterTo').value;
+
+  let filtered = renewalsCache;
+
+  if (term) {
+    filtered = filtered.filter(r =>
+      (r.business_name || '').toLowerCase().includes(term) ||
+      (r.contact_name || '').toLowerCase().includes(term) ||
+      (r.email || '').toLowerCase().includes(term) ||
+      (r.phone || '').toLowerCase().includes(term)
+    );
+  }
+  if (statusFilter) filtered = filtered.filter(r => renewalDisplayStatus(r) === statusFilter);
+  if (freqFilter) filtered = filtered.filter(r => r.frequency === freqFilter);
+  if (fromFilter) filtered = filtered.filter(r => r.due_date >= fromFilter);
+  if (toFilter) filtered = filtered.filter(r => r.due_date <= toFilter);
+
+  const tbody = document.getElementById('renewalsTableBody');
+  tbody.innerHTML = filtered.length
+    ? filtered.map(renewalRowHtml).join('')
+    : '<tr><td colspan="7" class="empty-note">No renewals match these filters.</td></tr>';
+
+  tbody.querySelectorAll('[data-renew]').forEach(btn => {
+    btn.addEventListener('click', () => renewRenewal(btn.dataset.renew));
+  });
+  tbody.querySelectorAll('[data-view-renewal]').forEach(btn => {
+    btn.addEventListener('click', () => openRenewalModal(btn.dataset.viewRenewal));
+  });
+  tbody.querySelectorAll('[data-edit-renewal]').forEach(btn => {
+    btn.addEventListener('click', () => openRenewalModal(btn.dataset.editRenewal));
+  });
+  tbody.querySelectorAll('[data-delete-renewal]').forEach(btn => {
+    btn.addEventListener('click', () => deleteRenewalRecord(btn.dataset.deleteRenewal));
+  });
+}
+
+document.getElementById('renewalSearchInput').addEventListener('input', applyRenewalFilters);
+document.getElementById('renewalFilterStatus').addEventListener('change', applyRenewalFilters);
+document.getElementById('renewalFilterFrequency').addEventListener('change', applyRenewalFilters);
+document.getElementById('renewalFilterFrom').addEventListener('change', applyRenewalFilters);
+document.getElementById('renewalFilterTo').addEventListener('change', applyRenewalFilters);
+
+async function loadRenewals() {
+  const tbody = document.getElementById('renewalsTableBody');
+  tbody.innerHTML = '<tr><td colspan="7" class="empty-note">Loading…</td></tr>';
+
+  try {
+    const res = await fetch('/api/admin/renewals');
+    const data = await res.json();
+    renewalsCache = data.renewals || [];
+    computeRenewalStats(renewalsCache);
+    applyRenewalFilters();
+  } catch (err) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-note">Could not load renewals.</td></tr>';
+  }
+}
+
+function populateRenewalCustomerSelect() {
+  const select = document.getElementById('renewalCustomer');
+  const options = customersCache.map(c => `<option value="${c.id}">${escapeHtml(c.business_name)}</option>`).join('');
+  select.innerHTML = '<option value="">— Select a customer —</option>' + options;
+}
+
+const renewalModal = makeModal('renewalModalOverlay');
+const renewalFields = {
+  id: document.getElementById('renewalId'),
+  customer_id: document.getElementById('renewalCustomer'),
+  frequency: document.getElementById('renewalFrequency'),
+  due_date: document.getElementById('renewalDueDate'),
+  amount: document.getElementById('renewalAmount')
+};
+
+function clearRenewalForm() {
+  renewalFields.id.value = '';
+  renewalFields.customer_id.value = '';
+  renewalFields.frequency.value = 'Yearly';
+  renewalFields.due_date.value = '';
+  renewalFields.amount.value = '';
+}
+
+function openRenewalModal(id) {
+  clearRenewalForm();
+  populateRenewalCustomerSelect();
+  document.getElementById('renewalModalTitle').textContent = id ? 'Update Renewal Record' : 'Create Renewal Record';
+
+  if (id) {
+    const r = renewalsCache.find(x => String(x.id) === String(id));
+    if (r) {
+      renewalFields.id.value = r.id;
+      renewalFields.customer_id.value = r.customer_id;
+      renewalFields.frequency.value = r.frequency;
+      renewalFields.due_date.value = r.due_date;
+      renewalFields.amount.value = r.amount;
+    }
+  }
+
+  renewalModal.show();
+}
+
+document.getElementById('addRenewalBtn').addEventListener('click', () => openRenewalModal(null));
+document.getElementById('renewalCancelBtn').addEventListener('click', () => {
+  renewalModal.hide();
+  clearRenewalForm();
+});
+document.getElementById('renewalModalCloseBtn').addEventListener('click', () => {
+  renewalModal.hide();
+  clearRenewalForm();
+});
+
+const renewalSaveBtn = document.getElementById('renewalSaveBtn');
+renewalSaveBtn.addEventListener('click', () => {
+  const payload = {
+    id: renewalFields.id.value,
+    customer_id: Number(renewalFields.customer_id.value),
+    frequency: renewalFields.frequency.value,
+    due_date: renewalFields.due_date.value,
+    amount: Number(renewalFields.amount.value)
+  };
+
+  if (!payload.customer_id) {
+    alert('Please select a customer.');
+    return;
+  }
+  if (!payload.due_date) {
+    alert('Please set a renewal due date.');
+    return;
+  }
+  if (!payload.amount || payload.amount <= 0) {
+    alert('Please enter an amount greater than 0.');
+    return;
+  }
+
+  const isEdit = !!payload.id;
+  const method = isEdit ? 'PUT' : 'POST';
+  if (!isEdit) delete payload.id;
+
+  withButtonSpinner(renewalSaveBtn, 'Saving…', async () => {
+    try {
+      const res = await fetch('/api/admin/renewals', {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        alert('Error: ' + (data.error || 'Could not save'));
+        return;
+      }
+      renewalModal.hide();
+      clearRenewalForm();
+      loadRenewals();
+    } catch (err) {
+      alert('Something went wrong saving this renewal.');
+    }
+  });
+});
+
+const renewalSuccessModal = makeModal('renewalSuccessOverlay');
+
+async function renewRenewal(id) {
+  if (!confirm('Mark this renewal as Renewed? This will automatically create the next renewal cycle.')) return;
+
+  try {
+    const res = await fetch('/api/admin/renewals', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: Number(id) })
+    });
+    const data = await res.json();
+    if (!res.ok || data.error) {
+      alert('Error: ' + (data.error || 'Could not renew'));
+      return;
+    }
+
+    const r = renewalsCache.find(x => String(x.id) === String(id));
+    document.getElementById('renewalSuccessDetails').textContent =
+      `Customer: ${r ? r.business_name : ''}\nNew Due Date: ${data.next.due_date}\nAmount: ₹${data.next.amount}`;
+    await loadRenewals();
+    renewalSuccessModal.show();
+  } catch (err) {
+    alert('Something went wrong processing this renewal.');
+  }
+}
+
+document.getElementById('renewalSuccessOkBtn').addEventListener('click', () => renewalSuccessModal.hide());
+
+async function deleteRenewalRecord(id) {
+  if (!confirm('Delete this renewal record? This cannot be undone.')) return;
+  await fetch('/api/admin/renewals', {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: Number(id) })
+  });
+  loadRenewals();
+}
+
+document.getElementById('exportRenewalsBtn').addEventListener('click', () => {
+  const rows = [['Customer Name', 'Customer ID', 'Frequency', 'Renewal Due Date', 'Amount Due', 'Status']];
+  renewalsCache.forEach(r => {
+    rows.push([r.business_name, r.customer_unique_id || '', r.frequency, r.due_date, r.amount, renewalDisplayStatus(r)]);
+  });
+  const csv = rows.map(row => row.map(cell => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'renewals.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+});
 
 // ===== Customer dashboard =====
 
