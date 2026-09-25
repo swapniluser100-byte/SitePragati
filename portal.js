@@ -161,7 +161,10 @@ function leadStatusClass(status) {
 }
 
 function leadInitials(name) {
-  const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+  // Skip word-like tokens with no letter/number (e.g. the "-" in
+  // "Demo - Prakruti Nursery") so a name in that shape still gets real
+  // initials ("DP") instead of one letter and a stray dash.
+  const parts = String(name || '').trim().split(/\s+/).filter(w => /[a-zA-Z0-9]/.test(w));
   const initials = (parts[0]?.[0] || '') + (parts[1]?.[0] || '');
   return initials.toUpperCase() || '?';
 }
@@ -689,13 +692,29 @@ const TICKET_STATUS_OPTIONS = ['Open', 'In Progress', 'Payment Pending', 'Paymen
 let ticketsCache = [];
 let currentTicketId = null;
 
-function ticketRowHtml(t) {
+const TICKET_CLOSED_STATUSES = ['Resolved', 'Closed'];
+
+function ticketRowHtml(t, i) {
   return `
     <tr class="clickable-row" data-ticket-id="${t.id}">
       <td>${escapeHtml(new Date(t.created_at).toLocaleDateString())}</td>
-      <td>${escapeHtml(t.business_name)}</td>
+      <td>
+        <span class="lead-name-cell">
+          <span class="lead-avatar" style="background:${LEAD_AVATAR_COLORS[i % LEAD_AVATAR_COLORS.length]}">${escapeHtml(leadInitials(t.business_name))}</span>
+          ${escapeHtml(t.business_name)}
+        </span>
+      </td>
       <td>${escapeHtml(t.subject)}</td>
       <td><span class="status-badge ${statusClass(t.status)}">${escapeHtml(t.status)}</span></td>
+      <td class="actions-col">
+        <button type="button" class="btn btn-outline btn-small" data-view-ticket="${t.id}">👁 View</button>
+        <span class="row-menu-wrap">
+          <button type="button" class="btn btn-outline btn-icon" data-menu-toggle="${t.id}" aria-label="More actions" title="More actions">⋮</button>
+          <span class="row-menu" data-menu="${t.id}" hidden>
+            <button type="button" class="row-menu-item row-menu-danger" data-delete-ticket="${t.id}">🗑 Delete ticket</button>
+          </span>
+        </span>
+      </td>
     </tr>`;
 }
 
@@ -703,7 +722,35 @@ function wireTicketRowClicks(container) {
   container.querySelectorAll('.clickable-row').forEach(row => {
     row.addEventListener('click', () => openTicketDetail(row.dataset.ticketId));
   });
+  container.querySelectorAll('[data-view-ticket]').forEach(btn => {
+    btn.addEventListener('click', (e) => { e.stopPropagation(); openTicketDetail(btn.dataset.viewTicket); });
+  });
+  container.querySelectorAll('[data-menu-toggle]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const menu = container.querySelector(`[data-menu="${btn.dataset.menuToggle}"]`);
+      document.querySelectorAll('.row-menu').forEach(m => { if (m !== menu) m.hidden = true; });
+      menu.hidden = !menu.hidden;
+    });
+  });
+  container.querySelectorAll('[data-delete-ticket]').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (!confirm('Delete this ticket and its conversation? This cannot be undone.')) return;
+      await fetch('/api/admin/tickets', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: Number(btn.dataset.deleteTicket) })
+      });
+      loadTickets();
+    });
+  });
 }
+
+// Closes any open row "⋮" menu when clicking elsewhere on the page.
+document.addEventListener('click', () => {
+  document.querySelectorAll('.row-menu').forEach(m => m.hidden = true);
+});
 
 function populateTicketCustomerFilter() {
   const select = document.getElementById('ticketFilterCustomer');
@@ -782,70 +829,105 @@ addTicketSaveBtn.addEventListener('click', () => {
   });
 });
 
+// The stat row always reflects every ticket, regardless of the current
+// filters/search — same convention as the Leads and Customers tabs.
+// "Open Tickets" and "Resolved" are buckets (anything not yet
+// Resolved/Closed, and Resolved-or-Closed respectively); "In Progress"
+// is that one exact status — together Open+InProgress+Resolved should
+// only double-count a ticket once each is figured by its own rule.
+function computeTicketStats(tickets) {
+  document.getElementById('ticketStatTotal').textContent = tickets.length;
+  document.getElementById('ticketStatOpen').textContent = tickets.filter(t => !TICKET_CLOSED_STATUSES.includes(t.status)).length;
+  document.getElementById('ticketStatInProgress').textContent = tickets.filter(t => t.status === 'In Progress').length;
+  document.getElementById('ticketStatResolved').textContent = tickets.filter(t => TICKET_CLOSED_STATUSES.includes(t.status)).length;
+}
+
+let ticketSearchTerm = '';
+let ticketStatFilter = ''; // '' | 'open' | 'In Progress' | 'closed' — set by clicking a stat card
+
 function applyTicketFilters() {
   const customerFilter = document.getElementById('ticketFilterCustomer').value;
   const statusFilter = document.getElementById('ticketFilterStatus').value;
+  const term = ticketSearchTerm.trim().toLowerCase();
 
   let filtered = ticketsCache;
   if (customerFilter) filtered = filtered.filter(t => String(t.customer_id) === customerFilter);
   if (statusFilter) filtered = filtered.filter(t => t.status === statusFilter);
+  if (term) {
+    filtered = filtered.filter(t =>
+      [t.business_name, t.subject, t.id, t.reference_code].some(v => v && String(v).toLowerCase().includes(term))
+    );
+  }
+  if (ticketStatFilter === 'open') filtered = filtered.filter(t => !TICKET_CLOSED_STATUSES.includes(t.status));
+  else if (ticketStatFilter === 'closed') filtered = filtered.filter(t => TICKET_CLOSED_STATUSES.includes(t.status));
+  else if (ticketStatFilter) filtered = filtered.filter(t => t.status === ticketStatFilter);
+
+  const open = filtered.filter(t => !TICKET_CLOSED_STATUSES.includes(t.status));
+  const closed = filtered.filter(t => TICKET_CLOSED_STATUSES.includes(t.status));
 
   const tbody = document.getElementById('ticketsTableBody');
-  const closedSection = document.getElementById('closedTicketsSection');
-
-  if (statusFilter === 'Closed') {
-    // Already filtered exclusively to Closed — show them directly, no need
-    // for a separate collapsed section on top of an explicit filter.
-    tbody.innerHTML = filtered.length
-      ? filtered.map(ticketRowHtml).join('')
-      : '<tr><td colspan="4" class="empty-note">No closed tickets match these filters.</td></tr>';
-    wireTicketRowClicks(tbody.parentElement);
-    closedSection.hidden = true;
-    return;
-  }
-
-  const active = filtered.filter(t => t.status !== 'Closed');
-  const closed = filtered.filter(t => t.status === 'Closed');
-
-  tbody.innerHTML = active.length
-    ? active.map(ticketRowHtml).join('')
-    : '<tr><td colspan="4" class="empty-note">No tickets match these filters.</td></tr>';
+  tbody.innerHTML = open.length
+    ? open.map(ticketRowHtml).join('')
+    : '<tr><td colspan="5" class="empty-note">No open tickets match these filters.</td></tr>';
   wireTicketRowClicks(tbody.parentElement);
-
-  document.getElementById('closedTicketsCount').textContent = closed.length;
-  closedSection.hidden = closed.length === 0;
+  document.getElementById('openTicketsCount').textContent = open.length;
 
   const closedTbody = document.getElementById('closedTicketsTableBody');
-  closedTbody.innerHTML = closed.map(ticketRowHtml).join('');
+  closedTbody.innerHTML = closed.length
+    ? closed.map(ticketRowHtml).join('')
+    : '<tr><td colspan="5" class="empty-note">No closed tickets match these filters.</td></tr>';
   wireTicketRowClicks(closedTbody.parentElement);
+  document.getElementById('closedTicketsCount').textContent = closed.length;
 }
 
 document.getElementById('ticketFilterCustomer').addEventListener('change', applyTicketFilters);
 document.getElementById('ticketFilterStatus').addEventListener('change', applyTicketFilters);
 
-document.getElementById('toggleClosedTickets').addEventListener('click', () => {
-  const wrap = document.getElementById('closedTicketsWrap');
-  const isHidden = wrap.hidden;
-  wrap.hidden = !isHidden;
-  const count = document.getElementById('closedTicketsCount').textContent;
-  document.getElementById('toggleClosedTickets').innerHTML = isHidden
-    ? `Hide closed tickets (<span id="closedTicketsCount">${count}</span>)`
-    : `Show closed tickets (<span id="closedTicketsCount">${count}</span>)`;
+document.getElementById('ticketSearchInput').addEventListener('input', (e) => {
+  ticketSearchTerm = e.target.value;
+  applyTicketFilters();
+});
+
+document.getElementById('resetTicketFiltersBtn').addEventListener('click', () => {
+  document.getElementById('ticketFilterCustomer').value = '';
+  document.getElementById('ticketFilterStatus').value = '';
+  document.getElementById('ticketSearchInput').value = '';
+  ticketSearchTerm = '';
+  ticketStatFilter = '';
+  document.querySelectorAll('.ticket-stat-card').forEach(c => c.classList.toggle('active', c.dataset.ticketStat === ''));
+  applyTicketFilters();
+});
+
+document.querySelectorAll('.ticket-stat-card').forEach(card => {
+  card.addEventListener('click', () => {
+    ticketStatFilter = card.dataset.ticketStat;
+    document.querySelectorAll('.ticket-stat-card').forEach(c => c.classList.toggle('active', c === card));
+    applyTicketFilters();
+  });
+});
+
+document.querySelectorAll('.ticket-section-header').forEach(header => {
+  header.addEventListener('click', () => {
+    const target = document.getElementById(header.dataset.toggleSection);
+    target.hidden = !target.hidden;
+    header.classList.toggle('collapsed', target.hidden);
+  });
 });
 
 async function loadTickets() {
   const tbody = document.getElementById('ticketsTableBody');
-  tbody.innerHTML = '<tr><td colspan="4" class="empty-note">Loading…</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="5" class="empty-note">Loading…</td></tr>';
 
   try {
     const res = await fetch('/api/admin/tickets');
     const data = await res.json();
     ticketsCache = data.tickets || [];
 
+    computeTicketStats(ticketsCache);
     populateTicketCustomerFilter();
     applyTicketFilters();
   } catch (err) {
-    tbody.innerHTML = '<tr><td colspan="4" class="empty-note">Could not load tickets.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-note">Could not load tickets.</td></tr>';
   }
 }
 
@@ -1072,7 +1154,6 @@ document.getElementById('ticketDetailStatus').addEventListener('change', async (
   if (updated) renderTicketDetailInfo(updated);
 });
 
-document.getElementById('refreshTickets').addEventListener('click', loadTickets);
 
 // ===== Customer detail view (transactions) =====
 function renderCustomerDetailInfo(c) {
