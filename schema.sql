@@ -58,9 +58,11 @@ CREATE TABLE IF NOT EXISTS transactions (
   description TEXT,
   status TEXT DEFAULT 'Paid',
   ticket_id INTEGER,
+  renewal_id INTEGER, -- the renewals row this transaction mirrors, if any
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
-  FOREIGN KEY (ticket_id) REFERENCES tickets(id) ON DELETE SET NULL
+  FOREIGN KEY (ticket_id) REFERENCES tickets(id) ON DELETE SET NULL,
+  FOREIGN KEY (renewal_id) REFERENCES renewals(id) ON DELETE SET NULL
 );
 
 -- Renewals table: recurring payment cycles for a customer (e.g. yearly
