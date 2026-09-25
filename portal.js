@@ -944,14 +944,26 @@ document.getElementById('refreshTickets').addEventListener('click', loadTickets)
 function renderCustomerDetailInfo(c) {
   const info = document.getElementById('customerDetailInfo');
   info.innerHTML = `
-    <h3>${escapeHtml(c.business_name)}</h3>
-    ${requestLinkBlockHtml(c)}
-    ${customerLinksBlockHtml(c)}
-    <p>${escapeHtml(c.contact_name || '')} ${c.phone ? '· ' + escapeHtml(c.phone) : ''}</p>
-    <p>${escapeHtml(c.address || '')}</p>
-    <p class="due-amount">${c.next_payment_due_date ? 'Next due: ' + escapeHtml(c.next_payment_due_date) : 'No due date set'}${c.next_payment_due_amount ? ' — ₹' + escapeHtml(String(c.next_payment_due_amount)) : ''}</p>
-    <p class="total-paid">Total paid: ₹${escapeHtml(String(c.total_paid ?? 0))}</p>
-    ${c.notes ? `<p><strong>Notes:</strong></p><p style="white-space:pre-wrap;">${escapeHtml(c.notes)}</p>` : ''}
+    <div class="cust-info-card">
+      <span class="cust-info-avatar" aria-hidden="true">👤</span>
+      <div class="cust-info-main">
+        <h3>${escapeHtml(c.business_name)}</h3>
+        ${requestLinkBlockHtml(c)}
+        ${customerLinksBlockHtml(c)}
+        <p>${escapeHtml(c.contact_name || '')} ${c.phone ? '· ' + escapeHtml(c.phone) : ''}</p>
+        <p>${escapeHtml(c.address || '')}</p>
+        <p class="due-amount">${c.next_payment_due_date ? 'Next due: ' + escapeHtml(c.next_payment_due_date) : 'No due date set'}${c.next_payment_due_amount ? ' — ₹' + escapeHtml(String(c.next_payment_due_amount)) : ''}</p>
+        ${c.notes ? `<p><strong>Notes:</strong></p><p style="white-space:pre-wrap;">${escapeHtml(c.notes)}</p>` : ''}
+      </div>
+      <div class="cust-info-divider"></div>
+      <div class="cust-info-side">
+        <span class="renewal-stat-icon renewal-stat-icon-blue">📅</span>
+        <div>
+          <p class="renewal-stat-label">Total Paid</p>
+          <p class="renewal-stat-value">₹${escapeHtml(String(c.total_paid ?? 0))}</p>
+        </div>
+      </div>
+    </div>
   `;
   wireCopyLinkButtons(info);
 }
@@ -974,38 +986,91 @@ document.getElementById('backToCustomersBtn').addEventListener('click', () => {
   currentCustomerId = null;
 });
 
+let transactionsCache = [];
+let transactionStatusFilter = '';
+
+const TXN_STAT_CARDS = [
+  { status: 'Paid', label: 'Paid Amount', icon: '💰', cls: 'txn-stat-paid' },
+  { status: 'Pending', label: 'Pending Amount', icon: '🕐', cls: 'txn-stat-pending' },
+  { status: 'Overdue', label: 'Overdue Amount', icon: '⚠️', cls: 'txn-stat-overdue' }
+];
+
+function renderTransactionStats() {
+  const sums = { Paid: 0, Pending: 0, Overdue: 0 };
+  const counts = { Paid: 0, Pending: 0, Overdue: 0 };
+
+  transactionsCache.forEach(t => {
+    if (sums[t.status] === undefined) return;
+    sums[t.status] += Number(t.amount);
+    counts[t.status]++;
+  });
+
+  const wrap = document.getElementById('customerTxnStats');
+  wrap.innerHTML = TXN_STAT_CARDS.map(card => `
+    <button type="button" class="txn-stat-card ${card.cls} ${transactionStatusFilter === card.status ? 'active' : ''}" data-txn-stat="${card.status}">
+      <span class="txn-stat-icon">${card.icon}</span>
+      <span class="txn-stat-text">
+        <span class="txn-stat-label">${card.label}</span>
+        <span class="txn-stat-value">₹${sums[card.status].toLocaleString('en-IN')}</span>
+        <span class="txn-stat-count">${counts[card.status]} transaction${counts[card.status] === 1 ? '' : 's'}</span>
+      </span>
+      <span class="txn-stat-chevron" aria-hidden="true">&rsaquo;</span>
+    </button>
+  `).join('');
+
+  wrap.querySelectorAll('[data-txn-stat]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const status = btn.dataset.txnStat;
+      transactionStatusFilter = transactionStatusFilter === status ? '' : status;
+      renderTransactionStats();
+      renderTransactionsTable();
+    });
+  });
+}
+
+function renderTransactionsTable() {
+  const tbody = document.getElementById('transactionsTableBody');
+  const filtered = transactionStatusFilter
+    ? transactionsCache.filter(t => t.status === transactionStatusFilter)
+    : transactionsCache;
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" class="empty-note">${transactionStatusFilter ? 'No ' + transactionStatusFilter.toLowerCase() + ' transactions.' : 'No transactions yet.'}</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(t => `
+    <tr>
+      <td>${escapeHtml(t.transaction_date || '')}</td>
+      <td>₹${escapeHtml(String(t.amount))}</td>
+      <td>${escapeHtml(t.description || '')}</td>
+      <td>${escapeHtml(t.status)}</td>
+      <td class="actions-col">
+        ${editButtonHtml('data-edit-txn', t.id)}
+        ${deleteButtonHtml('data-delete-txn', t.id)}
+      </td>
+    </tr>
+  `).join('');
+
+  tbody.querySelectorAll('[data-edit-txn]').forEach(btn => {
+    btn.addEventListener('click', () => openTransactionForm(transactionsCache.find(t => String(t.id) === btn.dataset.editTxn)));
+  });
+  tbody.querySelectorAll('[data-delete-txn]').forEach(btn => {
+    btn.addEventListener('click', () => deleteTransaction(btn.dataset.deleteTxn));
+  });
+}
+
 async function loadTransactions(customerId) {
   const tbody = document.getElementById('transactionsTableBody');
   tbody.innerHTML = '<tr><td colspan="5" class="empty-note">Loading…</td></tr>';
+  transactionStatusFilter = '';
 
   try {
     const res = await fetch(`/api/admin/transactions?customer_id=${customerId}`);
     const data = await res.json();
-
-    if (!data.transactions || data.transactions.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="5" class="empty-note">No transactions yet.</td></tr>';
-      return;
-    }
-
-    tbody.innerHTML = data.transactions.map(t => `
-      <tr>
-        <td>${escapeHtml(t.transaction_date || '')}</td>
-        <td>₹${escapeHtml(String(t.amount))}</td>
-        <td>${escapeHtml(t.description || '')}</td>
-        <td>${escapeHtml(t.status)}</td>
-        <td class="actions-col">
-          ${editButtonHtml('data-edit-txn', t.id)}
-          ${deleteButtonHtml('data-delete-txn', t.id)}
-        </td>
-      </tr>
-    `).join('');
-
-    tbody.querySelectorAll('[data-edit-txn]').forEach(btn => {
-      btn.addEventListener('click', () => openTransactionForm(data.transactions.find(t => String(t.id) === btn.dataset.editTxn)));
-    });
-    tbody.querySelectorAll('[data-delete-txn]').forEach(btn => {
-      btn.addEventListener('click', () => deleteTransaction(btn.dataset.deleteTxn));
-    });
+    transactionsCache = data.transactions || [];
+    renderTransactionStats();
+    renderTransactionsTable();
   } catch (err) {
     tbody.innerHTML = '<tr><td colspan="5" class="empty-note">Could not load transactions.</td></tr>';
   }
