@@ -1581,7 +1581,10 @@ document.getElementById('renewalFilterFrequency').addEventListener('change', app
 document.getElementById('renewalFilterFrom').addEventListener('change', applyRenewalFilters);
 document.getElementById('renewalFilterTo').addEventListener('change', applyRenewalFilters);
 
-async function loadRenewals() {
+// `announceAutoCreated`: when true (the "Refresh Renewals" button), tells
+// the admin how many missing renewal records the check just created —
+// skipped on the tab's normal/passive loads so it doesn't pop up unasked.
+async function loadRenewals(announceAutoCreated = false) {
   const tbody = document.getElementById('renewalsTableBody');
   tbody.innerHTML = '<tr><td colspan="7" class="empty-note">Loading…</td></tr>';
 
@@ -1591,6 +1594,13 @@ async function loadRenewals() {
     renewalsCache = data.renewals || [];
     computeRenewalStats(renewalsCache);
     applyRenewalFilters();
+
+    if (announceAutoCreated) {
+      const count = data.auto_created || 0;
+      alert(count > 0
+        ? `Created ${count} missing renewal record${count === 1 ? '' : 's'}.`
+        : 'No missing renewals found — every renewal-required customer already has one queued up.');
+    }
   } catch (err) {
     tbody.innerHTML = '<tr><td colspan="7" class="empty-note">Could not load renewals.</td></tr>';
   }
@@ -1738,6 +1748,11 @@ async function deleteRenewalRecord(id) {
   });
   loadRenewals();
 }
+
+const refreshRenewalsBtn = document.getElementById('refreshRenewalsBtn');
+refreshRenewalsBtn.addEventListener('click', () => {
+  withButtonSpinner(refreshRenewalsBtn, 'Checking…', () => loadRenewals(true));
+});
 
 document.getElementById('exportRenewalsBtn').addEventListener('click', () => {
   const rows = [['Customer Name', 'Customer ID', 'Frequency', 'Renewal Due Date', 'Amount Due', 'Status']];

@@ -3,7 +3,9 @@
 //          contact name, email, phone, and unique_id (for search/display).
 //          Also opportunistically auto-creates a Pending renewal for any
 //          renewal_required customer who doesn't already have one — see
-//          autoCreateMissingRenewals below.
+//          autoCreateMissingRenewals below. The response's `auto_created`
+//          count is how many it just made (surfaced by the Renewals
+//          tab's "Refresh Renewals" button).
 // POST   → { customer_id, frequency, due_date, amount, status? } →
 //          create a new renewal record (status defaults to 'Pending';
 //          pass 'Renewed' only when backfilling an already-paid cycle).
@@ -97,12 +99,17 @@ async function syncRenewalTransaction(env, renewal) {
 // customer who's never had a renewal, seed their first cycle with
 // "+ Create Renewal" in this tab; every cycle after that is handled
 // automatically by this function and the Renew button.
+// Returns how many renewals it just created — the Renewals tab's
+// "Refresh Renewals" button surfaces this count so the admin can tell the
+// check actually ran, rather than it silently doing nothing.
 async function autoCreateMissingRenewals(env) {
   const { results: candidates } = await env.DB.prepare(`
     SELECT id, next_payment_due_date, next_payment_due_amount, renewal_frequency
     FROM customers
     WHERE renewal_required = 1
   `).all();
+
+  let createdCount = 0;
 
   for (const c of candidates) {
     if (!FREQUENCY_MONTHS[c.renewal_frequency]) continue;
@@ -139,13 +146,16 @@ async function autoCreateMissingRenewals(env) {
     await syncRenewalTransaction(env, {
       id: insertResult.meta.last_row_id, customer_id: c.id, frequency, due_date: dueDate, amount, status: 'Pending', renewed_at: null
     });
+    createdCount++;
   }
+
+  return createdCount;
 }
 
 export async function onRequestGet(context) {
   const { env } = context;
   try {
-    await autoCreateMissingRenewals(env);
+    const autoCreated = await autoCreateMissingRenewals(env);
 
     const { results } = await env.DB.prepare(`
       SELECT
@@ -156,7 +166,7 @@ export async function onRequestGet(context) {
       JOIN customers ON customers.id = renewals.customer_id
       ORDER BY renewals.due_date ASC
     `).all();
-    return json({ renewals: results });
+    return json({ renewals: results, auto_created: autoCreated });
   } catch (err) {
     return json({ error: err.message }, 500);
   }
