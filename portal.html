@@ -374,12 +374,60 @@
 
     <!-- List view -->
     <div id="ticketsListView">
-      <div class="panel-head">
-        <h2>Tickets</h2>
-        <div style="display:flex; gap:8px;">
-          <button type="button" id="addTicketBtn" class="btn btn-primary btn-small">+ Add ticket</button>
-          <button type="button" id="refreshTickets" class="btn btn-outline btn-small">Refresh</button>
+      <div class="panel-head panel-head-leads">
+        <div class="panel-head-icon-row">
+          <span class="panel-head-icon">🎫</span>
+          <div>
+            <h2>Tickets</h2>
+            <p class="panel-head-subtitle">Track and manage your customer support tickets.</p>
+          </div>
         </div>
+        <div class="panel-head-actions">
+          <div class="table-search">
+            <span class="search-icon" aria-hidden="true">🔍</span>
+            <input type="search" id="ticketSearchInput" placeholder="Search by customer, subject, or ticket ID…" aria-label="Search tickets">
+          </div>
+          <button type="button" id="addTicketBtn" class="btn btn-primary btn-small">+ Add ticket</button>
+        </div>
+      </div>
+
+      <div class="ticket-stats">
+        <button type="button" class="ticket-stat-card ticket-stat-blue active" data-ticket-stat="">
+          <span class="ticket-stat-icon">🎫</span>
+          <span class="ticket-stat-text">
+            <span class="ticket-stat-label">Total Tickets</span>
+            <span class="ticket-stat-value" id="ticketStatTotal">0</span>
+            <span class="ticket-stat-sub">Across all customers</span>
+          </span>
+          <span class="ticket-stat-chevron">&rsaquo;</span>
+        </button>
+        <button type="button" class="ticket-stat-card ticket-stat-green" data-ticket-stat="open">
+          <span class="ticket-stat-icon">⏱️</span>
+          <span class="ticket-stat-text">
+            <span class="ticket-stat-label">Open Tickets</span>
+            <span class="ticket-stat-value" id="ticketStatOpen">0</span>
+            <span class="ticket-stat-sub">Needs attention</span>
+          </span>
+          <span class="ticket-stat-chevron">&rsaquo;</span>
+        </button>
+        <button type="button" class="ticket-stat-card ticket-stat-purple" data-ticket-stat="In Progress">
+          <span class="ticket-stat-icon">✅</span>
+          <span class="ticket-stat-text">
+            <span class="ticket-stat-label">In Progress</span>
+            <span class="ticket-stat-value" id="ticketStatInProgress">0</span>
+            <span class="ticket-stat-sub">Being resolved</span>
+          </span>
+          <span class="ticket-stat-chevron">&rsaquo;</span>
+        </button>
+        <button type="button" class="ticket-stat-card ticket-stat-amber" data-ticket-stat="closed">
+          <span class="ticket-stat-icon">✅</span>
+          <span class="ticket-stat-text">
+            <span class="ticket-stat-label">Resolved</span>
+            <span class="ticket-stat-value" id="ticketStatResolved">0</span>
+            <span class="ticket-stat-sub">Closed successfully</span>
+          </span>
+          <span class="ticket-stat-chevron">&rsaquo;</span>
+        </button>
       </div>
 
       <div id="addTicketModalOverlay" class="modal-overlay" hidden>
@@ -423,29 +471,40 @@
             <option>Closed</option>
           </select>
         </div>
+        <button type="button" id="resetTicketFiltersBtn" class="btn btn-outline btn-small ticket-filters-reset">↺ Reset</button>
       </div>
 
-      <div class="table-wrap">
-        <table id="ticketsTable">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Customer</th>
-              <th>Subject</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="ticketsTableBody">
-            <tr><td colspan="4" class="empty-note">Loading…</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div id="closedTicketsSection" class="closed-tickets-section" hidden>
-        <button type="button" id="toggleClosedTickets" class="btn btn-outline btn-small">
-          Show closed tickets (<span id="closedTicketsCount">0</span>)
+      <div class="ticket-section">
+        <button type="button" class="ticket-section-header" data-toggle-section="openTicketsSection">
+          <span class="ticket-section-dot ticket-section-dot-open"></span>
+          <span class="ticket-section-title">Open Tickets (<span id="openTicketsCount">0</span>)</span>
+          <span class="ticket-section-chevron">⌃</span>
         </button>
-        <div class="table-wrap" id="closedTicketsWrap" hidden>
+        <div class="table-wrap" id="openTicketsSection">
+          <table id="ticketsTable">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Customer</th>
+                <th>Subject</th>
+                <th>Status</th>
+                <th class="actions-col">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="ticketsTableBody">
+              <tr><td colspan="5" class="empty-note">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="ticket-section">
+        <button type="button" class="ticket-section-header" data-toggle-section="closedTicketsSection">
+          <span class="ticket-section-dot ticket-section-dot-closed"></span>
+          <span class="ticket-section-title">Closed Tickets (<span id="closedTicketsCount">0</span>)</span>
+          <span class="ticket-section-chevron">⌃</span>
+        </button>
+        <div class="table-wrap" id="closedTicketsSection">
           <table id="closedTicketsTable">
             <thead>
               <tr>
@@ -453,6 +512,7 @@
                 <th>Customer</th>
                 <th>Subject</th>
                 <th>Status</th>
+                <th class="actions-col">Actions</th>
               </tr>
             </thead>
             <tbody id="closedTicketsTableBody"></tbody>
