@@ -32,14 +32,16 @@ import { json } from '../../_utils/auth.js';
 const FREQUENCY_MONTHS = { 'Monthly': 1, 'Half Yearly': 6, 'Yearly': 12 };
 const STATUS_OPTIONS = ['Pending', 'Renewed'];
 
-// Advances an ISO date string by N months, clamping to the last day of
-// the target month when the original day doesn't exist there (e.g.
-// Jan 31 + 1 month -> Feb 28/29, not an overflowed March date).
-function advanceDueDate(dateStr, frequency) {
+// Adds N months to an ISO date string, clamping to the last day of the
+// target month when the original day doesn't exist there (e.g. Jan 31 +
+// 1 month -> Feb 28/29, not an overflowed March date). Always clamps the
+// ORIGINAL day-of-month, not whatever a previous clamp left it at — so
+// calling this repeatedly with increasing `months` from the same fixed
+// anchor self-corrects (Jan 31 + 1 -> Feb 28, + 2 -> Mar 31, not Mar 28).
+function addMonths(dateStr, months) {
   const [y, m, d] = dateStr.split('-').map(Number);
-  const monthsToAdd = FREQUENCY_MONTHS[frequency] || 12;
 
-  let newMonthIndex = (m - 1) + monthsToAdd;
+  let newMonthIndex = (m - 1) + months;
   const newYear = y + Math.floor(newMonthIndex / 12);
   newMonthIndex = ((newMonthIndex % 12) + 12) % 12;
 
@@ -49,6 +51,14 @@ function advanceDueDate(dateStr, frequency) {
   const mm = String(newMonthIndex + 1).padStart(2, '0');
   const dd = String(newDay).padStart(2, '0');
   return `${newYear}-${mm}-${dd}`;
+}
+
+// Advances an ISO date string by one cycle of `frequency` — used for a
+// single, one-off step (e.g. the Renew button's next-cycle insert),
+// where there's no fixed anchor to self-correct against; each call
+// chains off the actual previous due_date.
+function advanceDueDate(dateStr, frequency) {
+  return addMonths(dateStr, FREQUENCY_MONTHS[frequency] || 12);
 }
 
 // Keeps a renewal's linked transaction (matched by renewal_id) mirroring
@@ -79,74 +89,97 @@ async function syncRenewalTransaction(env, renewal) {
   }
 }
 
-// For every customer with renewal_required checked, makes sure at
-// least one Pending renewal is queued up for them. Skips a customer
-// entirely if they already have ANY Pending renewal (whether created
-// manually, by the Renew button's own next-cycle cascade, or by a
-// previous run of this same check) — that's what stops this from ever
-// creating a duplicate.
+// For every customer with renewal_required checked, catches up every
+// cycle that's due but has no renewal record yet — not just the next
+// one. The anchor is the customer's own most recent renewal record
+// (whatever its status, Pending or Renewed), or their renewal_start_date
+// if they have no renewal record at all yet (that first cycle is due
+// right on that date, not one cycle after it). Each cycle after the
+// anchor is computed as the anchor date plus N whole cycles of
+// `frequency` — always re-clamped from the anchor's own day-of-month,
+// never chained off a previous cycle's already-clamped date, so a
+// clamp in a short month (e.g. Jan 31 -> Feb 28) self-corrects in the
+// next month that actually has that day (-> Mar 31, not Mar 28). Every
+// created cycle uses the customer's CURRENT renewal_amount, so an
+// amount change on the customer record only affects cycles created from
+// here on, never rewriting already-created ones.
 //
-// When a customer has no Pending renewal, prefer advancing from their
-// most recently Renewed cycle (same due-date math the Renew button
-// uses) — this matters when a renewal was marked Renewed directly via
-// the edit form instead of the Renew button, which doesn't create a
-// next cycle on its own; advancing from history here avoids reseeding
-// the same stale due date. Only a customer with NO renewal history at
-// all falls back to their customers.next_payment_due_date/amount
-// columns — these are no longer editable from the admin console (the
-// form fields were removed), so that fallback only still helps
-// customers who already had them set before that change. For any
-// customer who's never had a renewal, seed their first cycle with
-// "+ Create Renewal" in this tab; every cycle after that is handled
-// automatically by this function and the Renew button.
+// Cycles are created for as long as the computed due_date is today or
+// earlier (the actually-missing/overdue ones). One more — the first
+// cycle whose due_date is still in the future — is created on top of
+// that ONLY when the customer didn't already have an unresolved Pending
+// renewal before this ran; that's what keeps this from stacking a
+// redundant extra future cycle on a customer who already has one queued
+// and simply hasn't reached it yet, while still guaranteeing every
+// renewal_required customer always has at least one Pending cycle
+// queued up (matching the original single-cycle behavior this replaces).
+//
+// Requires both renewal_frequency and renewal_amount to be set (and
+// either renewal_start_date or existing renewal history) — a customer
+// missing any of these is skipped, since there's no amount/date to
+// seed a new cycle from.
+//
 // Returns how many renewals it just created — the Renewals tab's
 // "Refresh Renewals" button surfaces this count so the admin can tell the
 // check actually ran, rather than it silently doing nothing.
+async function insertPendingRenewal(env, { customerId, frequency, dueDate, amount }) {
+  const insertResult = await env.DB.prepare(
+    `INSERT INTO renewals (customer_id, frequency, due_date, amount, status)
+     VALUES (?, ?, ?, ?, 'Pending')`
+  ).bind(customerId, frequency, dueDate, amount).run();
+
+  await syncRenewalTransaction(env, {
+    id: insertResult.meta.last_row_id, customer_id: customerId, frequency,
+    due_date: dueDate, amount, status: 'Pending', renewed_at: null
+  });
+}
+
 async function autoCreateMissingRenewals(env) {
   const { results: candidates } = await env.DB.prepare(`
-    SELECT id, next_payment_due_date, next_payment_due_amount, renewal_frequency
+    SELECT id, renewal_frequency, renewal_amount, renewal_start_date
     FROM customers
     WHERE renewal_required = 1
   `).all();
 
+  const today = new Date().toISOString().slice(0, 10);
   let createdCount = 0;
 
   for (const c of candidates) {
-    if (!FREQUENCY_MONTHS[c.renewal_frequency]) continue;
+    const frequency = c.renewal_frequency;
+    if (!FREQUENCY_MONTHS[frequency]) continue;
+    if (!(Number(c.renewal_amount) > 0)) continue;
+    const amount = Number(c.renewal_amount);
 
-    const existingPending = await env.DB.prepare(
-      `SELECT id FROM renewals WHERE customer_id = ? AND status = 'Pending' LIMIT 1`
-    ).bind(c.id).first();
-    if (existingPending) continue;
-
-    const lastRenewed = await env.DB.prepare(
-      `SELECT due_date, amount, frequency FROM renewals
-       WHERE customer_id = ? AND status = 'Renewed'
-       ORDER BY due_date DESC LIMIT 1`
+    const latest = await env.DB.prepare(
+      `SELECT due_date, status FROM renewals WHERE customer_id = ? ORDER BY due_date DESC LIMIT 1`
     ).bind(c.id).first();
 
-    let dueDate, amount, frequency;
-    if (lastRenewed) {
-      frequency = lastRenewed.frequency;
-      dueDate = advanceDueDate(lastRenewed.due_date, frequency);
-      amount = lastRenewed.amount;
-    } else if (c.next_payment_due_date && c.next_payment_due_amount) {
-      frequency = c.renewal_frequency;
-      dueDate = c.next_payment_due_date;
-      amount = c.next_payment_due_amount;
-    } else {
-      continue;
+    if (!latest && !c.renewal_start_date) continue; // nothing to anchor a first cycle on yet
+
+    // With history, the first candidate is one cycle after the anchor
+    // (the anchor's own due_date already has its record); with no
+    // history at all, the anchor date itself IS the first candidate.
+    const anchorDate = latest ? latest.due_date : c.renewal_start_date;
+    let cycleIndex = latest ? 1 : 0;
+    let candidateDue = addMonths(anchorDate, cycleIndex * FREQUENCY_MONTHS[frequency]);
+    const alreadyHadPending = !!(latest && latest.status === 'Pending');
+
+    // Safety cap (20 years of monthly cycles) — guards against a
+    // nonsensical/very old renewal_start_date generating an unbounded
+    // run of inserts in one request.
+    let guard = 0;
+    while (candidateDue <= today && guard < 240) {
+      await insertPendingRenewal(env, { customerId: c.id, frequency, dueDate: candidateDue, amount });
+      createdCount++;
+      cycleIndex++;
+      candidateDue = addMonths(anchorDate, cycleIndex * FREQUENCY_MONTHS[frequency]);
+      guard++;
     }
 
-    const insertResult = await env.DB.prepare(
-      `INSERT INTO renewals (customer_id, frequency, due_date, amount, status)
-       VALUES (?, ?, ?, ?, 'Pending')`
-    ).bind(c.id, frequency, dueDate, amount).run();
-
-    await syncRenewalTransaction(env, {
-      id: insertResult.meta.last_row_id, customer_id: c.id, frequency, due_date: dueDate, amount, status: 'Pending', renewed_at: null
-    });
-    createdCount++;
+    if (!alreadyHadPending) {
+      await insertPendingRenewal(env, { customerId: c.id, frequency, dueDate: candidateDue, amount });
+      createdCount++;
+    }
   }
 
   return createdCount;

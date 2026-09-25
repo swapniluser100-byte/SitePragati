@@ -571,7 +571,9 @@ const custFields = {
   website_url: document.getElementById('custWebsiteUrl'),
   admin_console_url: document.getElementById('custAdminConsoleUrl'),
   notes: document.getElementById('custNotes'),
-  renewal_frequency: document.getElementById('custRenewalFrequency')
+  renewal_frequency: document.getElementById('custRenewalFrequency'),
+  renewal_amount: document.getElementById('custRenewalAmount'),
+  renewal_start_date: document.getElementById('custRenewalStartDate')
 };
 // Handled separately from custFields — a checkbox's .value isn't its
 // checked state, so the generic value-based loops below don't apply to it.
@@ -636,6 +638,14 @@ custSaveBtn.addEventListener('click', () => {
   }
   if (payload.renewal_required && !payload.renewal_frequency) {
     alert('Please select a frequency since Renewal required is checked.');
+    return;
+  }
+  if (payload.renewal_required && !(Number(payload.renewal_amount) > 0)) {
+    alert('Please enter a renewal amount greater than 0 since Renewal required is checked.');
+    return;
+  }
+  if (payload.renewal_required && !payload.renewal_start_date) {
+    alert('Please enter a renewal start date since Renewal required is checked.');
     return;
   }
 

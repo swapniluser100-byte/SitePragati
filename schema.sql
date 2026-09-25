@@ -15,6 +15,8 @@ CREATE TABLE IF NOT EXISTS customers (
   notes TEXT,
   renewal_required INTEGER DEFAULT 0,
   renewal_frequency TEXT, -- 'Monthly' | 'Half Yearly' | 'Yearly' — required when renewal_required is set
+  renewal_amount REAL, -- amount charged each renewal cycle — required when renewal_required is set
+  renewal_start_date TEXT, -- ISO date of the first-ever cycle — anchors auto-created renewals when this customer has no renewal history yet
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
