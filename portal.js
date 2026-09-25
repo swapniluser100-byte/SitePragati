@@ -408,7 +408,6 @@ function renderCustomersList(customers) {
         ${requestLinkBlockHtml(c)}
         ${customerLinksBlockHtml(c)}
         <p>${escapeHtml(c.contact_name || '')} ${c.phone ? '· ' + escapeHtml(c.phone) : ''}</p>
-        <p>${c.next_payment_due_date ? 'Next due: ' + escapeHtml(c.next_payment_due_date) : 'No due date set'}${c.next_payment_due_amount ? ' — ₹' + escapeHtml(String(c.next_payment_due_amount)) : ''}</p>
         <p class="total-paid">Total paid: ₹${escapeHtml(String(c.total_paid ?? 0))}</p>
       </div>
       <div class="cs-card-actions">
@@ -453,8 +452,6 @@ const custFields = {
   password: document.getElementById('custPassword'),
   phone: document.getElementById('custPhone'),
   address: document.getElementById('custAddress'),
-  next_payment_due_date: document.getElementById('custNextDueDate'),
-  next_payment_due_amount: document.getElementById('custNextDueAmount'),
   website_url: document.getElementById('custWebsiteUrl'),
   admin_console_url: document.getElementById('custAdminConsoleUrl'),
   notes: document.getElementById('custNotes'),
@@ -963,16 +960,7 @@ function renderCustomerDetailInfo(c) {
         ${customerLinksBlockHtml(c)}
         <p>${escapeHtml(c.contact_name || '')} ${c.phone ? '· ' + escapeHtml(c.phone) : ''}</p>
         <p>${escapeHtml(c.address || '')}</p>
-        <p class="due-amount">${c.next_payment_due_date ? 'Next due: ' + escapeHtml(c.next_payment_due_date) : 'No due date set'}${c.next_payment_due_amount ? ' — ₹' + escapeHtml(String(c.next_payment_due_amount)) : ''}</p>
         ${c.notes ? `<p><strong>Notes:</strong></p><p style="white-space:pre-wrap;">${escapeHtml(c.notes)}</p>` : ''}
-      </div>
-      <div class="cust-info-divider"></div>
-      <div class="cust-info-side">
-        <span class="renewal-stat-icon renewal-stat-icon-blue">📅</span>
-        <div>
-          <p class="renewal-stat-label">Total Paid</p>
-          <p class="renewal-stat-value">₹${escapeHtml(String(c.total_paid ?? 0))}</p>
-        </div>
       </div>
     </div>
   `;

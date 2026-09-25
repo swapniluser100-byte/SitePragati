@@ -56,10 +56,14 @@ function advanceDueDate(dateStr, frequency) {
 // uses) — this matters when a renewal was marked Renewed directly via
 // the edit form instead of the Renew button, which doesn't create a
 // next cycle on its own; advancing from history here avoids reseeding
-// the same stale due date. Only customers with no renewal history at
-// all fall back to their static next_payment_due_date/amount fields,
-// and only customers missing a frequency or those seed fields are
-// skipped, since there's nothing to create a renewal from.
+// the same stale due date. Only a customer with NO renewal history at
+// all falls back to their customers.next_payment_due_date/amount
+// columns — these are no longer editable from the admin console (the
+// form fields were removed), so that fallback only still helps
+// customers who already had them set before that change. For any
+// customer who's never had a renewal, seed their first cycle with
+// "+ Create Renewal" in this tab; every cycle after that is handled
+// automatically by this function and the Renew button.
 async function autoCreateMissingRenewals(env) {
   const { results: candidates } = await env.DB.prepare(`
     SELECT id, next_payment_due_date, next_payment_due_amount, renewal_frequency
