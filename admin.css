@@ -303,8 +303,6 @@ select.status-select{
   background:rgba(47,111,98,0.12); font-size:1.6rem;
 }
 .cust-info-main{flex:1; min-width:0;}
-.cust-info-divider{width:1px; align-self:stretch; background:rgba(27,37,68,0.1); flex-shrink:0;}
-.cust-info-side{display:flex; align-items:center; gap:12px; flex-shrink:0;}
 
 .txn-stats{display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:16px; margin-bottom:20px;}
 .txn-stat-card{
@@ -329,5 +327,4 @@ select.status-select{
 
 @media (max-width:640px){
   .cust-info-card{flex-direction:column;}
-  .cust-info-divider{width:100%; height:1px;}
 }

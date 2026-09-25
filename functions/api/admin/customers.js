@@ -12,7 +12,6 @@ import { json, hashPassword, generateRandomId } from '../../_utils/auth.js';
 
 const FIELDS = [
   'business_name', 'contact_name', 'email', 'phone', 'address',
-  'next_payment_due_date', 'next_payment_due_amount',
   'website_url', 'admin_console_url', 'notes',
   'renewal_required', 'renewal_frequency'
 ];
@@ -35,7 +34,6 @@ export async function onRequestGet(context) {
       SELECT
         customers.id, customers.unique_id, customers.business_name, customers.contact_name,
         customers.email, customers.phone, customers.address,
-        customers.next_payment_due_date, customers.next_payment_due_amount,
         customers.website_url, customers.admin_console_url, customers.notes,
         customers.renewal_required, customers.renewal_frequency,
         customers.created_at,
