@@ -13,7 +13,8 @@ import { json, hashPassword, generateRandomId } from '../../_utils/auth.js';
 const FIELDS = [
   'business_name', 'contact_name', 'email', 'phone', 'address',
   'website_url', 'admin_console_url', 'notes',
-  'renewal_required', 'renewal_frequency', 'renewal_amount', 'renewal_start_date'
+  'renewal_required', 'renewal_frequency', 'renewal_amount', 'renewal_start_date',
+  'is_actual_customer'
 ];
 const FREQUENCY_OPTIONS = ['Monthly', 'Half Yearly', 'Yearly'];
 
@@ -45,6 +46,7 @@ export async function onRequestGet(context) {
         customers.website_url, customers.admin_console_url, customers.notes,
         customers.renewal_required, customers.renewal_frequency,
         customers.renewal_amount, customers.renewal_start_date,
+        customers.is_actual_customer,
         customers.created_at,
         COALESCE(SUM(CASE WHEN transactions.status = 'Paid' THEN transactions.amount ELSE 0 END), 0) AS total_paid,
         COALESCE(SUM(CASE WHEN transactions.status IN ('Pending', 'Overdue') THEN transactions.amount ELSE 0 END), 0) AS total_pending,
@@ -76,6 +78,7 @@ export async function onRequestPost(context) {
       if (f === 'email') return body.email.trim().toLowerCase();
       if (f === 'renewal_required') return body.renewal_required ? 1 : 0;
       if (f === 'renewal_amount') return body.renewal_amount ? Number(body.renewal_amount) : null;
+      if (f === 'is_actual_customer') return body.is_actual_customer ? 1 : 0;
       return body[f] ?? null;
     });
     const placeholders = FIELDS.map(() => '?').join(', ');
@@ -108,6 +111,7 @@ export async function onRequestPut(context) {
       if (f === 'email') return body.email ? body.email.trim().toLowerCase() : null;
       if (f === 'renewal_required') return body.renewal_required ? 1 : 0;
       if (f === 'renewal_amount') return body.renewal_amount ? Number(body.renewal_amount) : null;
+      if (f === 'is_actual_customer') return body.is_actual_customer ? 1 : 0;
       return body[f] ?? null;
     });
 

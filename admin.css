@@ -226,6 +226,20 @@ select.status-select{
 .customer-search-bar input:focus{border-color:var(--teal); outline:none;}
 .customer-search-bar input::placeholder{color:var(--slate);}
 
+.customer-search-row{display:flex; gap:12px; align-items:center; margin-bottom:18px;}
+.customer-search-row .customer-search-bar{flex:1; margin-bottom:0;}
+.actual-customer-toggle{
+  flex-shrink:0; white-space:nowrap; padding:12px 18px; border-radius:20px;
+  font-family:inherit; font-weight:700; font-size:0.85rem; cursor:pointer;
+  border:1.5px solid rgba(27,37,68,0.2); background:var(--white); color:var(--slate);
+}
+.actual-customer-toggle:hover{background:var(--paper-dim);}
+.actual-customer-toggle.active{background:var(--navy); border-color:var(--navy); color:var(--white);}
+
+@media (max-width:640px){
+  .customer-search-row{flex-direction:column; align-items:stretch;}
+}
+
 /* ===== Modal (Add lead) ===== */
 .modal-overlay{
   position:fixed; inset:0; background:rgba(27,37,68,0.5);
