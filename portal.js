@@ -543,6 +543,15 @@ function wireCopyLinkButtons(root) {
 let customersCache = [];
 let currentCustomerId = null;
 
+// Whether the Customers list is restricted to real customers (excluding
+// demo/test entries) — on by default, toggled via the pill button next
+// to the search bar.
+let showActualCustomersOnly = true;
+
+function actualCustomerFiltered(list) {
+  return showActualCustomersOnly ? list.filter(c => c.is_actual_customer) : list;
+}
+
 async function loadCustomers() {
   const list = document.getElementById('customersList');
   list.innerHTML = '<p class="empty-note">Loading…</p>';
@@ -551,7 +560,7 @@ async function loadCustomers() {
     const res = await fetch('/api/admin/customers');
     const data = await res.json();
     customersCache = data.customers || [];
-    computeCustomerStats(customersCache);
+    computeCustomerStats(actualCustomerFiltered(customersCache));
     populateTicketCustomerFilter(); // keep the Tickets tab's customer filter in sync
     filterCustomers(); // re-render, keeping whatever search term is already typed in
   } catch (err) {
@@ -559,10 +568,11 @@ async function loadCustomers() {
   }
 }
 
-// The top stat row always reflects every customer, not just the ones a
-// search term currently matches — same convention as the Renewals tab.
-// "Active" has no separate concept in this app yet (there's no way to
-// deactivate a customer short of deleting them), so it mirrors the total.
+// The top stat row always reflects every customer matching the current
+// actual-customer toggle, regardless of the search term — same
+// convention as the Renewals tab. "Active" has no separate concept in
+// this app yet (there's no way to deactivate a customer short of
+// deleting them), so it mirrors the total.
 function computeCustomerStats(customers) {
   const totalPaid = customers.reduce((sum, c) => sum + Number(c.total_paid || 0), 0);
   const totalPending = customers.reduce((sum, c) => sum + Number(c.total_pending || 0), 0);
@@ -581,7 +591,7 @@ function renderCustomersList(customers) {
     return;
   }
   if (customers.length === 0) {
-    list.innerHTML = '<p class="empty-note">No customers match your search.</p>';
+    list.innerHTML = '<p class="empty-note">No customers match your search or filters.</p>';
     return;
   }
 
@@ -630,16 +640,28 @@ function renderCustomersList(customers) {
 
 // Client-side search across name, contact, phone, and email — the
 // customer list is already fetched in full, so no need to round-trip
-// to the server for something this small.
+// to the server for something this small. Layers on top of whichever
+// actual-customer toggle state is active.
 function filterCustomers() {
   const term = document.getElementById('customerSearchInput').value.trim().toLowerCase();
-  const filtered = !term ? customersCache : customersCache.filter(c =>
+  const base = actualCustomerFiltered(customersCache);
+  const filtered = !term ? base : base.filter(c =>
     [c.business_name, c.contact_name, c.phone, c.email].some(v => v && String(v).toLowerCase().includes(term))
   );
   renderCustomersList(filtered);
 }
 
 document.getElementById('customerSearchInput').addEventListener('input', filterCustomers);
+
+const actualCustomerToggleBtn = document.getElementById('actualCustomerToggle');
+actualCustomerToggleBtn.addEventListener('click', () => {
+  showActualCustomersOnly = !showActualCustomersOnly;
+  actualCustomerToggleBtn.classList.toggle('active', showActualCustomersOnly);
+  actualCustomerToggleBtn.setAttribute('aria-pressed', String(showActualCustomersOnly));
+  actualCustomerToggleBtn.textContent = showActualCustomersOnly ? '✓ Actual Customers' : 'Showing All Customers';
+  computeCustomerStats(actualCustomerFiltered(customersCache));
+  filterCustomers();
+});
 
 const custModal = makeModal('customerModalOverlay');
 const custFields = {
@@ -660,10 +682,14 @@ const custFields = {
 // Handled separately from custFields — a checkbox's .value isn't its
 // checked state, so the generic value-based loops below don't apply to it.
 const custRenewalRequiredField = document.getElementById('custRenewalRequired');
+const custIsActualCustomerField = document.getElementById('custIsActualCustomer');
 
 function clearCustomerForm() {
   Object.values(custFields).forEach(el => el.value = '');
   custRenewalRequiredField.checked = false;
+  // Defaults checked for a new customer — most manually-added entries are
+  // real customers; demo/test entries are the exception and get unchecked.
+  custIsActualCustomerField.checked = true;
 }
 
 function openCustomerForm(id) {
@@ -681,6 +707,7 @@ function openCustomerForm(id) {
         if (key !== 'password' && c[key] != null) custFields[key].value = c[key];
       });
       custRenewalRequiredField.checked = !!c.renewal_required;
+      custIsActualCustomerField.checked = !!c.is_actual_customer;
     }
   }
 
@@ -702,6 +729,7 @@ custSaveBtn.addEventListener('click', () => {
   const payload = {};
   Object.entries(custFields).forEach(([key, el]) => { payload[key] = el.value; });
   payload.renewal_required = custRenewalRequiredField.checked;
+  payload.is_actual_customer = custIsActualCustomerField.checked;
 
   if (!payload.business_name.trim()) {
     alert('Business name is required.');

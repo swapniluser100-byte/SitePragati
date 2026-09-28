@@ -302,6 +302,11 @@
             <input type="url" id="custAdminConsoleUrl" placeholder="https://theirbusiness.pages.dev/admin.html">
           </div>
         </div>
+        <div class="cs-form-grid">
+          <div>
+            <label for="custIsActualCustomer"><input type="checkbox" id="custIsActualCustomer" checked style="width:auto; margin-right:6px; vertical-align:middle;"> Is Actual Customer? <span class="field-note">(uncheck for demo/test entries)</span></label>
+          </div>
+        </div>
         <label for="custAddress">Address</label>
         <textarea id="custAddress" rows="2"></textarea>
         <div class="cs-form-grid">
@@ -335,9 +340,14 @@
       </div>
       </div>
 
-      <div class="customer-search-bar">
-        <span class="search-icon" aria-hidden="true">🔍</span>
-        <input type="search" id="customerSearchInput" placeholder="Search by name, contact, phone, or email…" aria-label="Search customers">
+      <div class="customer-search-row">
+        <div class="customer-search-bar">
+          <span class="search-icon" aria-hidden="true">🔍</span>
+          <input type="search" id="customerSearchInput" placeholder="Search by name, contact, phone, or email…" aria-label="Search customers">
+        </div>
+        <button type="button" id="actualCustomerToggle" class="actual-customer-toggle active" aria-pressed="true">
+          ✓ Actual Customers
+        </button>
       </div>
 
       <div id="customersList" class="cs-list">
