@@ -12,6 +12,7 @@ function escapeHtml(str) {
 // console's Leads, Customers, Transactions, and Case Studies lists.
 const EDIT_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
 const DELETE_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>';
+const SEND_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4Z"/></svg>';
 
 function editButtonHtml(dataAttr, id) {
   return `<button class="btn btn-outline btn-small btn-icon" ${dataAttr}="${id}" aria-label="Edit" title="Edit">${EDIT_ICON_SVG}</button>`;
@@ -619,6 +620,7 @@ function renderCustomersList(customers) {
       <span class="status-pill ${isPending ? 'status-pill-pending' : 'status-pill-paid'}">${isPending ? 'Pending' : 'Paid'}</span>
       <div class="cs-card-actions">
         <button class="btn btn-outline btn-small" data-view-txns="${c.id}">📎 Transactions</button>
+        ${c.email ? `<button class="btn btn-outline btn-small btn-icon" data-send-creds="${c.id}" aria-label="Send login email" title="Email portal login credentials">${SEND_ICON_SVG}</button>` : ''}
         ${editButtonHtml('data-edit-cust', c.id)}
         ${deleteButtonHtml('data-delete-cust', c.id)}
       </div>
@@ -629,6 +631,9 @@ function renderCustomersList(customers) {
   list.querySelectorAll('[data-view-txns]').forEach(btn => {
     btn.addEventListener('click', () => openCustomerDetail(btn.dataset.viewTxns));
   });
+  list.querySelectorAll('[data-send-creds]').forEach(btn => {
+    btn.addEventListener('click', () => sendCustomerCredentials(btn));
+  });
   list.querySelectorAll('[data-edit-cust]').forEach(btn => {
     btn.addEventListener('click', () => openCustomerForm(btn.dataset.editCust));
   });
@@ -636,6 +641,31 @@ function renderCustomersList(customers) {
     btn.addEventListener('click', () => deleteCustomer(btn.dataset.deleteCust));
   });
   wireCopyLinkButtons(list);
+}
+
+// Resets the customer's portal password to a new random one and emails
+// them the portal URL + login email + new password. A confirm() gate
+// since it invalidates whatever password they're already using.
+async function sendCustomerCredentials(btn) {
+  if (!confirm('Send this customer a new portal login password by email? Their current password will stop working.')) return;
+  const id = btn.dataset.sendCreds;
+  await withButtonSpinner(btn, 'Sending…', async () => {
+    try {
+      const res = await fetch('/api/admin/send-customer-credentials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ customerId: Number(id) })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || 'Could not send the login email.');
+        return;
+      }
+      alert('Login credentials emailed to the customer.');
+    } catch (err) {
+      alert('Something went wrong sending the login email.');
+    }
+  });
 }
 
 // Client-side search across name, contact, phone, and email — the
