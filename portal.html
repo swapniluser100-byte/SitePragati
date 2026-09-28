@@ -348,6 +348,30 @@
         </div>
 
         <div class="cs-form-section">
+          <p class="cs-section-label">Subscription Plans <span class="field-note">(shown to the customer only when Renewal required is unchecked)</span></p>
+          <div class="cs-form-grid cs-form-grid-3">
+            <div>
+              <label for="custPlan1Price">Plan 1 price (₹/month)</label>
+              <input type="number" id="custPlan1Price" step="1" min="0">
+              <label for="custPlan1Features" style="margin-top:10px;">Features <span class="field-note">(one per line)</span></label>
+              <textarea id="custPlan1Features" rows="4"></textarea>
+            </div>
+            <div>
+              <label for="custPlan2Price">Plan 2 price (₹/month)</label>
+              <input type="number" id="custPlan2Price" step="1" min="0">
+              <label for="custPlan2Features" style="margin-top:10px;">Features <span class="field-note">(one per line)</span></label>
+              <textarea id="custPlan2Features" rows="4"></textarea>
+            </div>
+            <div>
+              <label for="custPlan3Price">Plan 3 price (₹/month)</label>
+              <input type="number" id="custPlan3Price" step="1" min="0">
+              <label for="custPlan3Features" style="margin-top:10px;">Features <span class="field-note">(one per line)</span></label>
+              <textarea id="custPlan3Features" rows="4"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="cs-form-section">
           <p class="cs-section-label">Internal</p>
           <label for="custIsActualCustomer"><input type="checkbox" id="custIsActualCustomer" checked style="width:auto; margin-right:6px; vertical-align:middle;"> Is Actual Customer? <span class="field-note">(uncheck for demo/test entries)</span></label>
           <label for="custNotes" style="margin-top:14px;">Notes <span class="field-note">(internal — not shown to the customer)</span></label>
@@ -879,6 +903,15 @@
   </div>
 
   <p class="welcome-line" id="welcomeLine"></p>
+
+  <div id="noSubscriptionBanner" class="no-sub-banner" hidden>
+    <div class="no-sub-head">
+      <span class="no-sub-icon">!</span>
+      <h3>No active maintenance subscription</h3>
+    </div>
+    <p class="no-sub-copy">Your maintenance will be billed per ticket. Upgrade to a plan and reduce your monthly costs — perfect for businesses that regularly need tweaks, improvements, or guidance.</p>
+    <div id="subPlanCards" class="sub-plan-grid"></div>
+  </div>
 
   <div class="panel-head">
     <h2>Support tickets</h2>

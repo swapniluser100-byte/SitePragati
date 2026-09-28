@@ -312,6 +312,10 @@ select.status-select{
   text-transform:uppercase; letter-spacing:0.06em; margin-bottom:12px;
 }
 .cs-form-section .cs-form-grid{margin-bottom:0;}
+.cs-form-grid-3{grid-template-columns:1fr 1fr 1fr;}
+@media (max-width:900px){
+  .cs-form-grid-3{grid-template-columns:1fr;}
+}
 .cs-form-section > label, .cs-form-section > textarea{margin-top:14px;}
 
 @media (max-width:640px){

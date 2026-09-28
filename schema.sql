@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS customers (
   renewal_amount REAL, -- amount charged each renewal cycle — required when renewal_required is set
   renewal_start_date TEXT, -- ISO date of the first-ever cycle — anchors auto-created renewals when this customer has no renewal history yet
   is_actual_customer INTEGER DEFAULT 1, -- unchecked for demo/test entries you want excluded from the default Customers view
+  subscription_plans TEXT, -- JSON array of up to 3 {price, features[]} objects, shown to the customer on their portal only when renewal_required is false
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
