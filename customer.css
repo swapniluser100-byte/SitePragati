@@ -45,6 +45,44 @@
   .referral-actions .btn{flex:1;}
 }
 
+.no-sub-banner{
+  background:var(--white); border:1px solid rgba(199,127,31,0.25); border-radius:var(--radius-md);
+  padding:24px; margin-bottom:24px;
+}
+.no-sub-head{display:flex; align-items:center; gap:12px; padding-bottom:16px; margin-bottom:16px; border-bottom:1px solid var(--paper-dim);}
+.no-sub-icon{
+  flex-shrink:0; width:32px; height:32px; border-radius:50%;
+  background:var(--amber-dark); color:var(--white); font-weight:700;
+  display:flex; align-items:center; justify-content:center; font-size:1.1rem;
+}
+.no-sub-head h3{margin:0; font-size:1.15rem;}
+.no-sub-copy{color:var(--slate); font-size:0.9rem; line-height:1.6; margin:0 0 20px;}
+
+.sub-plan-grid{display:grid; grid-template-columns:repeat(3, 1fr); gap:18px;}
+.sub-plan-card{
+  background:var(--white); border:1px solid rgba(27,37,68,0.1); border-top:3px solid var(--amber-dark);
+  border-radius:var(--radius-sm); padding:20px;
+}
+.sub-plan-price{
+  font-family:'Sora', sans-serif; font-size:1.6rem; font-weight:700; color:var(--amber-dark);
+  margin:0 0 14px; padding-bottom:14px; border-bottom:1px solid var(--paper-dim);
+}
+.sub-plan-price span{font-family:inherit; font-size:0.85rem; font-weight:600; color:var(--slate);}
+.sub-plan-card ul{list-style:none; margin:0; padding:0;}
+.sub-plan-card ul li{
+  position:relative; padding:8px 0 8px 18px; font-size:0.88rem; color:var(--navy);
+  border-top:1px solid var(--paper-dim);
+}
+.sub-plan-card ul li:first-child{border-top:none;}
+.sub-plan-card ul li::before{
+  content:''; position:absolute; left:2px; top:16px; width:6px; height:6px;
+  border-radius:50%; background:var(--amber-dark);
+}
+
+@media (max-width:768px){
+  .sub-plan-grid{grid-template-columns:1fr;}
+}
+
 .ticket-list{display:flex; flex-direction:column; gap:12px;}
 .ticket-card{
   background:var(--white); border:1px solid rgba(27,37,68,0.1); border-radius:var(--radius-sm);

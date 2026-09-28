@@ -121,7 +121,7 @@ async function checkSession() {
     if (data.role === 'admin') {
       showAdminDashboard();
     } else if (data.role === 'customer') {
-      showCustomerDashboard(data.businessName);
+      showCustomerDashboard(data.businessName, data.renewalRequired, data.subscriptionPlans);
     } else {
       showLogin();
     }
@@ -147,13 +147,38 @@ function showAdminDashboard() {
   loadRenewals();
 }
 
-function showCustomerDashboard(businessName) {
+function showCustomerDashboard(businessName, renewalRequired, subscriptionPlans) {
   document.getElementById('loginScreen').hidden = true;
   document.getElementById('adminDashboard').hidden = true;
   document.getElementById('customerDashboard').hidden = false;
   document.getElementById('welcomeLine').textContent = businessName ? `Welcome, ${businessName}` : '';
   loggedInBusinessName = businessName || '';
+  renderSubscriptionBanner(renewalRequired, subscriptionPlans);
   loadCustomerTickets();
+}
+
+// Shows the "No active maintenance subscription" upsell banner + up to 3
+// admin-configured plan cards, but only for customers who don't have
+// Renewal required checked — someone already on a renewal cycle doesn't
+// need to be sold a plan they're effectively already on.
+function renderSubscriptionBanner(renewalRequired, subscriptionPlans) {
+  const banner = document.getElementById('noSubscriptionBanner');
+  const plans = Array.isArray(subscriptionPlans) ? subscriptionPlans.filter(p => p && (p.price || (p.features || []).length)) : [];
+
+  if (renewalRequired || plans.length === 0) {
+    banner.hidden = true;
+    return;
+  }
+
+  document.getElementById('subPlanCards').innerHTML = plans.map(p => `
+    <div class="sub-plan-card">
+      <p class="sub-plan-price">₹${escapeHtml(p.price)}<span>/month</span></p>
+      <ul>
+        ${(p.features || []).map(f => `<li>${escapeHtml(f)}</li>`).join('')}
+      </ul>
+    </div>
+  `).join('');
+  banner.hidden = false;
 }
 
 // ===== Referral banner =====
@@ -201,7 +226,10 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     if (loginRole === 'admin') {
       showAdminDashboard();
     } else {
-      showCustomerDashboard(data.businessName);
+      // The login response only carries businessName — checkSession() calls
+      // /api/whoami, which also has renewalRequired/subscriptionPlans for
+      // the subscription-upsell banner.
+      checkSession();
     }
   } catch (err) {
     errorEl.textContent = 'Something went wrong. Please try again.';
@@ -714,12 +742,21 @@ const custFields = {
 const custRenewalRequiredField = document.getElementById('custRenewalRequired');
 const custIsActualCustomerField = document.getElementById('custIsActualCustomer');
 
+// Also handled separately — these 6 inputs (3 plans x price/features) get
+// packed into a single subscription_plans JSON field on save, and unpacked
+// from it on load, rather than mapping 1:1 to a DB column like custFields.
+const custPlanFields = [1, 2, 3].map(n => ({
+  price: document.getElementById(`custPlan${n}Price`),
+  features: document.getElementById(`custPlan${n}Features`)
+}));
+
 function clearCustomerForm() {
   Object.values(custFields).forEach(el => el.value = '');
   custRenewalRequiredField.checked = false;
   // Defaults checked for a new customer — most manually-added entries are
   // real customers; demo/test entries are the exception and get unchecked.
   custIsActualCustomerField.checked = true;
+  custPlanFields.forEach(p => { p.price.value = ''; p.features.value = ''; });
 }
 
 function openCustomerForm(id) {
@@ -738,6 +775,13 @@ function openCustomerForm(id) {
       });
       custRenewalRequiredField.checked = !!c.renewal_required;
       custIsActualCustomerField.checked = !!c.is_actual_customer;
+
+      let plans = [];
+      try { plans = c.subscription_plans ? JSON.parse(c.subscription_plans) : []; } catch (err) { plans = []; }
+      custPlanFields.forEach((p, i) => {
+        p.price.value = plans[i] && plans[i].price != null ? plans[i].price : '';
+        p.features.value = plans[i] && Array.isArray(plans[i].features) ? plans[i].features.join('\n') : '';
+      });
     }
   }
 
@@ -760,6 +804,14 @@ custSaveBtn.addEventListener('click', () => {
   Object.entries(custFields).forEach(([key, el]) => { payload[key] = el.value; });
   payload.renewal_required = custRenewalRequiredField.checked;
   payload.is_actual_customer = custIsActualCustomerField.checked;
+
+  const plans = custPlanFields
+    .map(p => ({
+      price: p.price.value ? Number(p.price.value) : null,
+      features: p.features.value.split('\n').map(f => f.trim()).filter(Boolean)
+    }))
+    .filter(p => p.price != null || p.features.length > 0);
+  payload.subscription_plans = plans.length > 0 ? JSON.stringify(plans) : null;
 
   if (!payload.business_name.trim()) {
     alert('Business name is required.');
