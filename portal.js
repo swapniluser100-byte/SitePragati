@@ -121,7 +121,7 @@ async function checkSession() {
     if (data.role === 'admin') {
       showAdminDashboard();
     } else if (data.role === 'customer') {
-      showCustomerDashboard(data.businessName, data.renewalRequired, data.subscriptionPlans);
+      showCustomerDashboard(data.businessName, data.renewalRequired, data.subscriptionPlans, data.upiId);
     } else {
       showLogin();
     }
@@ -147,12 +147,13 @@ function showAdminDashboard() {
   loadRenewals();
 }
 
-function showCustomerDashboard(businessName, renewalRequired, subscriptionPlans) {
+function showCustomerDashboard(businessName, renewalRequired, subscriptionPlans, upiId) {
   document.getElementById('loginScreen').hidden = true;
   document.getElementById('adminDashboard').hidden = true;
   document.getElementById('customerDashboard').hidden = false;
   document.getElementById('welcomeLine').textContent = businessName ? `Welcome, ${businessName}` : '';
   loggedInBusinessName = businessName || '';
+  customerUpiId = upiId || null; // used by the ticket-payment QR code below — falls back to the app default when unset
   renderSubscriptionBanner(renewalRequired, subscriptionPlans);
   loadCustomerTickets();
 }
@@ -732,6 +733,7 @@ const custFields = {
   address: document.getElementById('custAddress'),
   website_url: document.getElementById('custWebsiteUrl'),
   admin_console_url: document.getElementById('custAdminConsoleUrl'),
+  upi_id: document.getElementById('custUpiId'),
   notes: document.getElementById('custNotes'),
   renewal_frequency: document.getElementById('custRenewalFrequency'),
   renewal_amount: document.getElementById('custRenewalAmount'),
@@ -2057,11 +2059,12 @@ function statusClass(status) {
   return 'status-' + (status || 'open').toLowerCase().replace(/\s+/g, '-');
 }
 
-const PAYMENT_UPI_ID = 'swapnil.barad@axisbank';
+const PAYMENT_UPI_ID = 'swapnil.barad@axisbank'; // fallback used when a customer has no upi_id of their own set
 const PAYMENT_PAYEE_NAME = 'SitePragati';
+let customerUpiId = null; // set from /api/whoami on login/session-check — this customer's own UPI ID, if any
 
 function buildUpiLink(amount, note) {
-  const params = new URLSearchParams({ pa: PAYMENT_UPI_ID, pn: PAYMENT_PAYEE_NAME, cu: 'INR' });
+  const params = new URLSearchParams({ pa: customerUpiId || PAYMENT_UPI_ID, pn: PAYMENT_PAYEE_NAME, cu: 'INR' });
   if (amount) params.set('am', amount);
   if (note) params.set('tn', note);
   return 'upi://pay?' + params.toString();
