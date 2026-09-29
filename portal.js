@@ -2059,6 +2059,12 @@ function statusClass(status) {
   return 'status-' + (status || 'open').toLowerCase().replace(/\s+/g, '-');
 }
 
+const TICKET_DATE_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
+function formatTicketDate(dateStr) {
+  const d = new Date(dateStr);
+  return `${d.getDate()} ${TICKET_DATE_MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+}
+
 const PAYMENT_UPI_ID = 'swapnil.barad@axisbank'; // fallback used when a customer has no upi_id of their own set
 const PAYMENT_PAYEE_NAME = 'SitePragati';
 let customerUpiId = null; // set from /api/whoami on login/session-check — this customer's own UPI ID, if any
@@ -2077,13 +2083,22 @@ function upiQrUrl(amount, note) {
 
 function renderTicketPaymentSection(t) {
   if (t.status === 'Payment Pending') {
+    const amount = Number(t.payment_amount || 0).toLocaleString('en-IN');
+    const upiId = customerUpiId || PAYMENT_UPI_ID;
     return `
       <div class="ticket-payment">
-        <p class="payment-due">Amount due: ₹${escapeHtml(String(t.payment_amount))}</p>
+        <p class="payment-due">Amount Due: <span>₹${escapeHtml(amount)}</span></p>
         <img src="${upiQrUrl(t.payment_amount, t.subject)}" alt="Scan to pay via UPI" class="payment-qr" width="150" height="150">
-        <p class="payment-note">Scan with any UPI app to pay, then enter the transaction reference number below.</p>
-        <input type="text" class="payment-ref-input" data-ticket-id="${t.id}" placeholder="Transaction reference number">
-        <button type="button" class="btn btn-primary btn-small payment-submit-btn" data-ticket-id="${t.id}">Submit payment</button>
+        <p class="payment-upi-badge">UPI: ${escapeHtml(upiId)}</p>
+        <ol class="payment-steps">
+          <li>Scan with any UPI app (Google Pay, PhonePe, Paytm, etc.).</li>
+          <li>Complete your payment.</li>
+          <li>Enter your transaction reference number below.</li>
+        </ol>
+        <div class="payment-form-row">
+          <input type="text" class="payment-ref-input" data-ticket-id="${t.id}" placeholder="Transaction reference number">
+          <button type="button" class="btn btn-primary btn-small payment-submit-btn" data-ticket-id="${t.id}">Submit Payment</button>
+        </div>
         <p class="payment-status-msg" data-ticket-id="${t.id}"></p>
       </div>`;
   }
@@ -2111,9 +2126,9 @@ function buildTicketCardHtml(t) {
           <span class="status-badge ${statusClass(t.status)}">${escapeHtml(t.status)}</span>
         </div>
         <p>${escapeHtml(t.description || '')}</p>
-        <p class="ticket-date">Raised ${escapeHtml(new Date(t.created_at).toLocaleDateString())}${t.reference_code ? ` · Request ID: ${escapeHtml(t.reference_code)}` : ''}</p>
+        <p class="ticket-date">Raised: ${escapeHtml(formatTicketDate(t.created_at))}${t.reference_code ? ` · Request ID: ${escapeHtml(t.reference_code)}` : ''}</p>
         ${renderTicketPaymentSection(t)}
-        <button type="button" class="btn btn-outline btn-small conversation-toggle" data-ticket-id="${t.id}">💬 View conversation</button>
+        <button type="button" class="btn btn-outline btn-small conversation-toggle" data-ticket-id="${t.id}">💬 View Conversation</button>
         <div class="ticket-comments-section" data-ticket-id="${t.id}" hidden>
           <div class="comments-list" data-ticket-id="${t.id}"><p class="empty-note">Loading…</p></div>
           <div class="comment-form">

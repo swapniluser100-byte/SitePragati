@@ -85,13 +85,13 @@
 
 .ticket-list{display:flex; flex-direction:column; gap:12px;}
 .ticket-card{
-  background:var(--white); border:1px solid rgba(27,37,68,0.1); border-radius:var(--radius-sm);
-  padding:18px 20px;
+  background:var(--white); border:1px solid rgba(27,37,68,0.1); border-left:3px solid var(--amber-dark);
+  border-radius:var(--radius-sm); padding:18px 20px;
 }
 .ticket-card-head{
   display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:6px;
 }
-.ticket-card-head h3{font-size:1.02rem;}
+.ticket-card-head h3{font-size:1.02rem; color:var(--amber-dark);}
 .ticket-card p{color:var(--slate); font-size:0.88rem; margin-top:4px;}
 .ticket-date{font-size:0.78rem; color:var(--slate); margin-top:8px;}
 
@@ -123,11 +123,36 @@
   padding:12px 16px;
 }
 .ticket-payment-confirmed p{color:var(--teal); font-weight:600; margin:0;}
-.payment-due{font-weight:700; color:#B0453A; font-size:1rem; margin-bottom:10px;}
+.payment-due{font-weight:700; color:var(--navy); font-size:1.05rem; margin-bottom:14px;}
+.payment-due span{color:var(--navy);}
 .payment-qr{background:#fff; padding:6px; border-radius:var(--radius-sm); margin:0 auto 10px;}
+.payment-upi-badge{
+  display:inline-block; background:rgba(232,163,61,0.15); color:var(--amber-dark);
+  font-weight:700; font-size:0.85rem; padding:5px 14px; border-radius:20px; margin-bottom:16px;
+}
 .payment-note{font-size:0.82rem; color:var(--slate); margin-bottom:12px;}
+.payment-steps{
+  list-style:none; counter-reset:payment-step; text-align:left; max-width:340px;
+  margin:0 auto 16px; padding:0;
+}
+.payment-steps li{
+  counter-increment:payment-step; position:relative; padding:4px 0 4px 26px;
+  font-size:0.88rem; color:var(--navy);
+}
+.payment-steps li::before{
+  content:counter(payment-step) '.'; position:absolute; left:0; top:4px;
+  color:var(--amber-dark); font-weight:700;
+}
+.payment-form-row{
+  display:flex; gap:10px; max-width:420px; margin:0 auto; flex-wrap:wrap;
+}
 .payment-ref-input{
-  width:100%; max-width:280px; padding:9px 12px; margin-bottom:10px;
+  flex:1; min-width:180px; padding:9px 12px;
   border:1px solid rgba(27,37,68,0.25); border-radius:var(--radius-sm); font-family:inherit; font-size:0.9rem;
 }
+.payment-form-row .payment-submit-btn{flex-shrink:0;}
 .payment-status-msg{font-size:0.82rem; color:var(--teal); margin-top:8px; min-height:1.1em;}
+
+@media (max-width:480px){
+  .payment-form-row{flex-direction:column;}
+}
