@@ -125,7 +125,7 @@
 .ticket-payment-confirmed p{color:var(--teal); font-weight:600; margin:0;}
 .payment-due{font-weight:700; color:var(--navy); font-size:1.05rem; margin-bottom:14px;}
 .payment-due span{color:var(--navy);}
-.payment-qr{background:#fff; padding:6px; border-radius:var(--radius-sm); margin:0 auto 10px;}
+.payment-qr{display:block; background:#fff; padding:6px; border-radius:var(--radius-sm); margin:0 auto 10px;}
 .payment-upi-badge{
   display:inline-block; background:rgba(232,163,61,0.15); color:var(--amber-dark);
   font-weight:700; font-size:0.85rem; padding:5px 14px; border-radius:20px; margin-bottom:16px;
