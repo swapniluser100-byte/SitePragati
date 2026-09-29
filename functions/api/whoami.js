@@ -21,12 +21,14 @@ export async function onRequestGet(context) {
     let businessName = null;
     let renewalRequired = true; // safest default — don't show subscription upsell if this lookup fails
     let subscriptionPlans = null;
+    let upiId = null;
     try {
-      const row = await env.DB.prepare('SELECT business_name, renewal_required, subscription_plans FROM customers WHERE id = ?')
+      const row = await env.DB.prepare('SELECT business_name, renewal_required, subscription_plans, upi_id FROM customers WHERE id = ?')
         .bind(customerPayload.customerId).first();
       if (row) {
         businessName = row.business_name;
         renewalRequired = !!row.renewal_required;
+        upiId = row.upi_id || null;
         if (!renewalRequired && row.subscription_plans) {
           try {
             subscriptionPlans = JSON.parse(row.subscription_plans);
@@ -38,7 +40,7 @@ export async function onRequestGet(context) {
     } catch (err) {
       // Non-critical — the dashboard still loads fine without the welcome name.
     }
-    return json({ role: 'customer', customerId: customerPayload.customerId, businessName, renewalRequired, subscriptionPlans });
+    return json({ role: 'customer', customerId: customerPayload.customerId, businessName, renewalRequired, subscriptionPlans, upiId });
   }
 
   return json({ role: null });
