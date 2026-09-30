@@ -648,7 +648,7 @@ function renderCustomersList(customers) {
       </div>
       <span class="status-pill ${isPending ? 'status-pill-pending' : 'status-pill-paid'}">${isPending ? 'Pending' : 'Paid'}</span>
       <div class="cs-card-actions">
-        <button class="btn btn-outline btn-small" data-view-txns="${c.id}">📎 Transactions</button>
+        <button class="btn btn-outline btn-small" data-view-txns="${c.id}">👁 View</button>
         ${c.email ? `<button class="btn btn-outline btn-small btn-icon" data-send-creds="${c.id}" aria-label="Send login email" title="Email portal login credentials">${SEND_ICON_SVG}</button>` : ''}
         ${editButtonHtml('data-edit-cust', c.id)}
         ${deleteButtonHtml('data-delete-cust', c.id)}
