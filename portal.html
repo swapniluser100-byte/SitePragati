@@ -417,6 +417,7 @@
       <div class="subtab-nav">
         <button type="button" class="subtab-btn active" data-cust-subtab="details">Details</button>
         <button type="button" class="subtab-btn" data-cust-subtab="transactions">Transactions</button>
+        <button type="button" class="subtab-btn" data-cust-subtab="recommendations">Recommendation</button>
       </div>
 
       <div id="custSubtabDetails" class="cust-subtab-panel">
@@ -447,6 +448,36 @@
             </tbody>
           </table>
         </div>
+      </div>
+
+      <div id="custSubtabRecommendations" class="cust-subtab-panel" hidden>
+        <div class="panel-head">
+          <h3>Recommendations</h3>
+          <button type="button" id="addRecommendationBtn" class="btn btn-primary btn-small">+ Add recommendation</button>
+        </div>
+
+        <div id="recommendationsList" class="ticket-list">
+          <p class="empty-note">Loading…</p>
+        </div>
+      </div>
+
+      <div id="recommendationModalOverlay" class="modal-overlay" hidden>
+      <div id="recommendationForm" class="modal-box cs-form" role="dialog" aria-modal="true" aria-labelledby="recommendationFormTitle">
+        <div class="modal-head">
+          <h3 id="recommendationFormTitle">Add recommendation</h3>
+          <button type="button" id="recommendationModalCloseBtn" class="modal-close" aria-label="Close">&times;</button>
+        </div>
+        <input type="hidden" id="recId">
+        <input type="hidden" id="recCustomerId">
+        <label for="recName">Name</label>
+        <input type="text" id="recName" required>
+        <label for="recDetails">Details</label>
+        <textarea id="recDetails" rows="4"></textarea>
+        <div class="cs-form-actions">
+          <button type="button" id="recSaveBtn" class="btn btn-primary">Save</button>
+          <button type="button" id="recCancelBtn" class="btn btn-outline">Cancel</button>
+        </div>
+      </div>
       </div>
 
       <div id="transactionModalOverlay" class="modal-overlay" hidden>

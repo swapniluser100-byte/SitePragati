@@ -1376,6 +1376,7 @@ function openCustomerDetail(id) {
 
   renderCustomerDetailInfo(c);
   loadTransactions(id);
+  loadRecommendations(id);
 }
 
 document.getElementById('backToCustomersBtn').addEventListener('click', () => {
@@ -1384,13 +1385,14 @@ document.getElementById('backToCustomersBtn').addEventListener('click', () => {
   currentCustomerId = null;
 });
 
-// Details / Transactions sub-tabs within a customer's detail page
+// Details / Transactions / Recommendation sub-tabs within a customer's detail page
 function setCustomerDetailSubtab(name) {
   document.querySelectorAll('[data-cust-subtab]').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.custSubtab === name);
   });
   document.getElementById('custSubtabDetails').hidden = name !== 'details';
   document.getElementById('custSubtabTransactions').hidden = name !== 'transactions';
+  document.getElementById('custSubtabRecommendations').hidden = name !== 'recommendations';
 }
 document.querySelectorAll('[data-cust-subtab]').forEach(btn => {
   btn.addEventListener('click', () => setCustomerDetailSubtab(btn.dataset.custSubtab));
@@ -1594,6 +1596,138 @@ async function deleteTransaction(id) {
   });
   loadTransactions(currentCustomerId);
   refreshCurrentCustomerTotal();
+}
+
+// ===== Recommendations (within a customer's detail page) =====
+let recommendationsCache = [];
+
+function renderRecommendationsList() {
+  const list = document.getElementById('recommendationsList');
+
+  if (recommendationsCache.length === 0) {
+    list.innerHTML = '<p class="empty-note">No recommendations yet.</p>';
+    return;
+  }
+
+  list.innerHTML = recommendationsCache.map(r => `
+    <div class="ticket-card">
+      <div class="ticket-card-head">
+        <h3>${escapeHtml(r.name)}</h3>
+        <div class="cs-card-actions">
+          ${editButtonHtml('data-edit-rec', r.id)}
+          ${deleteButtonHtml('data-delete-rec', r.id)}
+        </div>
+      </div>
+      ${r.details ? `<p style="white-space:pre-wrap;">${escapeHtml(r.details)}</p>` : ''}
+    </div>
+  `).join('');
+
+  list.querySelectorAll('[data-edit-rec]').forEach(btn => {
+    btn.addEventListener('click', () => openRecommendationForm(recommendationsCache.find(r => String(r.id) === btn.dataset.editRec)));
+  });
+  list.querySelectorAll('[data-delete-rec]').forEach(btn => {
+    btn.addEventListener('click', () => deleteRecommendation(btn.dataset.deleteRec));
+  });
+}
+
+async function loadRecommendations(customerId) {
+  const list = document.getElementById('recommendationsList');
+  list.innerHTML = '<p class="empty-note">Loading…</p>';
+
+  try {
+    const res = await fetch(`/api/admin/recommendations?customer_id=${customerId}`);
+    const data = await res.json();
+    recommendationsCache = data.recommendations || [];
+    renderRecommendationsList();
+  } catch (err) {
+    list.innerHTML = '<p class="empty-note">Could not load recommendations.</p>';
+  }
+}
+
+const recModal = makeModal('recommendationModalOverlay');
+const recFields = {
+  id: document.getElementById('recId'),
+  customer_id: document.getElementById('recCustomerId'),
+  name: document.getElementById('recName'),
+  details: document.getElementById('recDetails')
+};
+
+function clearRecommendationForm() {
+  recFields.id.value = '';
+  recFields.name.value = '';
+  recFields.details.value = '';
+}
+
+function openRecommendationForm(rec) {
+  clearRecommendationForm();
+  document.getElementById('recommendationFormTitle').textContent = rec ? 'Edit recommendation' : 'Add recommendation';
+  recFields.customer_id.value = currentCustomerId;
+
+  if (rec) {
+    recFields.id.value = rec.id;
+    recFields.name.value = rec.name;
+    recFields.details.value = rec.details || '';
+  }
+
+  recModal.show();
+}
+
+document.getElementById('addRecommendationBtn').addEventListener('click', () => openRecommendationForm(null));
+document.getElementById('recCancelBtn').addEventListener('click', () => {
+  recModal.hide();
+  clearRecommendationForm();
+});
+document.getElementById('recommendationModalCloseBtn').addEventListener('click', () => {
+  recModal.hide();
+  clearRecommendationForm();
+});
+
+const recSaveBtn = document.getElementById('recSaveBtn');
+recSaveBtn.addEventListener('click', () => {
+  const payload = {
+    id: recFields.id.value || undefined,
+    customer_id: Number(recFields.customer_id.value),
+    name: recFields.name.value.trim(),
+    details: recFields.details.value
+  };
+
+  if (!payload.name) {
+    alert('Name is required.');
+    return;
+  }
+
+  const isEdit = !!payload.id;
+  const method = isEdit ? 'PUT' : 'POST';
+
+  withButtonSpinner(recSaveBtn, 'Saving…', async () => {
+    try {
+      const res = await fetch('/api/admin/recommendations', {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        alert('Error: ' + (data.error || 'Could not save'));
+        return;
+      }
+      recModal.hide();
+      clearRecommendationForm();
+      loadRecommendations(currentCustomerId);
+    } catch (err) {
+      alert('Something went wrong saving this recommendation.');
+    }
+  });
+});
+
+async function deleteRecommendation(id) {
+  if (!confirm('Delete this recommendation? This cannot be undone.')) return;
+  await fetch('/api/admin/recommendations', {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: Number(id) })
+  });
+  loadRecommendations(currentCustomerId);
 }
 
 // ===== Case Studies =====

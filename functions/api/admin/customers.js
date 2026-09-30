@@ -153,6 +153,7 @@ export async function onRequestDelete(context) {
     // enforced depending on D1's pragma settings)
     await env.DB.prepare('DELETE FROM transactions WHERE customer_id = ?').bind(id).run();
     await env.DB.prepare('DELETE FROM tickets WHERE customer_id = ?').bind(id).run();
+    await env.DB.prepare('DELETE FROM recommendations WHERE customer_id = ?').bind(id).run();
     await env.DB.prepare('DELETE FROM customers WHERE id = ?').bind(id).run();
 
     return json({ result: 'success' });
