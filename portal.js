@@ -1372,6 +1372,7 @@ function openCustomerDetail(id) {
 
   document.getElementById('customersListView').hidden = true;
   document.getElementById('customerDetailView').hidden = false;
+  setCustomerDetailSubtab('details'); // always land on Details first, regardless of what was open last time
 
   renderCustomerDetailInfo(c);
   loadTransactions(id);
@@ -1381,6 +1382,18 @@ document.getElementById('backToCustomersBtn').addEventListener('click', () => {
   document.getElementById('customerDetailView').hidden = true;
   document.getElementById('customersListView').hidden = false;
   currentCustomerId = null;
+});
+
+// Details / Transactions sub-tabs within a customer's detail page
+function setCustomerDetailSubtab(name) {
+  document.querySelectorAll('[data-cust-subtab]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.custSubtab === name);
+  });
+  document.getElementById('custSubtabDetails').hidden = name !== 'details';
+  document.getElementById('custSubtabTransactions').hidden = name !== 'transactions';
+}
+document.querySelectorAll('[data-cust-subtab]').forEach(btn => {
+  btn.addEventListener('click', () => setCustomerDetailSubtab(btn.dataset.custSubtab));
 });
 
 let transactionsCache = [];
