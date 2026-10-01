@@ -3,8 +3,12 @@
 // customer_id sent by the client for this endpoint).
 //
 // GET   → list only this customer's tickets
-// POST  → { subject, description } → create a new ticket for this customer,
-//         and emails the admin (NOTIFY_EMAIL) a branded notification
+// POST  → { subject, description, recommendation_id? } → create a new
+//         ticket for this customer, and emails the admin (NOTIFY_EMAIL) a
+//         branded notification. recommendation_id is optional — pass it
+//         when converting a recommendation (from the portal's
+//         Recommendation tab) into a ticket; it's verified to belong to
+//         this customer before being linked, never trusted outright.
 // PATCH → { id, payment_reference } → submit a transaction reference for a
 //         ticket that's awaiting payment. Scoped so a customer can only
 //         ever update their OWN ticket — the query includes customer_id
@@ -35,10 +39,20 @@ export async function onRequestPost(context) {
     if (!subject) return json({ error: 'Subject is required' }, 400);
 
     const referenceCode = await generateUniqueTicketCode(env);
-    await env.DB.prepare(
+    const result = await env.DB.prepare(
       `INSERT INTO tickets (customer_id, subject, description, status, reference_code)
        VALUES (?, ?, ?, 'Open', ?)`
     ).bind(data.customerId, subject, description, referenceCode).run();
+
+    if (body.recommendation_id) {
+      // Only link if this recommendation is actually this customer's own,
+      // and only once — a second convert attempt on the same
+      // recommendation shouldn't silently steal the link from the first.
+      await env.DB.prepare(
+        `UPDATE recommendations SET converted_ticket_id = ?
+         WHERE id = ? AND customer_id = ? AND converted_ticket_id IS NULL`
+      ).bind(result.meta.last_row_id, body.recommendation_id, data.customerId).run();
+    }
 
     // Look up the customer's business name for the notification email
     const customer = await env.DB.prepare(

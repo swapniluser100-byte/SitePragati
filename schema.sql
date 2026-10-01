@@ -90,6 +90,7 @@ CREATE TABLE IF NOT EXISTS recommendations (
   customer_id INTEGER NOT NULL,
   name TEXT NOT NULL,
   details TEXT,
+  converted_ticket_id INTEGER, -- set once the customer converts this into a support ticket, via their portal's recommendation detail page
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
 );

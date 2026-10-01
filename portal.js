@@ -172,6 +172,9 @@ function setCustomerSubtab(name) {
   });
   document.getElementById('customerSubtabTickets').hidden = name !== 'tickets';
   document.getElementById('customerSubtabRecommendations').hidden = name !== 'recommendations';
+  // Always land back on the recommendations list, not wherever the detail view was left.
+  document.getElementById('custRecListView').hidden = false;
+  document.getElementById('custRecDetailView').hidden = true;
 }
 document.querySelectorAll('[data-customer-subtab]').forEach(btn => {
   btn.addEventListener('click', () => setCustomerSubtab(btn.dataset.customerSubtab));
@@ -1648,6 +1651,7 @@ function renderRecommendationsList() {
       <div class="ticket-card-head">
         <h3>${escapeHtml(r.name)}</h3>
         <div class="cs-card-actions">
+          ${r.converted_ticket_id ? '<span class="status-badge status-renewed">Converted to ticket</span>' : ''}
           ${editButtonHtml('data-edit-rec', r.id)}
           ${deleteButtonHtml('data-delete-rec', r.id)}
         </div>
@@ -2401,6 +2405,8 @@ async function loadCustomerTickets() {
 
 // Read-only — the admin writes these from the customer's detail page;
 // the customer just gets to see them.
+let customerRecommendationsCache = [];
+
 async function loadCustomerRecommendationsList() {
   const list = document.getElementById('customerRecommendationsList');
   list.innerHTML = '<p class="empty-note">Loading…</p>';
@@ -2408,24 +2414,99 @@ async function loadCustomerRecommendationsList() {
   try {
     const res = await fetch('/api/customer/recommendations');
     const data = await res.json();
-    const recommendations = data.recommendations || [];
-
-    if (recommendations.length === 0) {
-      list.innerHTML = '<p class="empty-note">No recommendations yet.</p>';
-      return;
-    }
-
-    list.innerHTML = recommendations.map(r => `
-      <div class="ticket-card">
-        <div class="ticket-card-head">
-          <h3>${escapeHtml(r.name)}</h3>
-        </div>
-        ${r.details ? `<p style="white-space:pre-wrap;">${escapeHtml(r.details)}</p>` : ''}
-      </div>
-    `).join('');
+    customerRecommendationsCache = data.recommendations || [];
+    renderCustomerRecommendationsList();
   } catch (err) {
     list.innerHTML = '<p class="empty-note">Could not load recommendations.</p>';
   }
+}
+
+function renderCustomerRecommendationsList() {
+  const list = document.getElementById('customerRecommendationsList');
+
+  if (customerRecommendationsCache.length === 0) {
+    list.innerHTML = '<p class="empty-note">No recommendations yet.</p>';
+    return;
+  }
+
+  list.innerHTML = customerRecommendationsCache.map(r => `
+    <div class="ticket-card rec-card" data-rec-id="${r.id}">
+      <div class="ticket-card-head">
+        <h3>${escapeHtml(r.name)}</h3>
+        ${r.converted_ticket_id ? '<span class="status-badge status-renewed">Converted to ticket</span>' : ''}
+      </div>
+      ${r.details ? `<p style="white-space:pre-wrap;">${escapeHtml(r.details)}</p>` : ''}
+    </div>
+  `).join('');
+
+  list.querySelectorAll('[data-rec-id]').forEach(card => {
+    card.addEventListener('click', () => openCustomerRecommendationDetail(card.dataset.recId));
+  });
+}
+
+function openCustomerRecommendationDetail(id) {
+  const r = customerRecommendationsCache.find(x => String(x.id) === String(id));
+  if (!r) return;
+
+  document.getElementById('custRecListView').hidden = true;
+  document.getElementById('custRecDetailView').hidden = false;
+
+  const convertSectionHtml = r.converted_ticket_id ? `
+    <div class="rec-convert-box rec-convert-done">
+      <p>✓ You've already converted this into a support ticket. Check your <strong>Tickets</strong> tab for updates from the SitePragati team.</p>
+    </div>
+  ` : `
+    <div class="rec-convert-box">
+      <h3>Ready to move forward?</h3>
+      <p>Convert this recommendation into a support ticket and the SitePragati team will review it, work out the costing, and keep you updated — right from your Tickets tab.</p>
+      <button type="button" id="convertRecToTicketBtn" class="btn btn-primary">Convert to ticket</button>
+    </div>
+  `;
+
+  document.getElementById('custRecDetailContent').innerHTML = `
+    <div class="customer-detail-info">
+      <h3>${escapeHtml(r.name)}</h3>
+      ${r.details ? `<p style="white-space:pre-wrap; margin-top:8px;">${escapeHtml(r.details)}</p>` : ''}
+    </div>
+    ${convertSectionHtml}
+  `;
+
+  const convertBtn = document.getElementById('convertRecToTicketBtn');
+  if (convertBtn) convertBtn.addEventListener('click', () => convertRecommendationToTicket(r, convertBtn));
+}
+
+document.getElementById('backToRecommendationsBtn').addEventListener('click', () => {
+  document.getElementById('custRecDetailView').hidden = true;
+  document.getElementById('custRecListView').hidden = false;
+});
+
+async function convertRecommendationToTicket(rec, btn) {
+  const payload = {
+    subject: rec.name,
+    description: `I'd like to proceed with this recommendation — please share the costing and next steps.\n\n${rec.details || ''}`,
+    recommendation_id: rec.id
+  };
+
+  await withButtonSpinner(btn, 'Converting…', async () => {
+    try {
+      const res = await fetch('/api/customer/tickets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        alert('Error: ' + (data.error || 'Could not convert this recommendation to a ticket.'));
+        return;
+      }
+      rec.converted_ticket_id = true; // just needs to be truthy locally until the next full reload
+      renderCustomerRecommendationsList();
+      openCustomerRecommendationDetail(rec.id);
+      loadCustomerTickets();
+    } catch (err) {
+      alert('Something went wrong converting this recommendation to a ticket.');
+    }
+  });
 }
 
 async function toggleCustomerConversation(ticketId, btn) {
