@@ -1011,12 +1011,19 @@
   </div>
 
   <div id="customerSubtabRecommendations" class="cust-subtab-panel" hidden>
-    <div class="panel-head">
-      <h2>Recommendations</h2>
+    <div id="custRecListView">
+      <div class="panel-head">
+        <h2>Recommendations</h2>
+      </div>
+
+      <div id="customerRecommendationsList" class="ticket-list">
+        <p class="empty-note">Loading…</p>
+      </div>
     </div>
 
-    <div id="customerRecommendationsList" class="ticket-list">
-      <p class="empty-note">Loading…</p>
+    <div id="custRecDetailView" hidden>
+      <button type="button" id="backToRecommendationsBtn" class="btn btn-outline btn-small back-btn">&larr; Back to recommendations</button>
+      <div id="custRecDetailContent"></div>
     </div>
   </div>
 

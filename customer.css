@@ -95,6 +95,18 @@
 .ticket-card p{color:var(--slate); font-size:0.88rem; margin-top:4px;}
 .ticket-date{font-size:0.78rem; color:var(--slate); margin-top:8px;}
 
+.rec-card{cursor:pointer; transition:box-shadow 0.15s, transform 0.15s;}
+.rec-card:hover{box-shadow:0 6px 16px rgba(27,37,68,0.1); transform:translateY(-1px);}
+
+.rec-convert-box{
+  background:var(--white); border:1px solid rgba(27,37,68,0.1); border-radius:var(--radius-md);
+  padding:20px 24px;
+}
+.rec-convert-box h3{margin-bottom:8px;}
+.rec-convert-box p{color:var(--slate); font-size:0.9rem; line-height:1.6; margin-bottom:16px;}
+.rec-convert-box.rec-convert-done{background:rgba(47,111,98,0.08); border-color:rgba(47,111,98,0.25);}
+.rec-convert-box.rec-convert-done p{color:var(--teal); font-weight:600; margin-bottom:0;}
+
 .status-badge{
   display:inline-block; padding:4px 12px; border-radius:20px;
   font-size:0.78rem; font-weight:600; white-space:nowrap;

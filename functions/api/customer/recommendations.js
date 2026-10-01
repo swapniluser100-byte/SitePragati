@@ -11,7 +11,7 @@ export async function onRequestGet(context) {
   const { env, data } = context;
   try {
     const { results } = await env.DB.prepare(
-      'SELECT id, name, details FROM recommendations WHERE customer_id = ? ORDER BY id DESC'
+      'SELECT id, name, details, converted_ticket_id FROM recommendations WHERE customer_id = ? ORDER BY id DESC'
     ).bind(data.customerId).all();
     return json({ recommendations: results });
   } catch (err) {
