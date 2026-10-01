@@ -156,21 +156,21 @@ function showCustomerDashboard(businessName, renewalRequired, subscriptionPlans,
   document.getElementById('loginScreen').hidden = true;
   document.getElementById('adminDashboard').hidden = true;
   document.getElementById('customerDashboard').hidden = false;
-  document.getElementById('welcomeLine').textContent = businessName ? `Welcome, ${businessName}` : '';
   document.getElementById('customerHeaderName').textContent = businessName || '';
   loggedInBusinessName = businessName || '';
   customerUpiId = upiId || null; // used by the ticket-payment QR code below — falls back to the app default when unset
   renderSubscriptionBanner(renewalRequired, subscriptionPlans);
-  setCustomerSubtab('tickets'); // always land on Tickets first, regardless of what was open last time
+  setCustomerSubtab('home'); // always land on Home first, regardless of what was open last time
   loadCustomerTickets();
   loadCustomerRecommendationsList();
 }
 
-// Tickets / Recommendation sub-tabs within the customer's own portal
+// Home / Tickets / Recommendation sub-tabs within the customer's own portal
 function setCustomerSubtab(name) {
   document.querySelectorAll('[data-customer-subtab]').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.customerSubtab === name);
   });
+  document.getElementById('customerSubtabHome').hidden = name !== 'home';
   document.getElementById('customerSubtabTickets').hidden = name !== 'tickets';
   document.getElementById('customerSubtabRecommendations').hidden = name !== 'recommendations';
   // Always land back on each tab's own list, not wherever its detail view was left.
