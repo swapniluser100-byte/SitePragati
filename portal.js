@@ -311,7 +311,7 @@ let leadSortDir = 'desc';
 
 async function loadLeads() {
   const tbody = document.getElementById('leadsTableBody');
-  tbody.innerHTML = '<tr><td colspan="8" class="empty-note">Loading…</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="5" class="empty-note">Loading…</td></tr>';
 
   try {
     const res = await fetch('/api/admin/leads');
@@ -320,7 +320,7 @@ async function loadLeads() {
     computeLeadStats(leadsCache);
     renderLeadsTable();
   } catch (err) {
-    tbody.innerHTML = '<tr><td colspan="8" class="empty-note">Could not load leads.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-note">Could not load leads.</td></tr>';
   }
 }
 
@@ -337,7 +337,7 @@ function renderLeadsTable() {
   const tbody = document.getElementById('leadsTableBody');
 
   if (leadsCache.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" class="empty-note">No leads yet.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-note">No leads yet.</td></tr>';
     return;
   }
 
@@ -356,10 +356,13 @@ function renderLeadsTable() {
   });
 
   if (rows.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" class="empty-note">No leads match your search.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-note">No leads match your search.</td></tr>';
     return;
   }
 
+  // Business type, contact, and the full message now live on the lead's
+  // own detail page (opened via View) instead of being crammed into the
+  // table — same simplification already applied to Tickets/Customers.
   tbody.innerHTML = rows.map((lead, i) => `
     <tr data-id="${lead.id}">
       <td>${escapeHtml(new Date(lead.created_at).toLocaleDateString())}</td>
@@ -370,17 +373,13 @@ function renderLeadsTable() {
         </span>
       </td>
       <td>${escapeHtml(lead.business || '-')}</td>
-      <td>${lead.business_type ? `<span class="type-pill">${escapeHtml(lead.business_type)}</span>` : '-'}</td>
-      <td>${escapeHtml(lead.contact || '-')}</td>
-      <td class="message-cell">${escapeHtml(lead.message || '-')}</td>
       <td>
         <select class="lead-status-select ${leadStatusClass(lead.status)}" data-id="${lead.id}">
           ${STATUS_OPTIONS.map(s => `<option value="${s}" ${s === lead.status ? 'selected' : ''}>${s}</option>`).join('')}
         </select>
       </td>
       <td class="actions-col">
-        ${editButtonHtml('data-edit-lead', lead.id)}
-        ${deleteButtonHtml('data-delete-lead', lead.id)}
+        <button type="button" class="btn btn-outline btn-small" data-view-lead="${lead.id}">👁 View</button>
       </td>
     </tr>
   `).join('');
@@ -391,11 +390,8 @@ function renderLeadsTable() {
       updateLeadStatus(select.dataset.id, select.value);
     });
   });
-  tbody.querySelectorAll('[data-edit-lead]').forEach(btn => {
-    btn.addEventListener('click', () => openLeadModal(btn.dataset.editLead));
-  });
-  tbody.querySelectorAll('[data-delete-lead]').forEach(btn => {
-    btn.addEventListener('click', () => deleteLead(btn.dataset.deleteLead));
+  tbody.querySelectorAll('[data-view-lead]').forEach(btn => {
+    btn.addEventListener('click', () => openLeadDetail(btn.dataset.viewLead));
   });
 }
 
@@ -445,7 +441,58 @@ async function deleteLead(id) {
     body: JSON.stringify({ id: Number(id) })
   });
   loadLeads();
+
+  // Deleted from its own detail page — nothing left there to show, so go back to the list.
+  if (String(currentLeadDetailId) === String(id)) {
+    document.getElementById('leadDetailView').hidden = true;
+    document.getElementById('leadsListView').hidden = false;
+    currentLeadDetailId = null;
+  }
 }
+
+// ===== Lead detail page (business type/contact/message + status + Edit/Delete) =====
+let currentLeadDetailId = null;
+
+function openLeadDetail(id) {
+  currentLeadDetailId = id;
+  const lead = leadsCache.find(x => String(x.id) === String(id));
+  if (!lead) return;
+
+  document.getElementById('leadsListView').hidden = true;
+  document.getElementById('leadDetailView').hidden = false;
+
+  renderLeadDetailInfo(lead);
+}
+
+function renderLeadDetailInfo(lead) {
+  document.getElementById('leadDetailInfo').innerHTML = `
+    <h3>${escapeHtml(lead.name)}</h3>
+    <p>${escapeHtml(lead.business || '')} ${lead.business_type ? `<span class="type-pill">${escapeHtml(lead.business_type)}</span>` : ''}</p>
+    <p>${escapeHtml(lead.contact || '')}</p>
+    <p class="ticket-date">Raised: ${escapeHtml(new Date(lead.created_at).toLocaleDateString())}</p>
+    ${lead.message ? `<p style="white-space:pre-wrap; margin-top:10px;">${escapeHtml(lead.message)}</p>` : ''}
+  `;
+
+  const statusSelect = document.getElementById('leadDetailStatus');
+  statusSelect.innerHTML = STATUS_OPTIONS.map(s =>
+    `<option value="${s}" ${s === lead.status ? 'selected' : ''}>${s}</option>`
+  ).join('');
+
+  const wrap = document.getElementById('leadDetailActions');
+  wrap.innerHTML = `${editButtonHtml('data-edit-lead', lead.id, 'Edit')}${deleteButtonHtml('data-delete-lead', lead.id, 'Delete')}`;
+  wrap.querySelector('[data-edit-lead]').addEventListener('click', () => openLeadModal(lead.id));
+  wrap.querySelector('[data-delete-lead]').addEventListener('click', () => deleteLead(lead.id));
+}
+
+document.getElementById('backToLeadsBtn').addEventListener('click', () => {
+  document.getElementById('leadDetailView').hidden = true;
+  document.getElementById('leadsListView').hidden = false;
+  currentLeadDetailId = null;
+});
+
+document.getElementById('leadDetailStatus').addEventListener('change', (e) => {
+  updateLeadStatus(currentLeadDetailId, e.target.value);
+});
 
 // ===== Add / edit a lead manually (phone/in-person enquiries) =====
 // Generic modal helper: wires backdrop-click and Escape-to-close for a
@@ -545,7 +592,12 @@ leadSaveBtn.addEventListener('click', () => {
       }
       leadModal.hide();
       clearLeadForm();
-      loadLeads();
+      await loadLeads();
+      // Keep the open detail page (if any) in sync with what was just saved.
+      if (currentLeadDetailId) {
+        const updated = leadsCache.find(x => String(x.id) === String(currentLeadDetailId));
+        if (updated) renderLeadDetailInfo(updated);
+      }
     } catch (err) {
       alert('Something went wrong saving this lead.');
     }
