@@ -976,40 +976,65 @@
   </div>
 
   <div id="customerSubtabTickets" class="cust-subtab-panel">
-    <div class="panel-head">
-      <h2>Support tickets</h2>
-      <button type="button" id="newTicketBtn" class="btn btn-primary btn-small">+ New ticket</button>
-    </div>
-
-    <div class="ticket-filters">
-      <div>
-        <label for="customerFilterName">Customer</label>
-        <input type="text" id="customerFilterName" disabled>
+    <div id="custTicketListView">
+      <div class="panel-head">
+        <h2>Support tickets</h2>
+        <button type="button" id="newTicketBtn" class="btn btn-primary btn-small">+ New ticket</button>
       </div>
-      <div>
-        <label for="customerFilterStatus">Status</label>
-        <select id="customerFilterStatus">
-          <option value="">All statuses</option>
-          <option>Open</option>
-          <option>In Progress</option>
-          <option>Payment Pending</option>
-          <option>Payment Submitted</option>
-          <option>Payment Received</option>
-          <option>Resolved</option>
-          <option>Closed</option>
-        </select>
+
+      <div class="ticket-filters">
+        <div>
+          <label for="customerFilterName">Customer</label>
+          <input type="text" id="customerFilterName" disabled>
+        </div>
+        <div>
+          <label for="customerFilterStatus">Status</label>
+          <select id="customerFilterStatus">
+            <option value="">All statuses</option>
+            <option>Open</option>
+            <option>In Progress</option>
+            <option>Payment Pending</option>
+            <option>Payment Submitted</option>
+            <option>Payment Received</option>
+            <option>Resolved</option>
+            <option>Closed</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="ticketsList" class="ticket-list">
+        <p class="empty-note">Loading…</p>
+      </div>
+
+      <div id="customerClosedSection" class="closed-tickets-section" hidden>
+        <button type="button" id="toggleCustomerClosed" class="btn btn-outline btn-small">
+          Show closed tickets (<span id="customerClosedCount">0</span>)
+        </button>
+        <div id="customerClosedList" class="ticket-list" hidden></div>
       </div>
     </div>
 
-    <div id="ticketsList" class="ticket-list">
-      <p class="empty-note">Loading…</p>
-    </div>
+    <div id="custTicketDetailView" hidden>
+      <button type="button" id="backToCustTicketsBtn" class="btn btn-outline btn-small back-btn">&larr; Back to tickets</button>
 
-    <div id="customerClosedSection" class="closed-tickets-section" hidden>
-      <button type="button" id="toggleCustomerClosed" class="btn btn-outline btn-small">
-        Show closed tickets (<span id="customerClosedCount">0</span>)
-      </button>
-      <div id="customerClosedList" class="ticket-list" hidden></div>
+      <div id="custTicketDetailInfo" class="customer-detail-info"></div>
+
+      <div id="custTicketDetailPayment"></div>
+
+      <div class="ticket-comments-section">
+        <h3>Comments</h3>
+        <div id="custTicketCommentsList" class="comments-list">
+          <p class="empty-note">Loading…</p>
+        </div>
+        <div class="comment-form">
+          <textarea id="custNewCommentText" rows="3" placeholder="Write a message…"></textarea>
+          <div class="comment-form-row">
+            <input type="file" id="custNewCommentFile">
+            <button type="button" id="custPostCommentBtn" class="btn btn-primary btn-small">Send</button>
+          </div>
+          <p class="comment-form-msg" id="custCommentFormMsg"></p>
+        </div>
+      </div>
     </div>
   </div>
 

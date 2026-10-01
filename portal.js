@@ -173,7 +173,9 @@ function setCustomerSubtab(name) {
   });
   document.getElementById('customerSubtabTickets').hidden = name !== 'tickets';
   document.getElementById('customerSubtabRecommendations').hidden = name !== 'recommendations';
-  // Always land back on the recommendations list, not wherever the detail view was left.
+  // Always land back on each tab's own list, not wherever its detail view was left.
+  document.getElementById('custTicketListView').hidden = false;
+  document.getElementById('custTicketDetailView').hidden = true;
   document.getElementById('custRecListView').hidden = false;
   document.getElementById('custRecDetailView').hidden = true;
 }
@@ -2304,40 +2306,23 @@ function renderTicketPaymentSection(t) {
   return '';
 }
 
-function buildTicketCardHtml(t) {
+// A compact, clickable summary row — the Tickets tab only ever shows
+// this; the full subject/description/payment/comments live on the
+// ticket's own detail page, opened by clicking a row.
+function buildCustomerTicketRowHtml(t) {
   return `
-      <div class="ticket-card">
+      <div class="ticket-card rec-card" data-ticket-row="${t.id}">
         <div class="ticket-card-head">
           <h3>${escapeHtml(t.subject)}</h3>
           <span class="status-badge ${statusClass(t.status)}">${escapeHtml(t.status)}</span>
         </div>
-        <p>${escapeHtml(t.description || '')}</p>
         <p class="ticket-date">Raised: ${escapeHtml(formatTicketDate(t.created_at))}${t.reference_code ? ` · Request ID: ${escapeHtml(t.reference_code)}` : ''}</p>
-        ${renderTicketPaymentSection(t)}
-        <button type="button" class="btn btn-outline btn-small conversation-toggle" data-ticket-id="${t.id}">💬 View Conversation</button>
-        <div class="ticket-comments-section" data-ticket-id="${t.id}" hidden>
-          <div class="comments-list" data-ticket-id="${t.id}"><p class="empty-note">Loading…</p></div>
-          <div class="comment-form">
-            <textarea class="new-comment-text" data-ticket-id="${t.id}" rows="3" placeholder="Write a message…"></textarea>
-            <div class="comment-form-row">
-              <input type="file" class="new-comment-file" data-ticket-id="${t.id}">
-              <button type="button" class="btn btn-primary btn-small comment-post-btn" data-ticket-id="${t.id}">Send</button>
-            </div>
-            <p class="comment-form-msg" data-ticket-id="${t.id}"></p>
-          </div>
-        </div>
       </div>`;
 }
 
-function wireTicketCardEvents(container) {
-  container.querySelectorAll('.payment-submit-btn').forEach(btn => {
-    btn.addEventListener('click', () => submitPaymentReference(btn.dataset.ticketId));
-  });
-  container.querySelectorAll('.conversation-toggle').forEach(btn => {
-    btn.addEventListener('click', () => toggleCustomerConversation(btn.dataset.ticketId, btn));
-  });
-  container.querySelectorAll('.comment-post-btn').forEach(btn => {
-    btn.addEventListener('click', () => postCustomerComment(btn.dataset.ticketId));
+function wireCustomerTicketRowEvents(container) {
+  container.querySelectorAll('[data-ticket-row]').forEach(row => {
+    row.addEventListener('click', () => openCustomerTicketDetail(row.dataset.ticketRow));
   });
 }
 
@@ -2353,9 +2338,9 @@ function applyCustomerTicketFilters() {
 
   if (statusFilter === 'Closed') {
     list.innerHTML = filtered.length
-      ? filtered.map(buildTicketCardHtml).join('')
+      ? filtered.map(buildCustomerTicketRowHtml).join('')
       : '<p class="empty-note">No closed tickets match this filter.</p>';
-    wireTicketCardEvents(list);
+    wireCustomerTicketRowEvents(list);
     closedSection.hidden = true;
     return;
   }
@@ -2364,16 +2349,16 @@ function applyCustomerTicketFilters() {
   const closed = filtered.filter(t => t.status === 'Closed');
 
   list.innerHTML = active.length
-    ? active.map(buildTicketCardHtml).join('')
+    ? active.map(buildCustomerTicketRowHtml).join('')
     : '<p class="empty-note">No tickets yet — raise one above if you need something updated or fixed.</p>';
-  wireTicketCardEvents(list);
+  wireCustomerTicketRowEvents(list);
 
   document.getElementById('customerClosedCount').textContent = closed.length;
   closedSection.hidden = closed.length === 0;
 
   const closedList = document.getElementById('customerClosedList');
-  closedList.innerHTML = closed.map(buildTicketCardHtml).join('');
-  wireTicketCardEvents(closedList);
+  closedList.innerHTML = closed.map(buildCustomerTicketRowHtml).join('');
+  wireCustomerTicketRowEvents(closedList);
 }
 
 document.getElementById('customerFilterStatus').addEventListener('change', applyCustomerTicketFilters);
@@ -2510,33 +2495,63 @@ async function convertRecommendationToTicket(rec, btn) {
   });
 }
 
-async function toggleCustomerConversation(ticketId, btn) {
-  const section = document.querySelector(`.ticket-comments-section[data-ticket-id="${ticketId}"]`);
-  const isHidden = section.hidden;
-  section.hidden = !isHidden;
-  btn.textContent = isHidden ? '💬 Hide conversation' : '💬 View conversation';
+// ===== Customer ticket detail page (Details + related actions + Comments) =====
+let currentCustomerTicketId = null;
 
-  if (isHidden) {
-    loadCustomerTicketComments(ticketId);
-  }
+function openCustomerTicketDetail(id) {
+  currentCustomerTicketId = id;
+  const t = customerTicketsCache.find(x => String(x.id) === String(id));
+  if (!t) return;
+
+  document.getElementById('custTicketListView').hidden = true;
+  document.getElementById('custTicketDetailView').hidden = false;
+
+  renderCustomerTicketDetailInfo(t);
+
+  document.getElementById('custNewCommentText').value = '';
+  document.getElementById('custNewCommentFile').value = '';
+  document.getElementById('custCommentFormMsg').textContent = '';
+  loadCustomerTicketDetailComments(id);
 }
 
-async function loadCustomerTicketComments(ticketId) {
-  const list = document.querySelector(`.comments-list[data-ticket-id="${ticketId}"]`);
+function renderCustomerTicketDetailInfo(t) {
+  document.getElementById('custTicketDetailInfo').innerHTML = `
+    <h3>${escapeHtml(t.subject)}</h3>
+    ${t.reference_code ? `<p class="unique-id">Request ID: ${escapeHtml(t.reference_code)}</p>` : ''}
+    <p class="ticket-date">Raised: ${escapeHtml(formatTicketDate(t.created_at))}</p>
+    <p style="white-space:pre-wrap; margin-top:10px;">${escapeHtml(t.description || 'No description provided.')}</p>
+  `;
+
+  const paymentWrap = document.getElementById('custTicketDetailPayment');
+  paymentWrap.innerHTML = renderTicketPaymentSection(t);
+  paymentWrap.querySelectorAll('.payment-submit-btn').forEach(btn => {
+    btn.addEventListener('click', () => submitPaymentReference(btn.dataset.ticketId));
+  });
+}
+
+document.getElementById('backToCustTicketsBtn').addEventListener('click', () => {
+  document.getElementById('custTicketDetailView').hidden = true;
+  document.getElementById('custTicketListView').hidden = false;
+  currentCustomerTicketId = null;
+  loadCustomerTickets();
+});
+
+async function loadCustomerTicketDetailComments(ticketId) {
+  const list = document.getElementById('custTicketCommentsList');
   list.innerHTML = '<p class="empty-note">Loading…</p>';
   try {
     const res = await fetch(`/api/customer/ticket-comments?ticket_id=${ticketId}`);
     const data = await res.json();
     list.innerHTML = renderCommentThread(data.comments, '/api/customer/ticket-file');
   } catch (err) {
-    list.innerHTML = '<p class="empty-note">Could not load conversation.</p>';
+    list.innerHTML = '<p class="empty-note">Could not load comments.</p>';
   }
 }
 
-async function postCustomerComment(ticketId) {
-  const textEl = document.querySelector(`.new-comment-text[data-ticket-id="${ticketId}"]`);
-  const fileEl = document.querySelector(`.new-comment-file[data-ticket-id="${ticketId}"]`);
-  const msgEl = document.querySelector(`.comment-form-msg[data-ticket-id="${ticketId}"]`);
+document.getElementById('custPostCommentBtn').addEventListener('click', async () => {
+  const textEl = document.getElementById('custNewCommentText');
+  const fileEl = document.getElementById('custNewCommentFile');
+  const msgEl = document.getElementById('custCommentFormMsg');
   const text = textEl.value.trim();
   const file = fileEl.files[0];
 
@@ -2546,7 +2561,7 @@ async function postCustomerComment(ticketId) {
   }
 
   const formData = new FormData();
-  formData.append('ticket_id', ticketId);
+  formData.append('ticket_id', currentCustomerTicketId);
   formData.append('comment', text);
   if (file) formData.append('file', file);
 
@@ -2562,11 +2577,11 @@ async function postCustomerComment(ticketId) {
     textEl.value = '';
     fileEl.value = '';
     msgEl.textContent = '';
-    loadCustomerTicketComments(ticketId);
+    loadCustomerTicketDetailComments(currentCustomerTicketId);
   } catch (err) {
     msgEl.textContent = 'Something went wrong. Please try again.';
   }
-}
+});
 
 async function submitPaymentReference(ticketId) {
   const input = document.querySelector(`.payment-ref-input[data-ticket-id="${ticketId}"]`);
@@ -2591,7 +2606,11 @@ async function submitPaymentReference(ticketId) {
       msgEl.textContent = 'Error: ' + (data.error || 'Could not submit payment');
       return;
     }
-    loadCustomerTickets();
+    await loadCustomerTickets();
+    // Stay on the detail page and reflect the new status, instead of
+    // bouncing back to the list the customer just submitted payment from.
+    const updated = customerTicketsCache.find(x => String(x.id) === String(ticketId));
+    if (updated && String(currentCustomerTicketId) === String(ticketId)) renderCustomerTicketDetailInfo(updated);
   } catch (err) {
     msgEl.textContent = 'Something went wrong. Please try again.';
   }
