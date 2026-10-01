@@ -967,9 +967,57 @@
     <div id="subPlanCards" class="sub-plan-grid"></div>
   </div>
 
-  <div class="panel-head">
-    <h2>Support tickets</h2>
-    <button type="button" id="newTicketBtn" class="btn btn-primary btn-small">+ New ticket</button>
+  <div class="subtab-nav">
+    <button type="button" class="subtab-btn active" data-customer-subtab="tickets">Tickets</button>
+    <button type="button" class="subtab-btn" data-customer-subtab="recommendations">Recommendation</button>
+  </div>
+
+  <div id="customerSubtabTickets" class="cust-subtab-panel">
+    <div class="panel-head">
+      <h2>Support tickets</h2>
+      <button type="button" id="newTicketBtn" class="btn btn-primary btn-small">+ New ticket</button>
+    </div>
+
+    <div class="ticket-filters">
+      <div>
+        <label for="customerFilterName">Customer</label>
+        <input type="text" id="customerFilterName" disabled>
+      </div>
+      <div>
+        <label for="customerFilterStatus">Status</label>
+        <select id="customerFilterStatus">
+          <option value="">All statuses</option>
+          <option>Open</option>
+          <option>In Progress</option>
+          <option>Payment Pending</option>
+          <option>Payment Submitted</option>
+          <option>Payment Received</option>
+          <option>Resolved</option>
+          <option>Closed</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="ticketsList" class="ticket-list">
+      <p class="empty-note">Loading…</p>
+    </div>
+
+    <div id="customerClosedSection" class="closed-tickets-section" hidden>
+      <button type="button" id="toggleCustomerClosed" class="btn btn-outline btn-small">
+        Show closed tickets (<span id="customerClosedCount">0</span>)
+      </button>
+      <div id="customerClosedList" class="ticket-list" hidden></div>
+    </div>
+  </div>
+
+  <div id="customerSubtabRecommendations" class="cust-subtab-panel" hidden>
+    <div class="panel-head">
+      <h2>Recommendations</h2>
+    </div>
+
+    <div id="customerRecommendationsList" class="ticket-list">
+      <p class="empty-note">Loading…</p>
+    </div>
   </div>
 
   <div id="ticketModalOverlay" class="modal-overlay" hidden>
@@ -987,37 +1035,6 @@
       <button type="button" id="ticketCancelBtn" class="btn btn-outline">Cancel</button>
     </div>
   </div>
-  </div>
-
-  <div class="ticket-filters">
-    <div>
-      <label for="customerFilterName">Customer</label>
-      <input type="text" id="customerFilterName" disabled>
-    </div>
-    <div>
-      <label for="customerFilterStatus">Status</label>
-      <select id="customerFilterStatus">
-        <option value="">All statuses</option>
-        <option>Open</option>
-        <option>In Progress</option>
-        <option>Payment Pending</option>
-        <option>Payment Submitted</option>
-        <option>Payment Received</option>
-        <option>Resolved</option>
-        <option>Closed</option>
-      </select>
-    </div>
-  </div>
-
-  <div id="ticketsList" class="ticket-list">
-    <p class="empty-note">Loading…</p>
-  </div>
-
-  <div id="customerClosedSection" class="closed-tickets-section" hidden>
-    <button type="button" id="toggleCustomerClosed" class="btn btn-outline btn-small">
-      Show closed tickets (<span id="customerClosedCount">0</span>)
-    </button>
-    <div id="customerClosedList" class="ticket-list" hidden></div>
   </div>
 </div>
 

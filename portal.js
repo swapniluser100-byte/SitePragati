@@ -14,11 +14,16 @@ const EDIT_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor
 const DELETE_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>';
 const SEND_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4Z"/></svg>';
 
-function editButtonHtml(dataAttr, id) {
-  return `<button class="btn btn-outline btn-small btn-icon" ${dataAttr}="${id}" aria-label="Edit" title="Edit">${EDIT_ICON_SVG}</button>`;
+// label is optional — omit it for the compact icon-only button used in
+// list rows; pass one (e.g. "Edit") for a labeled icon+text button where
+// there's room, like the customer detail page's action row.
+function editButtonHtml(dataAttr, id, label) {
+  const cls = label ? 'btn btn-outline btn-small btn-icon-label' : 'btn btn-outline btn-small btn-icon';
+  return `<button class="${cls}" ${dataAttr}="${id}" aria-label="Edit" title="Edit">${EDIT_ICON_SVG}${label ? `<span>${label}</span>` : ''}</button>`;
 }
-function deleteButtonHtml(dataAttr, id) {
-  return `<button class="btn-danger btn-icon" ${dataAttr}="${id}" aria-label="Delete" title="Delete">${DELETE_ICON_SVG}</button>`;
+function deleteButtonHtml(dataAttr, id, label) {
+  const cls = label ? 'btn-danger btn-icon-label' : 'btn-danger btn-icon';
+  return `<button class="${cls}" ${dataAttr}="${id}" aria-label="Delete" title="Delete">${DELETE_ICON_SVG}${label ? `<span>${label}</span>` : ''}</button>`;
 }
 
 function setRole(role) {
@@ -155,8 +160,22 @@ function showCustomerDashboard(businessName, renewalRequired, subscriptionPlans,
   loggedInBusinessName = businessName || '';
   customerUpiId = upiId || null; // used by the ticket-payment QR code below — falls back to the app default when unset
   renderSubscriptionBanner(renewalRequired, subscriptionPlans);
+  setCustomerSubtab('tickets'); // always land on Tickets first, regardless of what was open last time
   loadCustomerTickets();
+  loadCustomerRecommendationsList();
 }
+
+// Tickets / Recommendation sub-tabs within the customer's own portal
+function setCustomerSubtab(name) {
+  document.querySelectorAll('[data-customer-subtab]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.customerSubtab === name);
+  });
+  document.getElementById('customerSubtabTickets').hidden = name !== 'tickets';
+  document.getElementById('customerSubtabRecommendations').hidden = name !== 'recommendations';
+}
+document.querySelectorAll('[data-customer-subtab]').forEach(btn => {
+  btn.addEventListener('click', () => setCustomerSubtab(btn.dataset.customerSubtab));
+});
 
 // Shows the "No active maintenance subscription" upsell banner + up to 3
 // admin-configured plan cards, but only for customers who don't have
@@ -665,9 +684,9 @@ function renderCustomersList(customers) {
 function renderCustomerDetailActions(c) {
   const wrap = document.getElementById('customerDetailActions');
   wrap.innerHTML = `
-    ${c.email ? `<button class="btn btn-outline btn-small btn-icon" data-send-creds="${c.id}" aria-label="Send login email" title="Email portal login credentials">${SEND_ICON_SVG}</button>` : ''}
-    ${editButtonHtml('data-edit-cust', c.id)}
-    ${deleteButtonHtml('data-delete-cust', c.id)}
+    ${c.email ? `<button class="btn btn-outline btn-small btn-icon-label" data-send-creds="${c.id}" aria-label="Send login email" title="Email portal login credentials">${SEND_ICON_SVG}<span>Send login email</span></button>` : ''}
+    ${editButtonHtml('data-edit-cust', c.id, 'Edit')}
+    ${deleteButtonHtml('data-delete-cust', c.id, 'Delete')}
   `;
   const sendBtn = wrap.querySelector('[data-send-creds]');
   if (sendBtn) sendBtn.addEventListener('click', () => sendCustomerCredentials(sendBtn));
@@ -2377,6 +2396,35 @@ async function loadCustomerTickets() {
     applyCustomerTicketFilters();
   } catch (err) {
     list.innerHTML = '<p class="empty-note">Could not load tickets.</p>';
+  }
+}
+
+// Read-only — the admin writes these from the customer's detail page;
+// the customer just gets to see them.
+async function loadCustomerRecommendationsList() {
+  const list = document.getElementById('customerRecommendationsList');
+  list.innerHTML = '<p class="empty-note">Loading…</p>';
+
+  try {
+    const res = await fetch('/api/customer/recommendations');
+    const data = await res.json();
+    const recommendations = data.recommendations || [];
+
+    if (recommendations.length === 0) {
+      list.innerHTML = '<p class="empty-note">No recommendations yet.</p>';
+      return;
+    }
+
+    list.innerHTML = recommendations.map(r => `
+      <div class="ticket-card">
+        <div class="ticket-card-head">
+          <h3>${escapeHtml(r.name)}</h3>
+        </div>
+        ${r.details ? `<p style="white-space:pre-wrap;">${escapeHtml(r.details)}</p>` : ''}
+      </div>
+    `).join('');
+  } catch (err) {
+    list.innerHTML = '<p class="empty-note">Could not load recommendations.</p>';
   }
 }
 
