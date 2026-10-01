@@ -649,9 +649,6 @@ function renderCustomersList(customers) {
       <span class="status-pill ${isPending ? 'status-pill-pending' : 'status-pill-paid'}">${isPending ? 'Pending' : 'Paid'}</span>
       <div class="cs-card-actions">
         <button class="btn btn-outline btn-small" data-view-txns="${c.id}">👁 View</button>
-        ${c.email ? `<button class="btn btn-outline btn-small btn-icon" data-send-creds="${c.id}" aria-label="Send login email" title="Email portal login credentials">${SEND_ICON_SVG}</button>` : ''}
-        ${editButtonHtml('data-edit-cust', c.id)}
-        ${deleteButtonHtml('data-delete-cust', c.id)}
       </div>
     </div>
   `;
@@ -660,16 +657,22 @@ function renderCustomersList(customers) {
   list.querySelectorAll('[data-view-txns]').forEach(btn => {
     btn.addEventListener('click', () => openCustomerDetail(btn.dataset.viewTxns));
   });
-  list.querySelectorAll('[data-send-creds]').forEach(btn => {
-    btn.addEventListener('click', () => sendCustomerCredentials(btn));
-  });
-  list.querySelectorAll('[data-edit-cust]').forEach(btn => {
-    btn.addEventListener('click', () => openCustomerForm(btn.dataset.editCust));
-  });
-  list.querySelectorAll('[data-delete-cust]').forEach(btn => {
-    btn.addEventListener('click', () => deleteCustomer(btn.dataset.deleteCust));
-  });
   wireCopyLinkButtons(list);
+}
+
+// Send login email / Edit / Delete — moved off the list card onto the
+// customer's own detail page, since that's reached via View now anyway.
+function renderCustomerDetailActions(c) {
+  const wrap = document.getElementById('customerDetailActions');
+  wrap.innerHTML = `
+    ${c.email ? `<button class="btn btn-outline btn-small btn-icon" data-send-creds="${c.id}" aria-label="Send login email" title="Email portal login credentials">${SEND_ICON_SVG}</button>` : ''}
+    ${editButtonHtml('data-edit-cust', c.id)}
+    ${deleteButtonHtml('data-delete-cust', c.id)}
+  `;
+  const sendBtn = wrap.querySelector('[data-send-creds]');
+  if (sendBtn) sendBtn.addEventListener('click', () => sendCustomerCredentials(sendBtn));
+  wrap.querySelector('[data-edit-cust]').addEventListener('click', () => openCustomerForm(c.id));
+  wrap.querySelector('[data-delete-cust]').addEventListener('click', () => deleteCustomer(c.id));
 }
 
 // Resets the customer's portal password to a new random one and emails
@@ -862,6 +865,7 @@ custSaveBtn.addEventListener('click', () => {
       custModal.hide();
       clearCustomerForm();
       loadCustomers();
+      if (currentCustomerId) refreshCurrentCustomerTotal(); // keep the open detail page's info/actions in sync after an edit
     } catch (err) {
       alert('Something went wrong saving this customer.');
     }
@@ -876,6 +880,13 @@ async function deleteCustomer(id) {
     body: JSON.stringify({ id: Number(id) })
   });
   loadCustomers();
+
+  // Deleted from their own detail page — nothing left there to show, so go back to the list.
+  if (String(currentCustomerId) === String(id)) {
+    document.getElementById('customerDetailView').hidden = true;
+    document.getElementById('customersListView').hidden = false;
+    currentCustomerId = null;
+  }
 }
 
 // ===== Tickets (admin view — all customers) =====
@@ -1375,6 +1386,7 @@ function openCustomerDetail(id) {
   setCustomerDetailSubtab('details'); // always land on Details first, regardless of what was open last time
 
   renderCustomerDetailInfo(c);
+  renderCustomerDetailActions(c);
   loadTransactions(id);
   loadRecommendations(id);
 }
@@ -1581,7 +1593,10 @@ async function refreshCurrentCustomerTotal() {
     const data = await res.json();
     customersCache = data.customers || [];
     const c = customersCache.find(x => String(x.id) === String(currentCustomerId));
-    if (c) renderCustomerDetailInfo(c);
+    if (c) {
+      renderCustomerDetailInfo(c);
+      renderCustomerDetailActions(c);
+    }
   } catch (err) {
     // Non-critical — the total will still be correct next time the list loads.
   }
