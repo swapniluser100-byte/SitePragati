@@ -160,7 +160,10 @@ function showCustomerDashboard(businessName, renewalRequired, subscriptionPlans,
   loggedInBusinessName = businessName || '';
   customerUpiId = upiId || null; // used by the ticket-payment QR code below — falls back to the app default when unset
   renderSubscriptionBanner(renewalRequired, subscriptionPlans);
-  setCustomerSubtab('home'); // always land on Home first, regardless of what was open last time
+  // Lands on Home by default, but a deep link (?page=ticket, etc. —
+  // captured at script init, before the auto-login flow below scrubs the
+  // URL) can send the customer straight to a specific tab instead.
+  setCustomerSubtab(mapPageParamToCustomerSubtab(requestedCustomerPage));
   loadCustomerTickets();
   loadCustomerRecommendationsList();
 }
@@ -182,6 +185,19 @@ function setCustomerSubtab(name) {
 document.querySelectorAll('[data-customer-subtab]').forEach(btn => {
   btn.addEventListener('click', () => setCustomerSubtab(btn.dataset.customerSubtab));
 });
+
+// Maps a ?page= URL value (singular/plural accepted) to the sub-tab it
+// should land on. Falls back to Home for anything unrecognized or absent.
+function mapPageParamToCustomerSubtab(page) {
+  const map = {
+    home: 'home',
+    ticket: 'tickets',
+    tickets: 'tickets',
+    recommendation: 'recommendations',
+    recommendations: 'recommendations'
+  };
+  return map[(page || '').toLowerCase()] || 'home';
+}
 
 // Shows the "No active maintenance subscription" upsell banner + up to 3
 // admin-configured plan cards, but only for customers who don't have
@@ -2738,6 +2754,11 @@ const resetTokenFromUrl = new URLSearchParams(window.location.search).get('admin
 // link is an explicit request to be that customer.
 const autoLoginEmail = new URLSearchParams(window.location.search).get('email');
 const autoLoginPw = new URLSearchParams(window.location.search).get('pw');
+
+// A deep link (?page=ticket, etc.) to land on a specific customer
+// sub-tab. Read here, before the auto-login flow below scrubs the URL,
+// and consumed by showCustomerDashboard() once the customer is shown.
+const requestedCustomerPage = new URLSearchParams(window.location.search).get('page');
 
 checkSession().then(async () => {
   if (resetTokenFromUrl) {
