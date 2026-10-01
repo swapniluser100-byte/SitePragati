@@ -157,6 +157,7 @@ function showCustomerDashboard(businessName, renewalRequired, subscriptionPlans,
   document.getElementById('adminDashboard').hidden = true;
   document.getElementById('customerDashboard').hidden = false;
   document.getElementById('welcomeLine').textContent = businessName ? `Welcome, ${businessName}` : '';
+  document.getElementById('customerHeaderName').textContent = businessName || '';
   loggedInBusinessName = businessName || '';
   customerUpiId = upiId || null; // used by the ticket-payment QR code below — falls back to the app default when unset
   renderSubscriptionBanner(renewalRequired, subscriptionPlans);
