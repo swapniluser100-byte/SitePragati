@@ -2731,12 +2731,46 @@ if (requestedRole === 'admin' || requestedRole === 'customer') {
 // session shouldn't hide an explicit reset request.
 const resetTokenFromUrl = new URLSearchParams(window.location.search).get('admin_reset_token');
 
-checkSession().then(() => {
+// A direct customer login link (?role=customer&email=...&pw=...) — e.g.
+// shared over WhatsApp/email for one-click access — logs the customer
+// straight in instead of making them type credentials. Always attempted
+// when present, even over an existing session, since following such a
+// link is an explicit request to be that customer.
+const autoLoginEmail = new URLSearchParams(window.location.search).get('email');
+const autoLoginPw = new URLSearchParams(window.location.search).get('pw');
+
+checkSession().then(async () => {
   if (resetTokenFromUrl) {
     adminResetToken = resetTokenFromUrl;
     showLogin();
     setRole('admin');
     showLoginCard('resetPasswordCard');
     window.history.replaceState({}, '', window.location.pathname);
+    return;
+  }
+
+  if (requestedRole === 'customer' && autoLoginEmail && autoLoginPw) {
+    // Scrub the password out of the visible URL/history right away,
+    // whether or not the login below actually succeeds.
+    window.history.replaceState({}, '', window.location.pathname);
+    try {
+      const res = await fetch('/api/customer/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: autoLoginEmail, password: autoLoginPw })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        checkSession();
+      } else {
+        showLogin();
+        setRole('customer');
+        document.getElementById('loginError').textContent = data.error || 'Login failed';
+      }
+    } catch (err) {
+      showLogin();
+      setRole('customer');
+      document.getElementById('loginError').textContent = 'Something went wrong. Please try again.';
+    }
   }
 });
