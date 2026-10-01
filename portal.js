@@ -160,8 +160,22 @@ function showCustomerDashboard(businessName, renewalRequired, subscriptionPlans,
   loggedInBusinessName = businessName || '';
   customerUpiId = upiId || null; // used by the ticket-payment QR code below — falls back to the app default when unset
   renderSubscriptionBanner(renewalRequired, subscriptionPlans);
+  setCustomerSubtab('tickets'); // always land on Tickets first, regardless of what was open last time
   loadCustomerTickets();
+  loadCustomerRecommendationsList();
 }
+
+// Tickets / Recommendation sub-tabs within the customer's own portal
+function setCustomerSubtab(name) {
+  document.querySelectorAll('[data-customer-subtab]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.customerSubtab === name);
+  });
+  document.getElementById('customerSubtabTickets').hidden = name !== 'tickets';
+  document.getElementById('customerSubtabRecommendations').hidden = name !== 'recommendations';
+}
+document.querySelectorAll('[data-customer-subtab]').forEach(btn => {
+  btn.addEventListener('click', () => setCustomerSubtab(btn.dataset.customerSubtab));
+});
 
 // Shows the "No active maintenance subscription" upsell banner + up to 3
 // admin-configured plan cards, but only for customers who don't have
@@ -2382,6 +2396,35 @@ async function loadCustomerTickets() {
     applyCustomerTicketFilters();
   } catch (err) {
     list.innerHTML = '<p class="empty-note">Could not load tickets.</p>';
+  }
+}
+
+// Read-only — the admin writes these from the customer's detail page;
+// the customer just gets to see them.
+async function loadCustomerRecommendationsList() {
+  const list = document.getElementById('customerRecommendationsList');
+  list.innerHTML = '<p class="empty-note">Loading…</p>';
+
+  try {
+    const res = await fetch('/api/customer/recommendations');
+    const data = await res.json();
+    const recommendations = data.recommendations || [];
+
+    if (recommendations.length === 0) {
+      list.innerHTML = '<p class="empty-note">No recommendations yet.</p>';
+      return;
+    }
+
+    list.innerHTML = recommendations.map(r => `
+      <div class="ticket-card">
+        <div class="ticket-card-head">
+          <h3>${escapeHtml(r.name)}</h3>
+        </div>
+        ${r.details ? `<p style="white-space:pre-wrap;">${escapeHtml(r.details)}</p>` : ''}
+      </div>
+    `).join('');
+  } catch (err) {
+    list.innerHTML = '<p class="empty-note">Could not load recommendations.</p>';
   }
 }
 
