@@ -608,8 +608,8 @@ function actualCustomerFiltered(list) {
 }
 
 async function loadCustomers() {
-  const list = document.getElementById('customersList');
-  list.innerHTML = '<p class="empty-note">Loading…</p>';
+  const tbody = document.getElementById('customersTableBody');
+  tbody.innerHTML = '<tr><td colspan="5" class="empty-note">Loading…</td></tr>';
 
   try {
     const res = await fetch('/api/admin/customers');
@@ -619,7 +619,7 @@ async function loadCustomers() {
     populateTicketCustomerFilter(); // keep the Tickets tab's customer filter in sync
     filterCustomers(); // re-render, keeping whatever search term is already typed in
   } catch (err) {
-    list.innerHTML = '<p class="empty-note">Could not load customers.</p>';
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-note">Could not load customers.</td></tr>';
   }
 }
 
@@ -638,51 +638,51 @@ function computeCustomerStats(customers) {
   document.getElementById('custStatPending').textContent = '₹' + totalPending.toLocaleString('en-IN');
 }
 
+// Matches the Tickets tab's table row style — just enough to identify
+// and open a customer. Links/contact/notes/payment totals all live on
+// the customer's own detail page now, not duplicated here.
+function customerRowHtml(c, i) {
+  const isPending = Number(c.total_pending || 0) > 0;
+  return `
+    <tr class="clickable-row" data-customer-id="${c.id}">
+      <td>${escapeHtml(formatTicketDate(c.created_at))}</td>
+      <td>
+        <span class="lead-name-cell">
+          <span class="lead-avatar" style="background:${LEAD_AVATAR_COLORS[i % LEAD_AVATAR_COLORS.length]}">${escapeHtml(leadInitials(c.business_name))}</span>
+          ${escapeHtml(c.business_name)}
+        </span>
+      </td>
+      <td>${escapeHtml(c.contact_name || '')}</td>
+      <td><span class="status-pill ${isPending ? 'status-pill-pending' : 'status-pill-paid'}">${isPending ? 'Pending' : 'Paid'}</span></td>
+      <td class="actions-col">
+        <button type="button" class="btn btn-outline btn-small" data-view-cust="${c.id}">👁 View</button>
+      </td>
+    </tr>`;
+}
+
+function wireCustomerRowClicks(container) {
+  container.querySelectorAll('.clickable-row').forEach(row => {
+    row.addEventListener('click', () => openCustomerDetail(row.dataset.customerId));
+  });
+  container.querySelectorAll('[data-view-cust]').forEach(btn => {
+    btn.addEventListener('click', (e) => { e.stopPropagation(); openCustomerDetail(btn.dataset.viewCust); });
+  });
+}
+
 function renderCustomersList(customers) {
-  const list = document.getElementById('customersList');
+  const tbody = document.getElementById('customersTableBody');
 
   if (customersCache.length === 0) {
-    list.innerHTML = '<p class="empty-note">No customers yet.</p>';
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-note">No customers yet.</td></tr>';
     return;
   }
   if (customers.length === 0) {
-    list.innerHTML = '<p class="empty-note">No customers match your search or filters.</p>';
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-note">No customers match your search or filters.</td></tr>';
     return;
   }
 
-  list.innerHTML = customers.map(c => {
-    // A customer with any Pending/Overdue balance shows that instead of
-    // what's already been paid — that's the number that needs attention.
-    const isPending = Number(c.total_pending || 0) > 0;
-    const boxAmount = isPending ? Number(c.total_pending || 0) : Number(c.total_paid || 0);
-    const boxCount = isPending ? Number(c.pending_txn_count || 0) : Number(c.paid_txn_count || 0);
-
-    return `
-    <div class="cs-card cust-card">
-      <span class="cust-card-avatar">🏢</span>
-      <div class="cs-card-info">
-        <h3>${escapeHtml(c.business_name)}</h3>
-        ${requestLinkBlockHtml(c)}
-        ${customerLinksBlockHtml(c)}
-        <p>${escapeHtml(c.contact_name || '')} ${c.phone ? '· ' + escapeHtml(c.phone) : ''}</p>
-      </div>
-      <div class="cust-card-stat ${isPending ? 'cust-card-stat-pending' : 'cust-card-stat-paid'}">
-        <p class="cust-card-stat-label">${isPending ? 'Pending Amount' : 'Total Paid'}</p>
-        <p class="cust-card-stat-value">₹${boxAmount.toLocaleString('en-IN')}</p>
-        <p class="cust-card-stat-count">${boxCount} transaction${boxCount === 1 ? '' : 's'}</p>
-      </div>
-      <span class="status-pill ${isPending ? 'status-pill-pending' : 'status-pill-paid'}">${isPending ? 'Pending' : 'Paid'}</span>
-      <div class="cs-card-actions">
-        <button class="btn btn-outline btn-small" data-view-txns="${c.id}">👁 View</button>
-      </div>
-    </div>
-  `;
-  }).join('');
-
-  list.querySelectorAll('[data-view-txns]').forEach(btn => {
-    btn.addEventListener('click', () => openCustomerDetail(btn.dataset.viewTxns));
-  });
-  wireCopyLinkButtons(list);
+  tbody.innerHTML = customers.map(customerRowHtml).join('');
+  wireCustomerRowClicks(tbody);
 }
 
 // Send login email / Edit / Delete — moved off the list card onto the
