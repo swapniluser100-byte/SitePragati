@@ -265,136 +265,6 @@
         </div>
       </div>
 
-      <div id="customerModalOverlay" class="modal-overlay" hidden>
-      <div id="customerForm" class="modal-box cs-form" role="dialog" aria-modal="true" aria-labelledby="customerFormTitle">
-        <div class="modal-head">
-          <h3 id="customerFormTitle">Add customer</h3>
-          <button type="button" id="customerModalCloseBtn" class="modal-close" aria-label="Close">&times;</button>
-        </div>
-        <input type="hidden" id="custId">
-
-        <div class="cs-form-section">
-          <p class="cs-section-label">Business Details</p>
-          <div class="cs-form-grid">
-            <div>
-              <label for="custBusinessName">Business name</label>
-              <input type="text" id="custBusinessName" required>
-            </div>
-            <div>
-              <label for="custContactName">Contact name</label>
-              <input type="text" id="custContactName">
-            </div>
-            <div>
-              <label for="custPhone">Phone</label>
-              <input type="text" id="custPhone">
-            </div>
-          </div>
-          <label for="custAddress">Address</label>
-          <textarea id="custAddress" rows="2"></textarea>
-        </div>
-
-        <div class="cs-form-section">
-          <p class="cs-section-label">Portal Login</p>
-          <div class="cs-form-grid">
-            <div>
-              <label for="custEmail">Email <span class="field-note">(portal login)</span></label>
-              <input type="email" id="custEmail" placeholder="customer@business.com">
-            </div>
-            <div>
-              <label for="custPassword">Password <span class="field-note" id="custPasswordNote">(required for new customers)</span></label>
-              <input type="text" id="custPassword" placeholder="Set a login password">
-            </div>
-          </div>
-        </div>
-
-        <div class="cs-form-section">
-          <p class="cs-section-label">Website Links</p>
-          <div class="cs-form-grid">
-            <div>
-              <label for="custWebsiteUrl">Website link</label>
-              <input type="url" id="custWebsiteUrl" placeholder="https://theirbusiness.pages.dev">
-            </div>
-            <div>
-              <label for="custAdminConsoleUrl">Admin console link</label>
-              <input type="url" id="custAdminConsoleUrl" placeholder="https://theirbusiness.pages.dev/admin.html">
-            </div>
-          </div>
-        </div>
-
-        <div class="cs-form-section">
-          <p class="cs-section-label">Payment</p>
-          <div class="cs-form-grid">
-            <div>
-              <label for="custUpiId">UPI ID <span class="field-note">(for this customer's ticket-payment QR code)</span></label>
-              <input type="text" id="custUpiId" placeholder="e.g. yourname@axisbank — leave blank to use the default">
-            </div>
-          </div>
-        </div>
-
-        <div class="cs-form-section">
-          <p class="cs-section-label">Renewal Settings</p>
-          <div class="cs-form-grid">
-            <div>
-              <label for="custRenewalRequired"><input type="checkbox" id="custRenewalRequired" style="width:auto; margin-right:6px; vertical-align:middle;"> Renewal required?</label>
-            </div>
-            <div>
-              <label for="custRenewalFrequency">Frequency</label>
-              <select id="custRenewalFrequency">
-                <option value="">— None —</option>
-                <option value="Monthly">Monthly</option>
-                <option value="Half Yearly">Half Yearly</option>
-                <option value="Yearly">Yearly</option>
-              </select>
-            </div>
-            <div>
-              <label for="custRenewalAmount">Renewal amount (₹) <span class="field-note">(charged each cycle)</span></label>
-              <input type="number" id="custRenewalAmount" step="0.01" min="0">
-            </div>
-            <div>
-              <label for="custRenewalStartDate">Renewal start date <span class="field-note">(first cycle's due date)</span></label>
-              <input type="date" id="custRenewalStartDate">
-            </div>
-          </div>
-        </div>
-
-        <div class="cs-form-section">
-          <p class="cs-section-label">Subscription Plans <span class="field-note">(shown to the customer only when Renewal required is unchecked)</span></p>
-          <div class="cs-form-grid cs-form-grid-3">
-            <div>
-              <label for="custPlan1Price">Plan 1 price (₹/month)</label>
-              <input type="number" id="custPlan1Price" step="1" min="0">
-              <label for="custPlan1Features" style="margin-top:10px;">Features <span class="field-note">(one per line)</span></label>
-              <textarea id="custPlan1Features" rows="4"></textarea>
-            </div>
-            <div>
-              <label for="custPlan2Price">Plan 2 price (₹/month)</label>
-              <input type="number" id="custPlan2Price" step="1" min="0">
-              <label for="custPlan2Features" style="margin-top:10px;">Features <span class="field-note">(one per line)</span></label>
-              <textarea id="custPlan2Features" rows="4"></textarea>
-            </div>
-            <div>
-              <label for="custPlan3Price">Plan 3 price (₹/month)</label>
-              <input type="number" id="custPlan3Price" step="1" min="0">
-              <label for="custPlan3Features" style="margin-top:10px;">Features <span class="field-note">(one per line)</span></label>
-              <textarea id="custPlan3Features" rows="4"></textarea>
-            </div>
-          </div>
-        </div>
-
-        <div class="cs-form-section">
-          <p class="cs-section-label">Internal</p>
-          <label for="custIsActualCustomer"><input type="checkbox" id="custIsActualCustomer" checked style="width:auto; margin-right:6px; vertical-align:middle;"> Is Actual Customer? <span class="field-note">(uncheck for demo/test entries)</span></label>
-          <label for="custNotes" style="margin-top:14px;">Notes <span class="field-note">(internal — not shown to the customer)</span></label>
-          <textarea id="custNotes" rows="5"></textarea>
-        </div>
-
-        <div class="cs-form-actions">
-          <button type="button" id="custSaveBtn" class="btn btn-primary">Save</button>
-          <button type="button" id="custCancelBtn" class="btn btn-outline">Cancel</button>
-        </div>
-      </div>
-      </div>
-
       <div class="customer-search-row">
         <div class="customer-search-bar">
           <span class="search-icon" aria-hidden="true">🔍</span>
@@ -412,7 +282,10 @@
 
     <!-- Detail view: one customer's transactions -->
     <div id="customerDetailView" hidden>
-      <button type="button" id="backToCustomersBtn" class="btn btn-outline btn-small back-btn">&larr; Back to customers</button>
+      <div class="customer-detail-header">
+        <button type="button" id="backToCustomersBtn" class="btn btn-outline btn-small">&larr; Back to customers</button>
+        <div id="customerDetailActions" class="cs-card-actions"></div>
+      </div>
 
       <div class="subtab-nav">
         <button type="button" class="subtab-btn active" data-cust-subtab="details">Details</button>
@@ -515,6 +388,137 @@
       </div>
       </div>
     </div>
+
+    <div id="customerModalOverlay" class="modal-overlay" hidden>
+    <div id="customerForm" class="modal-box cs-form" role="dialog" aria-modal="true" aria-labelledby="customerFormTitle">
+      <div class="modal-head">
+        <h3 id="customerFormTitle">Add customer</h3>
+        <button type="button" id="customerModalCloseBtn" class="modal-close" aria-label="Close">&times;</button>
+      </div>
+      <input type="hidden" id="custId">
+
+      <div class="cs-form-section">
+        <p class="cs-section-label">Business Details</p>
+        <div class="cs-form-grid">
+          <div>
+            <label for="custBusinessName">Business name</label>
+            <input type="text" id="custBusinessName" required>
+          </div>
+          <div>
+            <label for="custContactName">Contact name</label>
+            <input type="text" id="custContactName">
+          </div>
+          <div>
+            <label for="custPhone">Phone</label>
+            <input type="text" id="custPhone">
+          </div>
+        </div>
+        <label for="custAddress">Address</label>
+        <textarea id="custAddress" rows="2"></textarea>
+      </div>
+
+      <div class="cs-form-section">
+        <p class="cs-section-label">Portal Login</p>
+        <div class="cs-form-grid">
+          <div>
+            <label for="custEmail">Email <span class="field-note">(portal login)</span></label>
+            <input type="email" id="custEmail" placeholder="customer@business.com">
+          </div>
+          <div>
+            <label for="custPassword">Password <span class="field-note" id="custPasswordNote">(required for new customers)</span></label>
+            <input type="text" id="custPassword" placeholder="Set a login password">
+          </div>
+        </div>
+      </div>
+
+      <div class="cs-form-section">
+        <p class="cs-section-label">Website Links</p>
+        <div class="cs-form-grid">
+          <div>
+            <label for="custWebsiteUrl">Website link</label>
+            <input type="url" id="custWebsiteUrl" placeholder="https://theirbusiness.pages.dev">
+          </div>
+          <div>
+            <label for="custAdminConsoleUrl">Admin console link</label>
+            <input type="url" id="custAdminConsoleUrl" placeholder="https://theirbusiness.pages.dev/admin.html">
+          </div>
+        </div>
+      </div>
+
+      <div class="cs-form-section">
+        <p class="cs-section-label">Payment</p>
+        <div class="cs-form-grid">
+          <div>
+            <label for="custUpiId">UPI ID <span class="field-note">(for this customer's ticket-payment QR code)</span></label>
+            <input type="text" id="custUpiId" placeholder="e.g. yourname@axisbank — leave blank to use the default">
+          </div>
+        </div>
+      </div>
+
+      <div class="cs-form-section">
+        <p class="cs-section-label">Renewal Settings</p>
+        <div class="cs-form-grid">
+          <div>
+            <label for="custRenewalRequired"><input type="checkbox" id="custRenewalRequired" style="width:auto; margin-right:6px; vertical-align:middle;"> Renewal required?</label>
+          </div>
+          <div>
+            <label for="custRenewalFrequency">Frequency</label>
+            <select id="custRenewalFrequency">
+              <option value="">— None —</option>
+              <option value="Monthly">Monthly</option>
+              <option value="Half Yearly">Half Yearly</option>
+              <option value="Yearly">Yearly</option>
+            </select>
+          </div>
+          <div>
+            <label for="custRenewalAmount">Renewal amount (₹) <span class="field-note">(charged each cycle)</span></label>
+            <input type="number" id="custRenewalAmount" step="0.01" min="0">
+          </div>
+          <div>
+            <label for="custRenewalStartDate">Renewal start date <span class="field-note">(first cycle's due date)</span></label>
+            <input type="date" id="custRenewalStartDate">
+          </div>
+        </div>
+      </div>
+
+      <div class="cs-form-section">
+        <p class="cs-section-label">Subscription Plans <span class="field-note">(shown to the customer only when Renewal required is unchecked)</span></p>
+        <div class="cs-form-grid cs-form-grid-3">
+          <div>
+            <label for="custPlan1Price">Plan 1 price (₹/month)</label>
+            <input type="number" id="custPlan1Price" step="1" min="0">
+            <label for="custPlan1Features" style="margin-top:10px;">Features <span class="field-note">(one per line)</span></label>
+            <textarea id="custPlan1Features" rows="4"></textarea>
+          </div>
+          <div>
+            <label for="custPlan2Price">Plan 2 price (₹/month)</label>
+            <input type="number" id="custPlan2Price" step="1" min="0">
+            <label for="custPlan2Features" style="margin-top:10px;">Features <span class="field-note">(one per line)</span></label>
+            <textarea id="custPlan2Features" rows="4"></textarea>
+          </div>
+          <div>
+            <label for="custPlan3Price">Plan 3 price (₹/month)</label>
+            <input type="number" id="custPlan3Price" step="1" min="0">
+            <label for="custPlan3Features" style="margin-top:10px;">Features <span class="field-note">(one per line)</span></label>
+            <textarea id="custPlan3Features" rows="4"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="cs-form-section">
+        <p class="cs-section-label">Internal</p>
+        <label for="custIsActualCustomer"><input type="checkbox" id="custIsActualCustomer" checked style="width:auto; margin-right:6px; vertical-align:middle;"> Is Actual Customer? <span class="field-note">(uncheck for demo/test entries)</span></label>
+        <label for="custNotes" style="margin-top:14px;">Notes <span class="field-note">(internal — not shown to the customer)</span></label>
+        <textarea id="custNotes" rows="5"></textarea>
+      </div>
+
+      <div class="cs-form-actions">
+        <button type="button" id="custSaveBtn" class="btn btn-primary">Save</button>
+        <button type="button" id="custCancelBtn" class="btn btn-outline">Cancel</button>
+      </div>
+    </div>
+    </div>
+
   </section>
 
   <!-- Tickets tab -->

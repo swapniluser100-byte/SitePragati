@@ -285,6 +285,7 @@ select.status-select{
   border:1px solid rgba(27,37,68,0.15); border-radius:5px; padding:6px 8px; flex:1; min-width:0;
 }
 .back-btn{margin-bottom:20px;}
+.customer-detail-header{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:20px; flex-wrap:wrap;}
 
 /* ===== Case studies ===== */
 .cs-list{display:flex; flex-direction:column; gap:12px;}
