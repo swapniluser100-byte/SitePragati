@@ -1,1103 +1,1969 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="robots" content="noindex, nofollow">
-<title>SitePragati — Portal</title>
-<link rel="icon" href="favicon.ico" sizes="any">
-<link rel="icon" type="image/png" href="images/favicon-32.png" sizes="32x32">
-<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="admin.css">
-<link rel="stylesheet" href="customer.css">
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>SitePragati — Portal</title>
+    <link rel="icon" href="favicon.ico" sizes="any" />
+    <link
+      rel="icon"
+      type="image/png"
+      href="images/favicon-32.png"
+      sizes="32x32"
+    />
+    <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="admin.css" />
+    <link rel="stylesheet" href="customer.css" />
+  </head>
+  <body>
+    <!-- Login screen -->
+    <div id="loginScreen" class="login-screen">
+      <form id="loginForm" class="login-card">
+        <img
+          src="images/logo-horizontal-color.png"
+          alt="SitePragati"
+          class="login-logo"
+        />
+        <p class="login-sub" id="loginSub">Customer portal</p>
 
-<!-- Login screen -->
-<div id="loginScreen" class="login-screen">
-  <form id="loginForm" class="login-card">
-    <img src="images/logo-horizontal-color.png" alt="SitePragati" class="login-logo">
-    <p class="login-sub" id="loginSub">Customer portal</p>
-
-    <div class="role-toggle">
-      <button type="button" class="role-btn active" id="roleCustomerBtn" data-role="customer">Customer</button>
-      <button type="button" class="role-btn" id="roleAdminBtn" data-role="admin">Owner / Admin</button>
-    </div>
-
-    <div id="emailFieldWrap">
-      <label for="email">Email</label>
-      <input type="email" id="email" name="email" placeholder="you@yourbusiness.com" autofocus>
-    </div>
-
-    <label for="password">Password</label>
-    <input type="password" id="password" name="password" placeholder="Your password" required>
-
-    <button type="submit" class="btn btn-primary">Log in</button>
-    <p class="login-error" id="loginError"></p>
-    <p class="login-help" id="loginHelp">Don't have login details? Contact SitePragati to get set up.</p>
-    <p class="login-help" id="adminForgotPasswordRow" hidden><a href="#" id="forgotPasswordLink">Forgot password?</a></p>
-  </form>
-
-  <div id="forgotPasswordCard" class="login-card" hidden>
-    <h1>Reset admin password</h1>
-    <p class="login-sub">We'll email a reset link to the admin notification address on file.</p>
-    <button type="button" id="sendResetEmailBtn" class="btn btn-primary" style="width:100%; margin-top:6px;">Send reset email</button>
-    <p class="login-error" id="forgotPasswordMsg"></p>
-    <p class="login-help"><a href="#" id="backToLoginFromForgot">&larr; Back to login</a></p>
-  </div>
-
-  <div id="resetPasswordCard" class="login-card" hidden>
-    <h1>Set a new password</h1>
-    <p class="login-sub">Choose a new password for the admin console.</p>
-    <label for="resetNewPassword">New password</label>
-    <input type="password" id="resetNewPassword" placeholder="At least 8 characters">
-    <label for="resetConfirmPassword">Confirm password</label>
-    <input type="password" id="resetConfirmPassword" placeholder="Re-enter password">
-    <button type="button" id="submitResetPasswordBtn" class="btn btn-primary" style="width:100%; margin-top:6px;">Set new password</button>
-    <p class="login-error" id="resetPasswordMsg"></p>
-  </div>
-</div>
-
-<!-- ===================== ADMIN DASHBOARD ===================== -->
-<div id="adminDashboard" class="dashboard-shell" hidden>
-  <aside class="admin-sidebar">
-    <div class="sidebar-brand">
-      <span class="sidebar-brand-avatar">S</span>
-      <span>SitePragati</span>
-    </div>
-
-    <nav class="sidebar-nav">
-      <button type="button" class="sidebar-nav-item active" data-tab="leads">
-        <span class="sidebar-nav-icon">👥</span> Leads
-      </button>
-      <button type="button" class="sidebar-nav-item" data-tab="tickets">
-        <span class="sidebar-nav-icon">🎫</span> Tickets
-      </button>
-      <button type="button" class="sidebar-nav-item" data-tab="customers">
-        <span class="sidebar-nav-icon">👤</span> Customers
-      </button>
-      <button type="button" class="sidebar-nav-item" data-tab="caseStudies">
-        <span class="sidebar-nav-icon">📄</span> Case Studies
-      </button>
-      <button type="button" class="sidebar-nav-item" data-tab="renewals">
-        <span class="sidebar-nav-icon">📅</span> Renewal
-      </button>
-    </nav>
-
-    <div class="sidebar-footer">
-      <p class="sidebar-footer-label">Signed in as</p>
-      <p class="sidebar-footer-value">Admin</p>
-      <button type="button" id="adminLogoutBtn" class="btn btn-outline btn-small sidebar-logout-btn">↪ Log out</button>
-    </div>
-  </aside>
-
-  <div class="admin-main">
-    <header class="admin-topbar">🏪 SitePragati Admin</header>
-
-    <div class="admin-content">
-
-  <!-- Leads tab -->
-  <section id="leadsTab" class="tab-panel active">
-    <div id="leadsListView">
-      <div class="panel-head panel-head-leads">
-        <div class="panel-head-icon-row">
-          <span class="panel-head-icon">👥</span>
-          <div>
-            <h2>Leads</h2>
-            <p class="panel-head-subtitle">Manage and track your sales leads</p>
-          </div>
+        <div class="role-toggle">
+          <button
+            type="button"
+            class="role-btn active"
+            id="roleCustomerBtn"
+            data-role="customer"
+          >
+            Customer
+          </button>
+          <button
+            type="button"
+            class="role-btn"
+            id="roleAdminBtn"
+            data-role="admin"
+          >
+            Owner / Admin
+          </button>
         </div>
-        <div class="panel-head-actions">
-          <div class="table-search">
-            <span class="search-icon" aria-hidden="true">🔍</span>
-            <input type="search" id="leadSearchInput" placeholder="Search by name, business, contact or email…" aria-label="Search leads">
-          </div>
-          <button type="button" id="addLeadBtn" class="btn btn-primary btn-small">+ Add lead</button>
-        </div>
-      </div>
 
-      <div class="lead-stats">
-        <button type="button" class="lead-stat-card lead-stat-blue active" data-lead-filter="">
-          <span class="lead-stat-icon">👥</span>
-          <span class="lead-stat-text">
-            <span class="lead-stat-label">Total Leads</span>
-            <span class="lead-stat-value" id="leadStatTotal">0</span>
-          </span>
-          <span class="lead-stat-chevron">&rsaquo;</span>
+        <div id="emailFieldWrap">
+          <label for="email">Email</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            placeholder="you@yourbusiness.com"
+            autofocus
+          />
+        </div>
+
+        <label for="password">Password</label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          placeholder="Your password"
+          required
+        />
+
+        <button type="submit" class="btn btn-primary">Log in</button>
+        <p class="login-error" id="loginError"></p>
+        <p class="login-help" id="loginHelp">
+          Don't have login details? Contact SitePragati to get set up.
+        </p>
+        <p class="login-help" id="adminForgotPasswordRow" hidden>
+          <a href="#" id="forgotPasswordLink">Forgot password?</a>
+        </p>
+      </form>
+
+      <div id="forgotPasswordCard" class="login-card" hidden>
+        <h1>Reset admin password</h1>
+        <p class="login-sub">
+          We'll email a reset link to the admin notification address on file.
+        </p>
+        <button
+          type="button"
+          id="sendResetEmailBtn"
+          class="btn btn-primary"
+          style="width: 100%; margin-top: 6px"
+        >
+          Send reset email
         </button>
-        <button type="button" class="lead-stat-card lead-stat-green" data-lead-filter="Contacted">
-          <span class="lead-stat-icon">🧑</span>
-          <span class="lead-stat-text">
-            <span class="lead-stat-label">Contacted</span>
-            <span class="lead-stat-value" id="leadStatContacted">0</span>
-          </span>
-          <span class="lead-stat-chevron">&rsaquo;</span>
-        </button>
-        <button type="button" class="lead-stat-card lead-stat-amber" data-lead-filter="In Progress">
-          <span class="lead-stat-icon">📅</span>
-          <span class="lead-stat-text">
-            <span class="lead-stat-label">In Progress</span>
-            <span class="lead-stat-value" id="leadStatInProgress">0</span>
-          </span>
-          <span class="lead-stat-chevron">&rsaquo;</span>
-        </button>
-        <button type="button" class="lead-stat-card lead-stat-purple" data-lead-filter="Converted">
-          <span class="lead-stat-icon">✅</span>
-          <span class="lead-stat-text">
-            <span class="lead-stat-label">Converted</span>
-            <span class="lead-stat-value" id="leadStatConverted">0</span>
-          </span>
-          <span class="lead-stat-chevron">&rsaquo;</span>
-        </button>
+        <p class="login-error" id="forgotPasswordMsg"></p>
+        <p class="login-help">
+          <a href="#" id="backToLoginFromForgot">&larr; Back to login</a>
+        </p>
       </div>
 
-      <div class="table-wrap">
-        <table id="leadsTable">
-          <thead>
-            <tr>
-              <th class="sortable-th" data-sort-field="created_at">Date <span class="sort-icon">⇅</span></th>
-              <th class="sortable-th" data-sort-field="name">Name <span class="sort-icon">⇅</span></th>
-              <th class="sortable-th" data-sort-field="business">Business <span class="sort-icon">⇅</span></th>
-              <th class="sortable-th" data-sort-field="status">Status <span class="sort-icon">⇅</span></th>
-              <th class="actions-col">Actions</th>
-            </tr>
-          </thead>
-          <tbody id="leadsTableBody">
-            <tr><td colspan="5" class="empty-note">Loading…</td></tr>
-          </tbody>
-        </table>
+      <div id="resetPasswordCard" class="login-card" hidden>
+        <h1>Set a new password</h1>
+        <p class="login-sub">Choose a new password for the admin console.</p>
+        <label for="resetNewPassword">New password</label>
+        <input
+          type="password"
+          id="resetNewPassword"
+          placeholder="At least 8 characters"
+        />
+        <label for="resetConfirmPassword">Confirm password</label>
+        <input
+          type="password"
+          id="resetConfirmPassword"
+          placeholder="Re-enter password"
+        />
+        <button
+          type="button"
+          id="submitResetPasswordBtn"
+          class="btn btn-primary"
+          style="width: 100%; margin-top: 6px"
+        >
+          Set new password
+        </button>
+        <p class="login-error" id="resetPasswordMsg"></p>
       </div>
     </div>
 
-    <div id="leadDetailView" hidden>
-      <div class="customer-detail-header">
-        <button type="button" id="backToLeadsBtn" class="btn btn-outline btn-small">&larr; Back to leads</button>
-        <div id="leadDetailActions" class="cs-card-actions"></div>
+    <!-- ===================== ADMIN DASHBOARD ===================== -->
+    <div id="adminDashboard" class="dashboard-shell" hidden>
+      <aside class="admin-sidebar">
+        <div class="sidebar-brand">
+          <span class="sidebar-brand-avatar">S</span>
+          <span>SitePragati</span>
+        </div>
+
+        <nav class="sidebar-nav">
+          <button
+            type="button"
+            class="sidebar-nav-item active"
+            data-tab="leads"
+          >
+            <span class="sidebar-nav-icon">👥</span> Leads
+          </button>
+          <button type="button" class="sidebar-nav-item" data-tab="tickets">
+            <span class="sidebar-nav-icon">🎫</span> Tickets
+          </button>
+          <button type="button" class="sidebar-nav-item" data-tab="customers">
+            <span class="sidebar-nav-icon">👤</span> Customers
+          </button>
+          <button type="button" class="sidebar-nav-item" data-tab="caseStudies">
+            <span class="sidebar-nav-icon">📄</span> Case Studies
+          </button>
+          <button type="button" class="sidebar-nav-item" data-tab="renewals">
+            <span class="sidebar-nav-icon">📅</span> Renewal
+          </button>
+        </nav>
+
+        <div class="sidebar-footer">
+          <p class="sidebar-footer-label">Signed in as</p>
+          <p class="sidebar-footer-value">Admin</p>
+          <button
+            type="button"
+            id="adminLogoutBtn"
+            class="btn btn-outline btn-small sidebar-logout-btn"
+          >
+            ↪ Log out
+          </button>
+        </div>
+      </aside>
+
+      <div class="admin-main">
+        <header class="admin-topbar">🏪 SitePragati Admin</header>
+
+        <div class="admin-content">
+          <!-- Leads tab -->
+          <section id="leadsTab" class="tab-panel active">
+            <div id="leadsListView">
+              <div class="panel-head panel-head-leads">
+                <div class="panel-head-icon-row">
+                  <span class="panel-head-icon">👥</span>
+                  <div>
+                    <h2>Leads</h2>
+                    <p class="panel-head-subtitle">
+                      Manage and track your sales leads
+                    </p>
+                  </div>
+                </div>
+                <div class="panel-head-actions">
+                  <div class="table-search">
+                    <span class="search-icon" aria-hidden="true">🔍</span>
+                    <input
+                      type="search"
+                      id="leadSearchInput"
+                      placeholder="Search by name, business, contact or email…"
+                      aria-label="Search leads"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    id="addLeadBtn"
+                    class="btn btn-primary btn-small"
+                  >
+                    + Add lead
+                  </button>
+                </div>
+              </div>
+
+              <div class="lead-stats">
+                <button
+                  type="button"
+                  class="lead-stat-card lead-stat-blue active"
+                  data-lead-filter=""
+                >
+                  <span class="lead-stat-icon">👥</span>
+                  <span class="lead-stat-text">
+                    <span class="lead-stat-label">Total Leads</span>
+                    <span class="lead-stat-value" id="leadStatTotal">0</span>
+                  </span>
+                  <span class="lead-stat-chevron">&rsaquo;</span>
+                </button>
+                <button
+                  type="button"
+                  class="lead-stat-card lead-stat-green"
+                  data-lead-filter="Contacted"
+                >
+                  <span class="lead-stat-icon">🧑</span>
+                  <span class="lead-stat-text">
+                    <span class="lead-stat-label">Contacted</span>
+                    <span class="lead-stat-value" id="leadStatContacted"
+                      >0</span
+                    >
+                  </span>
+                  <span class="lead-stat-chevron">&rsaquo;</span>
+                </button>
+                <button
+                  type="button"
+                  class="lead-stat-card lead-stat-amber"
+                  data-lead-filter="In Progress"
+                >
+                  <span class="lead-stat-icon">📅</span>
+                  <span class="lead-stat-text">
+                    <span class="lead-stat-label">In Progress</span>
+                    <span class="lead-stat-value" id="leadStatInProgress"
+                      >0</span
+                    >
+                  </span>
+                  <span class="lead-stat-chevron">&rsaquo;</span>
+                </button>
+                <button
+                  type="button"
+                  class="lead-stat-card lead-stat-purple"
+                  data-lead-filter="Converted"
+                >
+                  <span class="lead-stat-icon">✅</span>
+                  <span class="lead-stat-text">
+                    <span class="lead-stat-label">Converted</span>
+                    <span class="lead-stat-value" id="leadStatConverted"
+                      >0</span
+                    >
+                  </span>
+                  <span class="lead-stat-chevron">&rsaquo;</span>
+                </button>
+              </div>
+
+              <div class="table-wrap">
+                <table id="leadsTable">
+                  <thead>
+                    <tr>
+                      <th class="sortable-th" data-sort-field="created_at">
+                        Date <span class="sort-icon">⇅</span>
+                      </th>
+                      <th class="sortable-th" data-sort-field="name">
+                        Name <span class="sort-icon">⇅</span>
+                      </th>
+                      <th class="sortable-th" data-sort-field="business">
+                        Business <span class="sort-icon">⇅</span>
+                      </th>
+                      <th class="sortable-th" data-sort-field="status">
+                        Status <span class="sort-icon">⇅</span>
+                      </th>
+                      <th class="actions-col">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="leadsTableBody">
+                    <tr>
+                      <td colspan="5" class="empty-note">Loading…</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div id="leadDetailView" hidden>
+              <div class="customer-detail-header">
+                <button
+                  type="button"
+                  id="backToLeadsBtn"
+                  class="btn btn-outline btn-small"
+                >
+                  &larr; Back to leads
+                </button>
+                <div id="leadDetailActions" class="cs-card-actions"></div>
+              </div>
+
+              <div id="leadDetailInfo" class="customer-detail-info"></div>
+
+              <label for="leadDetailStatus" class="td-status-label"
+                >Status</label
+              >
+              <select id="leadDetailStatus" class="status-select"></select>
+            </div>
+
+            <div id="leadModalOverlay" class="modal-overlay" hidden>
+              <div
+                class="modal-box cs-form"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="leadModalTitle"
+              >
+                <div class="modal-head">
+                  <h3 id="leadModalTitle">Add lead</h3>
+                  <button
+                    type="button"
+                    id="leadModalCloseBtn"
+                    class="modal-close"
+                    aria-label="Close"
+                  >
+                    &times;
+                  </button>
+                </div>
+                <input type="hidden" id="leadId" />
+                <div class="cs-form-grid">
+                  <div>
+                    <label for="leadName">Name</label>
+                    <input type="text" id="leadName" required />
+                  </div>
+                  <div>
+                    <label for="leadBusiness">Business</label>
+                    <input type="text" id="leadBusiness" />
+                  </div>
+                  <div>
+                    <label for="leadBusinessType">Business type</label>
+                    <select id="leadBusinessType">
+                      <option value="">— Select —</option>
+                      <option value="Café/Restaurant">Café / Restaurant</option>
+                      <option value="Retail/Shop">Retail / Shop</option>
+                      <option value="Services">
+                        Services (salon, consulting, repair, etc.)
+                      </option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label for="leadContact"
+                      >Contact
+                      <span class="field-note">(phone or email)</span></label
+                    >
+                    <input type="text" id="leadContact" />
+                  </div>
+                  <div>
+                    <label for="leadStatus">Status</label>
+                    <select id="leadStatus">
+                      <option value="New">New</option>
+                      <option value="Contacted">Contacted</option>
+                      <option value="In Progress">In Progress</option>
+                      <option value="Converted">Converted</option>
+                      <option value="Lost">Lost</option>
+                    </select>
+                  </div>
+                </div>
+                <label for="leadMessage">Message</label>
+                <textarea id="leadMessage" rows="2"></textarea>
+                <div class="cs-form-actions">
+                  <button
+                    type="button"
+                    id="leadSaveBtn"
+                    class="btn btn-primary"
+                  >
+                    Save
+                  </button>
+                  <button
+                    type="button"
+                    id="leadCancelBtn"
+                    class="btn btn-outline"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Customers tab -->
+          <section id="customersTab" class="tab-panel">
+            <!-- List view -->
+            <div id="customersListView">
+              <div class="panel-head">
+                <h2>Customers</h2>
+                <div class="panel-head-actions">
+                  <button
+                    type="button"
+                    id="bulkQuickLoginBtn"
+                    class="btn btn-outline btn-small"
+                  >
+                    🔗 Generate quick login links
+                  </button>
+                  <button
+                    type="button"
+                    id="addCustomerBtn"
+                    class="btn btn-primary btn-small"
+                  >
+                    + Add customer
+                  </button>
+                </div>
+              </div>
+
+              <div class="cust-stats">
+                <div class="cust-stat-card">
+                  <span class="cust-stat-icon cust-stat-icon-blue">👥</span>
+                  <div>
+                    <p class="cust-stat-label">Total Customers</p>
+                    <p class="cust-stat-value" id="custStatTotal">0</p>
+                  </div>
+                </div>
+                <div class="cust-stat-card">
+                  <span class="cust-stat-icon cust-stat-icon-green">✅</span>
+                  <div>
+                    <p class="cust-stat-label">Active Customers</p>
+                    <p class="cust-stat-value" id="custStatActive">0</p>
+                  </div>
+                </div>
+                <div class="cust-stat-card">
+                  <span class="cust-stat-icon cust-stat-icon-amber">💰</span>
+                  <div>
+                    <p class="cust-stat-label">Total Paid</p>
+                    <p class="cust-stat-value" id="custStatPaid">₹0</p>
+                  </div>
+                </div>
+                <div class="cust-stat-card">
+                  <span class="cust-stat-icon cust-stat-icon-red">⏳</span>
+                  <div>
+                    <p class="cust-stat-label">Pending Amount</p>
+                    <p class="cust-stat-value" id="custStatPending">₹0</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="customer-search-row">
+                <div class="customer-search-bar">
+                  <span class="search-icon" aria-hidden="true">🔍</span>
+                  <input
+                    type="search"
+                    id="customerSearchInput"
+                    placeholder="Search by name, contact, phone, or email…"
+                    aria-label="Search customers"
+                  />
+                </div>
+                <button
+                  type="button"
+                  id="actualCustomerToggle"
+                  class="actual-customer-toggle active"
+                  aria-pressed="true"
+                >
+                  ✓ Actual Customers
+                </button>
+              </div>
+
+              <div class="table-wrap">
+                <table id="customersTable">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Business Name</th>
+                      <th>Contact</th>
+                      <th>Status</th>
+                      <th class="actions-col">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="customersTableBody">
+                    <tr>
+                      <td colspan="5" class="empty-note">Loading…</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Detail view: one customer's transactions -->
+            <div id="customerDetailView" hidden>
+              <div class="customer-detail-header">
+                <button
+                  type="button"
+                  id="backToCustomersBtn"
+                  class="btn btn-outline btn-small"
+                >
+                  &larr; Back to customers
+                </button>
+                <div id="customerDetailActions" class="cs-card-actions"></div>
+              </div>
+
+              <div class="subtab-nav">
+                <button
+                  type="button"
+                  class="subtab-btn active"
+                  data-cust-subtab="details"
+                >
+                  Details
+                </button>
+                <button
+                  type="button"
+                  class="subtab-btn"
+                  data-cust-subtab="transactions"
+                >
+                  Transactions
+                </button>
+                <button
+                  type="button"
+                  class="subtab-btn"
+                  data-cust-subtab="recommendations"
+                >
+                  Recommendation
+                </button>
+              </div>
+
+              <div id="custSubtabDetails" class="cust-subtab-panel">
+                <div id="customerDetailInfo" class="customer-detail-info"></div>
+              </div>
+
+              <div id="custSubtabTransactions" class="cust-subtab-panel" hidden>
+                <div id="customerTxnStats" class="txn-stats"></div>
+
+                <div class="panel-head">
+                  <h3>Transactions</h3>
+                  <button
+                    type="button"
+                    id="addTransactionBtn"
+                    class="btn btn-primary btn-small"
+                  >
+                    + Add transaction
+                  </button>
+                </div>
+
+                <div class="table-wrap">
+                  <table id="transactionsTable">
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Amount</th>
+                        <th>Description</th>
+                        <th>Status</th>
+                        <th class="actions-col"></th>
+                      </tr>
+                    </thead>
+                    <tbody id="transactionsTableBody">
+                      <tr>
+                        <td colspan="5" class="empty-note">Loading…</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div
+                id="custSubtabRecommendations"
+                class="cust-subtab-panel"
+                hidden
+              >
+                <div class="panel-head">
+                  <h3>Recommendations</h3>
+                  <button
+                    type="button"
+                    id="addRecommendationBtn"
+                    class="btn btn-primary btn-small"
+                  >
+                    + Add recommendation
+                  </button>
+                </div>
+
+                <div id="recommendationsList" class="ticket-list">
+                  <p class="empty-note">Loading…</p>
+                </div>
+              </div>
+
+              <div id="recommendationModalOverlay" class="modal-overlay" hidden>
+                <div
+                  id="recommendationForm"
+                  class="modal-box cs-form"
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby="recommendationFormTitle"
+                >
+                  <div class="modal-head">
+                    <h3 id="recommendationFormTitle">Add recommendation</h3>
+                    <button
+                      type="button"
+                      id="recommendationModalCloseBtn"
+                      class="modal-close"
+                      aria-label="Close"
+                    >
+                      &times;
+                    </button>
+                  </div>
+                  <input type="hidden" id="recId" />
+                  <input type="hidden" id="recCustomerId" />
+                  <label for="recName">Name</label>
+                  <input type="text" id="recName" required />
+                  <label for="recDetails">Details</label>
+                  <textarea id="recDetails" rows="4"></textarea>
+                  <div class="cs-form-actions">
+                    <button
+                      type="button"
+                      id="recSaveBtn"
+                      class="btn btn-primary"
+                    >
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      id="recCancelBtn"
+                      class="btn btn-outline"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div id="transactionModalOverlay" class="modal-overlay" hidden>
+                <div
+                  id="transactionForm"
+                  class="modal-box cs-form"
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby="transactionFormTitle"
+                >
+                  <div class="modal-head">
+                    <h3 id="transactionFormTitle">Add transaction</h3>
+                    <button
+                      type="button"
+                      id="transactionModalCloseBtn"
+                      class="modal-close"
+                      aria-label="Close"
+                    >
+                      &times;
+                    </button>
+                  </div>
+                  <input type="hidden" id="txnId" />
+                  <input type="hidden" id="txnCustomerId" />
+                  <div class="cs-form-grid">
+                    <div>
+                      <label for="txnAmount">Amount (₹)</label>
+                      <input
+                        type="number"
+                        id="txnAmount"
+                        step="0.01"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label for="txnDate">Date</label>
+                      <input type="date" id="txnDate" />
+                    </div>
+                    <div>
+                      <label for="txnStatus">Status</label>
+                      <select id="txnStatus">
+                        <option value="Paid">Paid</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Overdue">Overdue</option>
+                      </select>
+                    </div>
+                  </div>
+                  <label for="txnDescription">Description</label>
+                  <textarea
+                    id="txnDescription"
+                    rows="2"
+                    placeholder="e.g. Monthly care plan, or invoice reference"
+                  ></textarea>
+                  <div class="cs-form-actions">
+                    <button
+                      type="button"
+                      id="txnSaveBtn"
+                      class="btn btn-primary"
+                    >
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      id="txnCancelBtn"
+                      class="btn btn-outline"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="customerModalOverlay" class="modal-overlay" hidden>
+              <div
+                id="customerForm"
+                class="modal-box cs-form"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="customerFormTitle"
+              >
+                <div class="modal-head">
+                  <h3 id="customerFormTitle">Add customer</h3>
+                  <button
+                    type="button"
+                    id="customerModalCloseBtn"
+                    class="modal-close"
+                    aria-label="Close"
+                  >
+                    &times;
+                  </button>
+                </div>
+                <input type="hidden" id="custId" />
+
+                <div class="cs-form-section">
+                  <p class="cs-section-label">Business Details</p>
+                  <div class="cs-form-grid">
+                    <div>
+                      <label for="custBusinessName">Business name</label>
+                      <input type="text" id="custBusinessName" required />
+                    </div>
+                    <div>
+                      <label for="custContactName">Contact name</label>
+                      <input type="text" id="custContactName" />
+                    </div>
+                    <div>
+                      <label for="custPhone">Phone</label>
+                      <input type="text" id="custPhone" />
+                    </div>
+                  </div>
+                  <label for="custAddress">Address</label>
+                  <textarea id="custAddress" rows="2"></textarea>
+                </div>
+
+                <div class="cs-form-section">
+                  <p class="cs-section-label">Portal Login</p>
+                  <div class="cs-form-grid">
+                    <div>
+                      <label for="custEmail"
+                        >Email
+                        <span class="field-note">(portal login)</span></label
+                      >
+                      <input
+                        type="email"
+                        id="custEmail"
+                        placeholder="customer@business.com"
+                      />
+                    </div>
+                    <div>
+                      <label for="custPassword"
+                        >Password
+                        <span class="field-note" id="custPasswordNote"
+                          >(required for new customers)</span
+                        ></label
+                      >
+                      <input
+                        type="text"
+                        id="custPassword"
+                        placeholder="Set a login password"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="cs-form-section">
+                  <p class="cs-section-label">Website Links</p>
+                  <div class="cs-form-grid">
+                    <div>
+                      <label for="custWebsiteUrl">Website link</label>
+                      <input
+                        type="url"
+                        id="custWebsiteUrl"
+                        placeholder="https://theirbusiness.pages.dev"
+                      />
+                    </div>
+                    <div>
+                      <label for="custAdminConsoleUrl"
+                        >Admin console link</label
+                      >
+                      <input
+                        type="url"
+                        id="custAdminConsoleUrl"
+                        placeholder="https://theirbusiness.pages.dev/admin.html"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="cs-form-section">
+                  <p class="cs-section-label">Payment</p>
+                  <div class="cs-form-grid">
+                    <div>
+                      <label for="custUpiId"
+                        >UPI ID
+                        <span class="field-note"
+                          >(for this customer's ticket-payment QR code)</span
+                        ></label
+                      >
+                      <input
+                        type="text"
+                        id="custUpiId"
+                        placeholder="e.g. yourname@axisbank — leave blank to use the default"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="cs-form-section">
+                  <p class="cs-section-label">Renewal Settings</p>
+                  <div class="cs-form-grid">
+                    <div>
+                      <label for="custRenewalRequired"
+                        ><input
+                          type="checkbox"
+                          id="custRenewalRequired"
+                          style="
+                            width: auto;
+                            margin-right: 6px;
+                            vertical-align: middle;
+                          "
+                        />
+                        Renewal required?</label
+                      >
+                    </div>
+                    <div>
+                      <label for="custRenewalFrequency">Frequency</label>
+                      <select id="custRenewalFrequency">
+                        <option value="">— None —</option>
+                        <option value="Monthly">Monthly</option>
+                        <option value="Half Yearly">Half Yearly</option>
+                        <option value="Yearly">Yearly</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label for="custRenewalAmount"
+                        >Renewal amount (₹)
+                        <span class="field-note"
+                          >(charged each cycle)</span
+                        ></label
+                      >
+                      <input
+                        type="number"
+                        id="custRenewalAmount"
+                        step="0.01"
+                        min="0"
+                      />
+                    </div>
+                    <div>
+                      <label for="custRenewalStartDate"
+                        >Renewal start date
+                        <span class="field-note"
+                          >(first cycle's due date)</span
+                        ></label
+                      >
+                      <input type="date" id="custRenewalStartDate" />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="cs-form-section">
+                  <p class="cs-section-label">
+                    Subscription Plans
+                    <span class="field-note"
+                      >(shown to the customer only when Renewal required is
+                      unchecked)</span
+                    >
+                  </p>
+                  <div class="cs-form-grid cs-form-grid-3">
+                    <div>
+                      <label for="custPlan1Price">Plan 1 price (₹/month)</label>
+                      <input
+                        type="number"
+                        id="custPlan1Price"
+                        step="1"
+                        min="0"
+                      />
+                      <label for="custPlan1Features" style="margin-top: 10px"
+                        >Features
+                        <span class="field-note">(one per line)</span></label
+                      >
+                      <textarea id="custPlan1Features" rows="4"></textarea>
+                    </div>
+                    <div>
+                      <label for="custPlan2Price">Plan 2 price (₹/month)</label>
+                      <input
+                        type="number"
+                        id="custPlan2Price"
+                        step="1"
+                        min="0"
+                      />
+                      <label for="custPlan2Features" style="margin-top: 10px"
+                        >Features
+                        <span class="field-note">(one per line)</span></label
+                      >
+                      <textarea id="custPlan2Features" rows="4"></textarea>
+                    </div>
+                    <div>
+                      <label for="custPlan3Price">Plan 3 price (₹/month)</label>
+                      <input
+                        type="number"
+                        id="custPlan3Price"
+                        step="1"
+                        min="0"
+                      />
+                      <label for="custPlan3Features" style="margin-top: 10px"
+                        >Features
+                        <span class="field-note">(one per line)</span></label
+                      >
+                      <textarea id="custPlan3Features" rows="4"></textarea>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="cs-form-section">
+                  <p class="cs-section-label">Internal</p>
+                  <label for="custIsActualCustomer"
+                    ><input
+                      type="checkbox"
+                      id="custIsActualCustomer"
+                      checked
+                      style="
+                        width: auto;
+                        margin-right: 6px;
+                        vertical-align: middle;
+                      "
+                    />
+                    Is Actual Customer?
+                    <span class="field-note"
+                      >(uncheck for demo/test entries)</span
+                    ></label
+                  >
+                  <label for="custNotes" style="margin-top: 14px"
+                    >Notes
+                    <span class="field-note"
+                      >(internal — not shown to the customer)</span
+                    ></label
+                  >
+                  <textarea id="custNotes" rows="5"></textarea>
+                </div>
+
+                <div class="cs-form-actions">
+                  <button
+                    type="button"
+                    id="custSaveBtn"
+                    class="btn btn-primary"
+                  >
+                    Save
+                  </button>
+                  <button
+                    type="button"
+                    id="custCancelBtn"
+                    class="btn btn-outline"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Tickets tab -->
+          <section id="ticketsTab" class="tab-panel">
+            <!-- List view -->
+            <div id="ticketsListView">
+              <div class="panel-head panel-head-leads">
+                <div class="panel-head-icon-row">
+                  <span class="panel-head-icon">🎫</span>
+                  <div>
+                    <h2>Tickets</h2>
+                    <p class="panel-head-subtitle">
+                      Track and manage your customer support tickets.
+                    </p>
+                  </div>
+                </div>
+                <div class="panel-head-actions">
+                  <div class="table-search">
+                    <span class="search-icon" aria-hidden="true">🔍</span>
+                    <input
+                      type="search"
+                      id="ticketSearchInput"
+                      placeholder="Search by customer, subject, or ticket ID…"
+                      aria-label="Search tickets"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    id="addTicketBtn"
+                    class="btn btn-primary btn-small"
+                  >
+                    + Add ticket
+                  </button>
+                </div>
+              </div>
+
+              <div class="ticket-stats">
+                <button
+                  type="button"
+                  class="ticket-stat-card ticket-stat-blue active"
+                  data-ticket-stat=""
+                >
+                  <span class="ticket-stat-icon">🎫</span>
+                  <span class="ticket-stat-text">
+                    <span class="ticket-stat-label">Total Tickets</span>
+                    <span class="ticket-stat-value" id="ticketStatTotal"
+                      >0</span
+                    >
+                    <span class="ticket-stat-sub">Across all customers</span>
+                  </span>
+                  <span class="ticket-stat-chevron">&rsaquo;</span>
+                </button>
+                <button
+                  type="button"
+                  class="ticket-stat-card ticket-stat-green"
+                  data-ticket-stat="open"
+                >
+                  <span class="ticket-stat-icon">⏱️</span>
+                  <span class="ticket-stat-text">
+                    <span class="ticket-stat-label">Open Tickets</span>
+                    <span class="ticket-stat-value" id="ticketStatOpen">0</span>
+                    <span class="ticket-stat-sub">Needs attention</span>
+                  </span>
+                  <span class="ticket-stat-chevron">&rsaquo;</span>
+                </button>
+                <button
+                  type="button"
+                  class="ticket-stat-card ticket-stat-purple"
+                  data-ticket-stat="In Progress"
+                >
+                  <span class="ticket-stat-icon">✅</span>
+                  <span class="ticket-stat-text">
+                    <span class="ticket-stat-label">In Progress</span>
+                    <span class="ticket-stat-value" id="ticketStatInProgress"
+                      >0</span
+                    >
+                    <span class="ticket-stat-sub">Being resolved</span>
+                  </span>
+                  <span class="ticket-stat-chevron">&rsaquo;</span>
+                </button>
+                <button
+                  type="button"
+                  class="ticket-stat-card ticket-stat-amber"
+                  data-ticket-stat="closed"
+                >
+                  <span class="ticket-stat-icon">✅</span>
+                  <span class="ticket-stat-text">
+                    <span class="ticket-stat-label">Resolved</span>
+                    <span class="ticket-stat-value" id="ticketStatResolved"
+                      >0</span
+                    >
+                    <span class="ticket-stat-sub">Closed successfully</span>
+                  </span>
+                  <span class="ticket-stat-chevron">&rsaquo;</span>
+                </button>
+              </div>
+
+              <div id="addTicketModalOverlay" class="modal-overlay" hidden>
+                <div
+                  class="modal-box cs-form"
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby="addTicketModalTitle"
+                >
+                  <div class="modal-head">
+                    <h3 id="addTicketModalTitle">Add ticket</h3>
+                    <button
+                      type="button"
+                      id="addTicketModalCloseBtn"
+                      class="modal-close"
+                      aria-label="Close"
+                    >
+                      &times;
+                    </button>
+                  </div>
+                  <label for="addTicketCustomer">Customer</label>
+                  <select id="addTicketCustomer" required>
+                    <option value="">— Select a customer —</option>
+                  </select>
+                  <label for="addTicketSubject">Subject</label>
+                  <input
+                    type="text"
+                    id="addTicketSubject"
+                    placeholder="e.g. Update menu prices, Fix broken image"
+                    required
+                  />
+                  <label for="addTicketDescription">Details</label>
+                  <textarea
+                    id="addTicketDescription"
+                    rows="3"
+                    placeholder="Describe what the customer needs."
+                  ></textarea>
+                  <div class="cs-form-actions">
+                    <button
+                      type="button"
+                      id="addTicketSaveBtn"
+                      class="btn btn-primary"
+                    >
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      id="addTicketCancelBtn"
+                      class="btn btn-outline"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="ticket-filters">
+                <div>
+                  <label for="ticketFilterCustomer">Customer</label>
+                  <select id="ticketFilterCustomer">
+                    <option value="">All customers</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="ticketFilterStatus">Status</label>
+                  <select id="ticketFilterStatus">
+                    <option value="">All statuses</option>
+                    <option>Open</option>
+                    <option>In Progress</option>
+                    <option>Payment Pending</option>
+                    <option>Payment Submitted</option>
+                    <option>Payment Received</option>
+                    <option>Resolved</option>
+                    <option>Closed</option>
+                  </select>
+                </div>
+                <button
+                  type="button"
+                  id="resetTicketFiltersBtn"
+                  class="btn btn-outline btn-small ticket-filters-reset"
+                >
+                  ↺ Reset
+                </button>
+              </div>
+
+              <div class="ticket-section">
+                <button
+                  type="button"
+                  class="ticket-section-header"
+                  data-toggle-section="openTicketsSection"
+                >
+                  <span
+                    class="ticket-section-dot ticket-section-dot-open"
+                  ></span>
+                  <span class="ticket-section-title"
+                    >Open Tickets (<span id="openTicketsCount">0</span>)</span
+                  >
+                  <span class="ticket-section-chevron">⌃</span>
+                </button>
+                <div class="table-wrap" id="openTicketsSection">
+                  <table id="ticketsTable">
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Customer</th>
+                        <th>Subject</th>
+                        <th>Status</th>
+                        <th class="actions-col">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody id="ticketsTableBody">
+                      <tr>
+                        <td colspan="5" class="empty-note">Loading…</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="ticket-section">
+                <button
+                  type="button"
+                  class="ticket-section-header"
+                  data-toggle-section="closedTicketsSection"
+                >
+                  <span
+                    class="ticket-section-dot ticket-section-dot-closed"
+                  ></span>
+                  <span class="ticket-section-title"
+                    >Closed Tickets (<span id="closedTicketsCount">0</span
+                    >)</span
+                  >
+                  <span class="ticket-section-chevron">⌃</span>
+                </button>
+                <div class="table-wrap" id="closedTicketsSection">
+                  <table id="closedTicketsTable">
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Customer</th>
+                        <th>Subject</th>
+                        <th>Status</th>
+                        <th class="actions-col">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody id="closedTicketsTableBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Detail view: one ticket -->
+            <div id="ticketDetailView" hidden>
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                "
+              >
+                <button
+                  type="button"
+                  id="backToTicketsBtn"
+                  class="btn btn-outline btn-small back-btn"
+                >
+                  &larr; Back to tickets
+                </button>
+                <div style="display: flex; gap: 8px">
+                  <button
+                    type="button"
+                    id="editTicketBtn"
+                    class="btn btn-outline btn-small btn-icon"
+                    aria-label="Edit"
+                    title="Edit"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M12 20h9" />
+                      <path
+                        d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"
+                      />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    id="deleteTicketBtn"
+                    class="btn-danger btn-icon"
+                    aria-label="Delete"
+                    title="Delete"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                      <path d="M10 11v6" />
+                      <path d="M14 11v6" />
+                      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <div id="ticketDetailInfo" class="customer-detail-info"></div>
+
+              <div id="ticketEditModalOverlay" class="modal-overlay" hidden>
+                <div
+                  class="modal-box cs-form"
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby="ticketEditModalTitle"
+                >
+                  <div class="modal-head">
+                    <h3 id="ticketEditModalTitle">Edit ticket</h3>
+                    <button
+                      type="button"
+                      id="ticketEditModalCloseBtn"
+                      class="modal-close"
+                      aria-label="Close"
+                    >
+                      &times;
+                    </button>
+                  </div>
+                  <input type="hidden" id="ticketEditId" />
+                  <label for="ticketEditSubject">Subject</label>
+                  <input type="text" id="ticketEditSubject" required />
+                  <label for="ticketEditDescription">Details</label>
+                  <textarea id="ticketEditDescription" rows="4"></textarea>
+                  <div class="cs-form-actions">
+                    <button
+                      type="button"
+                      id="ticketEditSaveBtn"
+                      class="btn btn-primary"
+                    >
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      id="ticketEditCancelBtn"
+                      class="btn btn-outline"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <label for="ticketDetailStatus" class="td-status-label"
+                >Status</label
+              >
+              <select id="ticketDetailStatus" class="status-select"></select>
+
+              <div class="ticket-comments-section">
+                <h3>Conversation</h3>
+                <div id="ticketCommentsList" class="comments-list">
+                  <p class="empty-note">Loading…</p>
+                </div>
+                <div class="comment-form">
+                  <textarea
+                    id="newCommentText"
+                    rows="3"
+                    placeholder="Reply to this ticket…"
+                  ></textarea>
+                  <div class="comment-form-row">
+                    <input type="file" id="newCommentFile" />
+                    <button
+                      type="button"
+                      id="postCommentBtn"
+                      class="btn btn-primary btn-small"
+                    >
+                      Post reply
+                    </button>
+                  </div>
+                  <p class="comment-form-msg" id="commentFormMsg"></p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Case Studies tab -->
+          <section id="caseStudiesTab" class="tab-panel">
+            <div class="panel-head">
+              <h2>Case Studies</h2>
+              <button
+                type="button"
+                id="addCaseStudyBtn"
+                class="btn btn-primary btn-small"
+              >
+                + Add case study
+              </button>
+            </div>
+
+            <div id="caseStudyModalOverlay" class="modal-overlay" hidden>
+              <div
+                id="caseStudyForm"
+                class="modal-box cs-form"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="csFormTitle"
+              >
+                <div class="modal-head">
+                  <h3 id="csFormTitle">Add case study</h3>
+                  <button
+                    type="button"
+                    id="caseStudyModalCloseBtn"
+                    class="modal-close"
+                    aria-label="Close"
+                  >
+                    &times;
+                  </button>
+                </div>
+                <input type="hidden" id="csId" />
+                <div class="cs-form-grid">
+                  <div>
+                    <label for="csBusinessName">Business name</label>
+                    <input type="text" id="csBusinessName" required />
+                  </div>
+                  <div>
+                    <label for="csCategory">Category</label>
+                    <input
+                      type="text"
+                      id="csCategory"
+                      placeholder="e.g. Café & restaurant"
+                    />
+                  </div>
+                  <div>
+                    <label for="csSiteUrl">Site URL</label>
+                    <input
+                      type="text"
+                      id="csSiteUrl"
+                      placeholder="example.pages.dev"
+                    />
+                  </div>
+                  <div>
+                    <label for="csImageFile">Image filename</label>
+                    <input
+                      type="text"
+                      id="csImageFile"
+                      placeholder="case-placeholder.svg"
+                    />
+                  </div>
+                  <div>
+                    <label for="csSortOrder">Sort order</label>
+                    <input type="number" id="csSortOrder" value="0" />
+                  </div>
+                </div>
+                <label for="csDescription">Description</label>
+                <textarea id="csDescription" rows="3"></textarea>
+
+                <p class="cs-stats-label">
+                  Stats (up to 3, label + value each — leave blank to omit)
+                </p>
+                <div class="cs-form-grid cs-stats-grid">
+                  <input
+                    type="text"
+                    id="csStat1Label"
+                    placeholder="Stat 1 label"
+                  />
+                  <input
+                    type="text"
+                    id="csStat1Value"
+                    placeholder="Stat 1 value"
+                  />
+                  <input
+                    type="text"
+                    id="csStat2Label"
+                    placeholder="Stat 2 label"
+                  />
+                  <input
+                    type="text"
+                    id="csStat2Value"
+                    placeholder="Stat 2 value"
+                  />
+                  <input
+                    type="text"
+                    id="csStat3Label"
+                    placeholder="Stat 3 label"
+                  />
+                  <input
+                    type="text"
+                    id="csStat3Value"
+                    placeholder="Stat 3 value"
+                  />
+                </div>
+
+                <div class="cs-form-actions">
+                  <button type="button" id="csSaveBtn" class="btn btn-primary">
+                    Save
+                  </button>
+                  <button
+                    type="button"
+                    id="csCancelBtn"
+                    class="btn btn-outline"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div id="caseStudiesList" class="cs-list">
+              <p class="empty-note">Loading…</p>
+            </div>
+          </section>
+
+          <!-- Renewal tab -->
+          <section id="renewalsTab" class="tab-panel">
+            <div class="panel-head">
+              <h2>Renewals</h2>
+              <div style="display: flex; gap: 8px">
+                <button
+                  type="button"
+                  id="refreshRenewalsBtn"
+                  class="btn btn-outline btn-small"
+                >
+                  🔄 Refresh Renewals
+                </button>
+                <button
+                  type="button"
+                  id="exportRenewalsBtn"
+                  class="btn btn-outline btn-small"
+                >
+                  Export
+                </button>
+                <button
+                  type="button"
+                  id="addRenewalBtn"
+                  class="btn btn-primary btn-small"
+                >
+                  + Create Renewal
+                </button>
+              </div>
+            </div>
+
+            <div class="renewal-stats">
+              <div class="renewal-stat-card">
+                <span class="renewal-stat-icon renewal-stat-icon-blue">📅</span>
+                <div>
+                  <p class="renewal-stat-label">Total Amount Due This Month</p>
+                  <p class="renewal-stat-value" id="renewalStatMonth">₹0</p>
+                </div>
+              </div>
+              <div class="renewal-stat-card">
+                <span class="renewal-stat-icon renewal-stat-icon-green"
+                  >💰</span
+                >
+                <div>
+                  <p class="renewal-stat-label">Amount Due This Year</p>
+                  <p class="renewal-stat-value" id="renewalStatYear">₹0</p>
+                </div>
+              </div>
+              <div class="renewal-stat-card">
+                <span class="renewal-stat-icon renewal-stat-icon-purple"
+                  >📄</span
+                >
+                <div>
+                  <p class="renewal-stat-label">Total Renewals</p>
+                  <p class="renewal-stat-value" id="renewalStatCount">0</p>
+                </div>
+              </div>
+              <div class="renewal-stat-card">
+                <span class="renewal-stat-icon renewal-stat-icon-green"
+                  >✅</span
+                >
+                <div>
+                  <p class="renewal-stat-label">
+                    Total Amount Renewed This Month
+                  </p>
+                  <p class="renewal-stat-value" id="renewalStatRenewedMonth">
+                    ₹0
+                  </p>
+                </div>
+              </div>
+              <div class="renewal-stat-card">
+                <span class="renewal-stat-icon renewal-stat-icon-green"
+                  >✅</span
+                >
+                <div>
+                  <p class="renewal-stat-label">
+                    Total Amount Renewed This Year
+                  </p>
+                  <p class="renewal-stat-value" id="renewalStatRenewedYear">
+                    ₹0
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div id="renewalModalOverlay" class="modal-overlay" hidden>
+              <div
+                class="modal-box cs-form"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="renewalModalTitle"
+              >
+                <div class="modal-head">
+                  <h3 id="renewalModalTitle">Create Renewal Record</h3>
+                  <button
+                    type="button"
+                    id="renewalModalCloseBtn"
+                    class="modal-close"
+                    aria-label="Close"
+                  >
+                    &times;
+                  </button>
+                </div>
+                <input type="hidden" id="renewalId" />
+                <label for="renewalCustomer">Customer</label>
+                <select id="renewalCustomer" required>
+                  <option value="">— Select a customer —</option>
+                </select>
+                <div class="cs-form-grid">
+                  <div>
+                    <label for="renewalFrequency">Frequency</label>
+                    <select id="renewalFrequency">
+                      <option value="Monthly">Monthly</option>
+                      <option value="Half Yearly">Half Yearly</option>
+                      <option value="Yearly" selected>Yearly</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label for="renewalDueDate">Renewal Due Date</label>
+                    <input type="date" id="renewalDueDate" required />
+                  </div>
+                </div>
+                <div class="cs-form-grid">
+                  <div>
+                    <label for="renewalStatus"
+                      >Status
+                      <span class="field-note"
+                        >(use Renew on the list to process a renewal + log a
+                        transaction)</span
+                      ></label
+                    >
+                    <select id="renewalStatus">
+                      <option value="Pending">Pending</option>
+                      <option value="Renewed">Renewed</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label for="renewalAmount">Amount (₹)</label>
+                    <input
+                      type="number"
+                      id="renewalAmount"
+                      step="0.01"
+                      min="0"
+                      required
+                    />
+                  </div>
+                </div>
+                <div class="cs-form-actions">
+                  <button
+                    type="button"
+                    id="renewalSaveBtn"
+                    class="btn btn-primary"
+                  >
+                    Save
+                  </button>
+                  <button
+                    type="button"
+                    id="renewalCancelBtn"
+                    class="btn btn-outline"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div id="renewalSuccessOverlay" class="modal-overlay" hidden>
+              <div
+                class="modal-box renewal-success-box"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="renewalSuccessTitle"
+              >
+                <div class="renewal-success-icon">✓</div>
+                <h3 id="renewalSuccessTitle">Renewal Successful!</h3>
+                <p>The renewal has been processed successfully.</p>
+                <p
+                  id="renewalSuccessDetails"
+                  class="renewal-success-details"
+                ></p>
+                <button
+                  type="button"
+                  id="renewalSuccessOkBtn"
+                  class="btn btn-primary"
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+
+            <div class="renewal-filters">
+              <div class="customer-search-bar renewal-search">
+                <span class="search-icon" aria-hidden="true">🔍</span>
+                <input
+                  type="search"
+                  id="renewalSearchInput"
+                  placeholder="Search by customer name, contact, phone, or email…"
+                  aria-label="Search renewals"
+                />
+              </div>
+              <select id="renewalFilterStatus">
+                <option value="">All Status</option>
+                <option value="Renewed">Renewed</option>
+                <option value="Due Soon">Due Soon</option>
+                <option value="Due">Due</option>
+              </select>
+              <select id="renewalFilterFrequency">
+                <option value="">All Frequency</option>
+                <option value="Monthly">Monthly</option>
+                <option value="Half Yearly">Half Yearly</option>
+                <option value="Yearly">Yearly</option>
+              </select>
+              <input
+                type="date"
+                id="renewalFilterFrom"
+                aria-label="Due date from"
+              />
+              <input
+                type="date"
+                id="renewalFilterTo"
+                aria-label="Due date to"
+              />
+            </div>
+
+            <div class="table-wrap">
+              <table id="renewalsTable">
+                <thead>
+                  <tr>
+                    <th>Customer Name</th>
+                    <th>Customer ID</th>
+                    <th>Frequency</th>
+                    <th>Renewal Due Date</th>
+                    <th>Amount Due</th>
+                    <th>Status</th>
+                    <th class="actions-col"></th>
+                  </tr>
+                </thead>
+                <tbody id="renewalsTableBody">
+                  <tr>
+                    <td colspan="7" class="empty-note">Loading…</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
       </div>
-
-      <div id="leadDetailInfo" class="customer-detail-info"></div>
-
-      <label for="leadDetailStatus" class="td-status-label">Status</label>
-      <select id="leadDetailStatus" class="status-select"></select>
     </div>
 
-    <div id="leadModalOverlay" class="modal-overlay" hidden>
-      <div class="modal-box cs-form" role="dialog" aria-modal="true" aria-labelledby="leadModalTitle">
-        <div class="modal-head">
-          <h3 id="leadModalTitle">Add lead</h3>
-          <button type="button" id="leadModalCloseBtn" class="modal-close" aria-label="Close">&times;</button>
+    <!-- ===================== CUSTOMER DASHBOARD ===================== -->
+    <div id="customerDashboard" class="dashboard" hidden>
+      <header class="admin-header">
+        <span class="brand"
+          ><img
+            src="images/logo-horizontal-color.png"
+            alt="SitePragati"
+            class="brand-logo"
+          />
+          <span>Customer Portal</span></span
+        >
+        <div class="header-right">
+          <span class="header-username" id="customerHeaderName"></span>
+          <button
+            type="button"
+            id="customerLogoutBtn"
+            class="btn btn-outline btn-small"
+          >
+            Log out
+          </button>
         </div>
-        <input type="hidden" id="leadId">
-        <div class="cs-form-grid">
-          <div>
-            <label for="leadName">Name</label>
-            <input type="text" id="leadName" required>
-          </div>
-          <div>
-            <label for="leadBusiness">Business</label>
-            <input type="text" id="leadBusiness">
-          </div>
-          <div>
-            <label for="leadBusinessType">Business type</label>
-            <select id="leadBusinessType">
-              <option value="">— Select —</option>
-              <option value="Café/Restaurant">Café / Restaurant</option>
-              <option value="Retail/Shop">Retail / Shop</option>
-              <option value="Services">Services (salon, consulting, repair, etc.)</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-          <div>
-            <label for="leadContact">Contact <span class="field-note">(phone or email)</span></label>
-            <input type="text" id="leadContact">
-          </div>
-          <div>
-            <label for="leadStatus">Status</label>
-            <select id="leadStatus">
-              <option value="New">New</option>
-              <option value="Contacted">Contacted</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Converted">Converted</option>
-              <option value="Lost">Lost</option>
-            </select>
-          </div>
-        </div>
-        <label for="leadMessage">Message</label>
-        <textarea id="leadMessage" rows="2"></textarea>
-        <div class="cs-form-actions">
-          <button type="button" id="leadSaveBtn" class="btn btn-primary">Save</button>
-          <button type="button" id="leadCancelBtn" class="btn btn-outline">Cancel</button>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Customers tab -->
-  <section id="customersTab" class="tab-panel">
-
-    <!-- List view -->
-    <div id="customersListView">
-      <div class="panel-head">
-        <h2>Customers</h2>
-        <button type="button" id="addCustomerBtn" class="btn btn-primary btn-small">+ Add customer</button>
-      </div>
-
-      <div class="cust-stats">
-        <div class="cust-stat-card">
-          <span class="cust-stat-icon cust-stat-icon-blue">👥</span>
-          <div>
-            <p class="cust-stat-label">Total Customers</p>
-            <p class="cust-stat-value" id="custStatTotal">0</p>
-          </div>
-        </div>
-        <div class="cust-stat-card">
-          <span class="cust-stat-icon cust-stat-icon-green">✅</span>
-          <div>
-            <p class="cust-stat-label">Active Customers</p>
-            <p class="cust-stat-value" id="custStatActive">0</p>
-          </div>
-        </div>
-        <div class="cust-stat-card">
-          <span class="cust-stat-icon cust-stat-icon-amber">💰</span>
-          <div>
-            <p class="cust-stat-label">Total Paid</p>
-            <p class="cust-stat-value" id="custStatPaid">₹0</p>
-          </div>
-        </div>
-        <div class="cust-stat-card">
-          <span class="cust-stat-icon cust-stat-icon-red">⏳</span>
-          <div>
-            <p class="cust-stat-label">Pending Amount</p>
-            <p class="cust-stat-value" id="custStatPending">₹0</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="customer-search-row">
-        <div class="customer-search-bar">
-          <span class="search-icon" aria-hidden="true">🔍</span>
-          <input type="search" id="customerSearchInput" placeholder="Search by name, contact, phone, or email…" aria-label="Search customers">
-        </div>
-        <button type="button" id="actualCustomerToggle" class="actual-customer-toggle active" aria-pressed="true">
-          ✓ Actual Customers
-        </button>
-      </div>
-
-      <div class="table-wrap">
-        <table id="customersTable">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Business Name</th>
-              <th>Contact</th>
-              <th>Status</th>
-              <th class="actions-col">Actions</th>
-            </tr>
-          </thead>
-          <tbody id="customersTableBody">
-            <tr><td colspan="5" class="empty-note">Loading…</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Detail view: one customer's transactions -->
-    <div id="customerDetailView" hidden>
-      <div class="customer-detail-header">
-        <button type="button" id="backToCustomersBtn" class="btn btn-outline btn-small">&larr; Back to customers</button>
-        <div id="customerDetailActions" class="cs-card-actions"></div>
-      </div>
+      </header>
 
       <div class="subtab-nav">
-        <button type="button" class="subtab-btn active" data-cust-subtab="details">Details</button>
-        <button type="button" class="subtab-btn" data-cust-subtab="transactions">Transactions</button>
-        <button type="button" class="subtab-btn" data-cust-subtab="recommendations">Recommendation</button>
-      </div>
-
-      <div id="custSubtabDetails" class="cust-subtab-panel">
-        <div id="customerDetailInfo" class="customer-detail-info"></div>
-      </div>
-
-      <div id="custSubtabTransactions" class="cust-subtab-panel" hidden>
-        <div id="customerTxnStats" class="txn-stats"></div>
-
-        <div class="panel-head">
-          <h3>Transactions</h3>
-          <button type="button" id="addTransactionBtn" class="btn btn-primary btn-small">+ Add transaction</button>
-        </div>
-
-        <div class="table-wrap">
-          <table id="transactionsTable">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Amount</th>
-                <th>Description</th>
-                <th>Status</th>
-                <th class="actions-col"></th>
-              </tr>
-            </thead>
-            <tbody id="transactionsTableBody">
-              <tr><td colspan="5" class="empty-note">Loading…</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div id="custSubtabRecommendations" class="cust-subtab-panel" hidden>
-        <div class="panel-head">
-          <h3>Recommendations</h3>
-          <button type="button" id="addRecommendationBtn" class="btn btn-primary btn-small">+ Add recommendation</button>
-        </div>
-
-        <div id="recommendationsList" class="ticket-list">
-          <p class="empty-note">Loading…</p>
-        </div>
-      </div>
-
-      <div id="recommendationModalOverlay" class="modal-overlay" hidden>
-      <div id="recommendationForm" class="modal-box cs-form" role="dialog" aria-modal="true" aria-labelledby="recommendationFormTitle">
-        <div class="modal-head">
-          <h3 id="recommendationFormTitle">Add recommendation</h3>
-          <button type="button" id="recommendationModalCloseBtn" class="modal-close" aria-label="Close">&times;</button>
-        </div>
-        <input type="hidden" id="recId">
-        <input type="hidden" id="recCustomerId">
-        <label for="recName">Name</label>
-        <input type="text" id="recName" required>
-        <label for="recDetails">Details</label>
-        <textarea id="recDetails" rows="4"></textarea>
-        <div class="cs-form-actions">
-          <button type="button" id="recSaveBtn" class="btn btn-primary">Save</button>
-          <button type="button" id="recCancelBtn" class="btn btn-outline">Cancel</button>
-        </div>
-      </div>
-      </div>
-
-      <div id="transactionModalOverlay" class="modal-overlay" hidden>
-      <div id="transactionForm" class="modal-box cs-form" role="dialog" aria-modal="true" aria-labelledby="transactionFormTitle">
-        <div class="modal-head">
-          <h3 id="transactionFormTitle">Add transaction</h3>
-          <button type="button" id="transactionModalCloseBtn" class="modal-close" aria-label="Close">&times;</button>
-        </div>
-        <input type="hidden" id="txnId">
-        <input type="hidden" id="txnCustomerId">
-        <div class="cs-form-grid">
-          <div>
-            <label for="txnAmount">Amount (₹)</label>
-            <input type="number" id="txnAmount" step="0.01" required>
-          </div>
-          <div>
-            <label for="txnDate">Date</label>
-            <input type="date" id="txnDate">
-          </div>
-          <div>
-            <label for="txnStatus">Status</label>
-            <select id="txnStatus">
-              <option value="Paid">Paid</option>
-              <option value="Pending">Pending</option>
-              <option value="Overdue">Overdue</option>
-            </select>
-          </div>
-        </div>
-        <label for="txnDescription">Description</label>
-        <textarea id="txnDescription" rows="2" placeholder="e.g. Monthly care plan, or invoice reference"></textarea>
-        <div class="cs-form-actions">
-          <button type="button" id="txnSaveBtn" class="btn btn-primary">Save</button>
-          <button type="button" id="txnCancelBtn" class="btn btn-outline">Cancel</button>
-        </div>
-      </div>
-      </div>
-    </div>
-
-    <div id="customerModalOverlay" class="modal-overlay" hidden>
-    <div id="customerForm" class="modal-box cs-form" role="dialog" aria-modal="true" aria-labelledby="customerFormTitle">
-      <div class="modal-head">
-        <h3 id="customerFormTitle">Add customer</h3>
-        <button type="button" id="customerModalCloseBtn" class="modal-close" aria-label="Close">&times;</button>
-      </div>
-      <input type="hidden" id="custId">
-
-      <div class="cs-form-section">
-        <p class="cs-section-label">Business Details</p>
-        <div class="cs-form-grid">
-          <div>
-            <label for="custBusinessName">Business name</label>
-            <input type="text" id="custBusinessName" required>
-          </div>
-          <div>
-            <label for="custContactName">Contact name</label>
-            <input type="text" id="custContactName">
-          </div>
-          <div>
-            <label for="custPhone">Phone</label>
-            <input type="text" id="custPhone">
-          </div>
-        </div>
-        <label for="custAddress">Address</label>
-        <textarea id="custAddress" rows="2"></textarea>
-      </div>
-
-      <div class="cs-form-section">
-        <p class="cs-section-label">Portal Login</p>
-        <div class="cs-form-grid">
-          <div>
-            <label for="custEmail">Email <span class="field-note">(portal login)</span></label>
-            <input type="email" id="custEmail" placeholder="customer@business.com">
-          </div>
-          <div>
-            <label for="custPassword">Password <span class="field-note" id="custPasswordNote">(required for new customers)</span></label>
-            <input type="text" id="custPassword" placeholder="Set a login password">
-          </div>
-        </div>
-      </div>
-
-      <div class="cs-form-section">
-        <p class="cs-section-label">Website Links</p>
-        <div class="cs-form-grid">
-          <div>
-            <label for="custWebsiteUrl">Website link</label>
-            <input type="url" id="custWebsiteUrl" placeholder="https://theirbusiness.pages.dev">
-          </div>
-          <div>
-            <label for="custAdminConsoleUrl">Admin console link</label>
-            <input type="url" id="custAdminConsoleUrl" placeholder="https://theirbusiness.pages.dev/admin.html">
-          </div>
-        </div>
-      </div>
-
-      <div class="cs-form-section">
-        <p class="cs-section-label">Payment</p>
-        <div class="cs-form-grid">
-          <div>
-            <label for="custUpiId">UPI ID <span class="field-note">(for this customer's ticket-payment QR code)</span></label>
-            <input type="text" id="custUpiId" placeholder="e.g. yourname@axisbank — leave blank to use the default">
-          </div>
-        </div>
-      </div>
-
-      <div class="cs-form-section">
-        <p class="cs-section-label">Renewal Settings</p>
-        <div class="cs-form-grid">
-          <div>
-            <label for="custRenewalRequired"><input type="checkbox" id="custRenewalRequired" style="width:auto; margin-right:6px; vertical-align:middle;"> Renewal required?</label>
-          </div>
-          <div>
-            <label for="custRenewalFrequency">Frequency</label>
-            <select id="custRenewalFrequency">
-              <option value="">— None —</option>
-              <option value="Monthly">Monthly</option>
-              <option value="Half Yearly">Half Yearly</option>
-              <option value="Yearly">Yearly</option>
-            </select>
-          </div>
-          <div>
-            <label for="custRenewalAmount">Renewal amount (₹) <span class="field-note">(charged each cycle)</span></label>
-            <input type="number" id="custRenewalAmount" step="0.01" min="0">
-          </div>
-          <div>
-            <label for="custRenewalStartDate">Renewal start date <span class="field-note">(first cycle's due date)</span></label>
-            <input type="date" id="custRenewalStartDate">
-          </div>
-        </div>
-      </div>
-
-      <div class="cs-form-section">
-        <p class="cs-section-label">Subscription Plans <span class="field-note">(shown to the customer only when Renewal required is unchecked)</span></p>
-        <div class="cs-form-grid cs-form-grid-3">
-          <div>
-            <label for="custPlan1Price">Plan 1 price (₹/month)</label>
-            <input type="number" id="custPlan1Price" step="1" min="0">
-            <label for="custPlan1Features" style="margin-top:10px;">Features <span class="field-note">(one per line)</span></label>
-            <textarea id="custPlan1Features" rows="4"></textarea>
-          </div>
-          <div>
-            <label for="custPlan2Price">Plan 2 price (₹/month)</label>
-            <input type="number" id="custPlan2Price" step="1" min="0">
-            <label for="custPlan2Features" style="margin-top:10px;">Features <span class="field-note">(one per line)</span></label>
-            <textarea id="custPlan2Features" rows="4"></textarea>
-          </div>
-          <div>
-            <label for="custPlan3Price">Plan 3 price (₹/month)</label>
-            <input type="number" id="custPlan3Price" step="1" min="0">
-            <label for="custPlan3Features" style="margin-top:10px;">Features <span class="field-note">(one per line)</span></label>
-            <textarea id="custPlan3Features" rows="4"></textarea>
-          </div>
-        </div>
-      </div>
-
-      <div class="cs-form-section">
-        <p class="cs-section-label">Internal</p>
-        <label for="custIsActualCustomer"><input type="checkbox" id="custIsActualCustomer" checked style="width:auto; margin-right:6px; vertical-align:middle;"> Is Actual Customer? <span class="field-note">(uncheck for demo/test entries)</span></label>
-        <label for="custNotes" style="margin-top:14px;">Notes <span class="field-note">(internal — not shown to the customer)</span></label>
-        <textarea id="custNotes" rows="5"></textarea>
-      </div>
-
-      <div class="cs-form-actions">
-        <button type="button" id="custSaveBtn" class="btn btn-primary">Save</button>
-        <button type="button" id="custCancelBtn" class="btn btn-outline">Cancel</button>
-      </div>
-    </div>
-    </div>
-
-  </section>
-
-  <!-- Tickets tab -->
-  <section id="ticketsTab" class="tab-panel">
-
-    <!-- List view -->
-    <div id="ticketsListView">
-      <div class="panel-head panel-head-leads">
-        <div class="panel-head-icon-row">
-          <span class="panel-head-icon">🎫</span>
-          <div>
-            <h2>Tickets</h2>
-            <p class="panel-head-subtitle">Track and manage your customer support tickets.</p>
-          </div>
-        </div>
-        <div class="panel-head-actions">
-          <div class="table-search">
-            <span class="search-icon" aria-hidden="true">🔍</span>
-            <input type="search" id="ticketSearchInput" placeholder="Search by customer, subject, or ticket ID…" aria-label="Search tickets">
-          </div>
-          <button type="button" id="addTicketBtn" class="btn btn-primary btn-small">+ Add ticket</button>
-        </div>
-      </div>
-
-      <div class="ticket-stats">
-        <button type="button" class="ticket-stat-card ticket-stat-blue active" data-ticket-stat="">
-          <span class="ticket-stat-icon">🎫</span>
-          <span class="ticket-stat-text">
-            <span class="ticket-stat-label">Total Tickets</span>
-            <span class="ticket-stat-value" id="ticketStatTotal">0</span>
-            <span class="ticket-stat-sub">Across all customers</span>
-          </span>
-          <span class="ticket-stat-chevron">&rsaquo;</span>
+        <button
+          type="button"
+          class="subtab-btn active"
+          data-customer-subtab="home"
+        >
+          Home
         </button>
-        <button type="button" class="ticket-stat-card ticket-stat-green" data-ticket-stat="open">
-          <span class="ticket-stat-icon">⏱️</span>
-          <span class="ticket-stat-text">
-            <span class="ticket-stat-label">Open Tickets</span>
-            <span class="ticket-stat-value" id="ticketStatOpen">0</span>
-            <span class="ticket-stat-sub">Needs attention</span>
-          </span>
-          <span class="ticket-stat-chevron">&rsaquo;</span>
+        <button type="button" class="subtab-btn" data-customer-subtab="tickets">
+          Tickets
         </button>
-        <button type="button" class="ticket-stat-card ticket-stat-purple" data-ticket-stat="In Progress">
-          <span class="ticket-stat-icon">✅</span>
-          <span class="ticket-stat-text">
-            <span class="ticket-stat-label">In Progress</span>
-            <span class="ticket-stat-value" id="ticketStatInProgress">0</span>
-            <span class="ticket-stat-sub">Being resolved</span>
-          </span>
-          <span class="ticket-stat-chevron">&rsaquo;</span>
-        </button>
-        <button type="button" class="ticket-stat-card ticket-stat-amber" data-ticket-stat="closed">
-          <span class="ticket-stat-icon">✅</span>
-          <span class="ticket-stat-text">
-            <span class="ticket-stat-label">Resolved</span>
-            <span class="ticket-stat-value" id="ticketStatResolved">0</span>
-            <span class="ticket-stat-sub">Closed successfully</span>
-          </span>
-          <span class="ticket-stat-chevron">&rsaquo;</span>
+        <button
+          type="button"
+          class="subtab-btn"
+          data-customer-subtab="recommendations"
+        >
+          Recommendation
         </button>
       </div>
 
-      <div id="addTicketModalOverlay" class="modal-overlay" hidden>
-        <div class="modal-box cs-form" role="dialog" aria-modal="true" aria-labelledby="addTicketModalTitle">
-          <div class="modal-head">
-            <h3 id="addTicketModalTitle">Add ticket</h3>
-            <button type="button" id="addTicketModalCloseBtn" class="modal-close" aria-label="Close">&times;</button>
+      <div id="customerSubtabHome" class="cust-subtab-panel">
+        <div class="referral-banner">
+          <div class="referral-icon">🎁</div>
+          <div class="referral-text">
+            <strong>Refer a business, get 6 months of free maintenance</strong>
+            <p>
+              Know a business that needs a website like yours? Refer them to
+              SitePragati and enjoy 6 months of free site maintenance on your
+              own website — including content updates, listing changes, and
+              general support. (Offer excludes new development work.)
+            </p>
           </div>
-          <label for="addTicketCustomer">Customer</label>
-          <select id="addTicketCustomer" required>
-            <option value="">— Select a customer —</option>
-          </select>
-          <label for="addTicketSubject">Subject</label>
-          <input type="text" id="addTicketSubject" placeholder="e.g. Update menu prices, Fix broken image" required>
-          <label for="addTicketDescription">Details</label>
-          <textarea id="addTicketDescription" rows="3" placeholder="Describe what the customer needs."></textarea>
-          <div class="cs-form-actions">
-            <button type="button" id="addTicketSaveBtn" class="btn btn-primary">Save</button>
-            <button type="button" id="addTicketCancelBtn" class="btn btn-outline">Cancel</button>
+          <div class="referral-actions">
+            <button
+              type="button"
+              id="referralWhatsappBtn"
+              class="btn btn-primary btn-small"
+            >
+              Share on WhatsApp
+            </button>
+            <button
+              type="button"
+              id="referralCopyBtn"
+              class="btn btn-outline btn-small"
+            >
+              Copy message
+            </button>
           </div>
         </div>
-      </div>
 
-      <div class="ticket-filters">
-        <div>
-          <label for="ticketFilterCustomer">Customer</label>
-          <select id="ticketFilterCustomer">
-            <option value="">All customers</option>
-          </select>
-        </div>
-        <div>
-          <label for="ticketFilterStatus">Status</label>
-          <select id="ticketFilterStatus">
-            <option value="">All statuses</option>
-            <option>Open</option>
-            <option>In Progress</option>
-            <option>Payment Pending</option>
-            <option>Payment Submitted</option>
-            <option>Payment Received</option>
-            <option>Resolved</option>
-            <option>Closed</option>
-          </select>
-        </div>
-        <button type="button" id="resetTicketFiltersBtn" class="btn btn-outline btn-small ticket-filters-reset">↺ Reset</button>
-      </div>
-
-      <div class="ticket-section">
-        <button type="button" class="ticket-section-header" data-toggle-section="openTicketsSection">
-          <span class="ticket-section-dot ticket-section-dot-open"></span>
-          <span class="ticket-section-title">Open Tickets (<span id="openTicketsCount">0</span>)</span>
-          <span class="ticket-section-chevron">⌃</span>
-        </button>
-        <div class="table-wrap" id="openTicketsSection">
-          <table id="ticketsTable">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Customer</th>
-                <th>Subject</th>
-                <th>Status</th>
-                <th class="actions-col">Actions</th>
-              </tr>
-            </thead>
-            <tbody id="ticketsTableBody">
-              <tr><td colspan="5" class="empty-note">Loading…</td></tr>
-            </tbody>
-          </table>
+        <div id="noSubscriptionBanner" class="no-sub-banner" hidden>
+          <div class="no-sub-head">
+            <span class="no-sub-icon">!</span>
+            <h3>No active maintenance subscription</h3>
+          </div>
+          <p class="no-sub-copy">
+            Your maintenance will be billed per ticket. Upgrade to a plan and
+            reduce your monthly costs — perfect for businesses that regularly
+            need tweaks, improvements, or guidance.
+          </p>
+          <div id="subPlanCards" class="sub-plan-grid"></div>
         </div>
       </div>
 
-      <div class="ticket-section">
-        <button type="button" class="ticket-section-header" data-toggle-section="closedTicketsSection">
-          <span class="ticket-section-dot ticket-section-dot-closed"></span>
-          <span class="ticket-section-title">Closed Tickets (<span id="closedTicketsCount">0</span>)</span>
-          <span class="ticket-section-chevron">⌃</span>
-        </button>
-        <div class="table-wrap" id="closedTicketsSection">
-          <table id="closedTicketsTable">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Customer</th>
-                <th>Subject</th>
-                <th>Status</th>
-                <th class="actions-col">Actions</th>
-              </tr>
-            </thead>
-            <tbody id="closedTicketsTableBody"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+      <div id="customerSubtabTickets" class="cust-subtab-panel" hidden>
+        <div id="custTicketListView">
+          <div class="panel-head">
+            <h2>Support tickets</h2>
+            <button
+              type="button"
+              id="newTicketBtn"
+              class="btn btn-primary btn-small"
+            >
+              + New ticket
+            </button>
+          </div>
 
-    <!-- Detail view: one ticket -->
-    <div id="ticketDetailView" hidden>
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <button type="button" id="backToTicketsBtn" class="btn btn-outline btn-small back-btn">&larr; Back to tickets</button>
-        <div style="display:flex; gap:8px;">
-          <button type="button" id="editTicketBtn" class="btn btn-outline btn-small btn-icon" aria-label="Edit" title="Edit">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          <div class="ticket-filters">
+            <div>
+              <label for="customerFilterName">Customer</label>
+              <input type="text" id="customerFilterName" disabled />
+            </div>
+            <div>
+              <label for="customerFilterStatus">Status</label>
+              <select id="customerFilterStatus">
+                <option value="">All statuses</option>
+                <option>Open</option>
+                <option>In Progress</option>
+                <option>Payment Pending</option>
+                <option>Payment Submitted</option>
+                <option>Payment Received</option>
+                <option>Resolved</option>
+                <option>Closed</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="ticketsList" class="ticket-list">
+            <p class="empty-note">Loading…</p>
+          </div>
+
+          <div id="customerClosedSection" class="closed-tickets-section" hidden>
+            <button
+              type="button"
+              id="toggleCustomerClosed"
+              class="btn btn-outline btn-small"
+            >
+              Show closed tickets (<span id="customerClosedCount">0</span>)
+            </button>
+            <div id="customerClosedList" class="ticket-list" hidden></div>
+          </div>
+        </div>
+
+        <div id="custTicketDetailView" hidden>
+          <button
+            type="button"
+            id="backToCustTicketsBtn"
+            class="btn btn-outline btn-small back-btn"
+          >
+            &larr; Back to tickets
           </button>
-          <button type="button" id="deleteTicketBtn" class="btn-danger btn-icon" aria-label="Delete" title="Delete">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+
+          <div id="custTicketDetailInfo" class="customer-detail-info"></div>
+
+          <div id="custTicketDetailPayment"></div>
+
+          <div class="ticket-comments-section">
+            <h3>Comments</h3>
+            <div id="custTicketCommentsList" class="comments-list">
+              <p class="empty-note">Loading…</p>
+            </div>
+            <div class="comment-form">
+              <textarea
+                id="custNewCommentText"
+                rows="3"
+                placeholder="Write a message…"
+              ></textarea>
+              <div class="comment-form-row">
+                <input type="file" id="custNewCommentFile" />
+                <button
+                  type="button"
+                  id="custPostCommentBtn"
+                  class="btn btn-primary btn-small"
+                >
+                  Send
+                </button>
+              </div>
+              <p class="comment-form-msg" id="custCommentFormMsg"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="customerSubtabRecommendations" class="cust-subtab-panel" hidden>
+        <div id="custRecListView">
+          <div class="panel-head">
+            <h2>Recommendations</h2>
+          </div>
+
+          <div id="customerRecommendationsList" class="ticket-list">
+            <p class="empty-note">Loading…</p>
+          </div>
+        </div>
+
+        <div id="custRecDetailView" hidden>
+          <button
+            type="button"
+            id="backToRecommendationsBtn"
+            class="btn btn-outline btn-small back-btn"
+          >
+            &larr; Back to recommendations
           </button>
+          <div id="custRecDetailContent"></div>
         </div>
       </div>
 
-      <div id="ticketDetailInfo" class="customer-detail-info"></div>
-
-      <div id="ticketEditModalOverlay" class="modal-overlay" hidden>
-        <div class="modal-box cs-form" role="dialog" aria-modal="true" aria-labelledby="ticketEditModalTitle">
+      <div id="ticketModalOverlay" class="modal-overlay" hidden>
+        <div
+          id="ticketForm"
+          class="modal-box cs-form"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="ticketFormTitle"
+        >
           <div class="modal-head">
-            <h3 id="ticketEditModalTitle">Edit ticket</h3>
-            <button type="button" id="ticketEditModalCloseBtn" class="modal-close" aria-label="Close">&times;</button>
+            <h3 id="ticketFormTitle">New ticket</h3>
+            <button
+              type="button"
+              id="ticketModalCloseBtn"
+              class="modal-close"
+              aria-label="Close"
+            >
+              &times;
+            </button>
           </div>
-          <input type="hidden" id="ticketEditId">
-          <label for="ticketEditSubject">Subject</label>
-          <input type="text" id="ticketEditSubject" required>
-          <label for="ticketEditDescription">Details</label>
-          <textarea id="ticketEditDescription" rows="4"></textarea>
+          <label for="ticketSubject">Subject</label>
+          <input
+            type="text"
+            id="ticketSubject"
+            placeholder="e.g. Update menu prices, Fix broken image"
+            required
+          />
+          <label for="ticketDescription">Details</label>
+          <textarea
+            id="ticketDescription"
+            rows="4"
+            placeholder="Describe what you need — the more detail, the faster we can help."
+          ></textarea>
           <div class="cs-form-actions">
-            <button type="button" id="ticketEditSaveBtn" class="btn btn-primary">Save</button>
-            <button type="button" id="ticketEditCancelBtn" class="btn btn-outline">Cancel</button>
+            <button type="button" id="ticketSaveBtn" class="btn btn-primary">
+              Submit ticket
+            </button>
+            <button type="button" id="ticketCancelBtn" class="btn btn-outline">
+              Cancel
+            </button>
           </div>
         </div>
       </div>
-
-      <label for="ticketDetailStatus" class="td-status-label">Status</label>
-      <select id="ticketDetailStatus" class="status-select"></select>
-
-      <div class="ticket-comments-section">
-        <h3>Conversation</h3>
-        <div id="ticketCommentsList" class="comments-list">
-          <p class="empty-note">Loading…</p>
-        </div>
-        <div class="comment-form">
-          <textarea id="newCommentText" rows="3" placeholder="Reply to this ticket…"></textarea>
-          <div class="comment-form-row">
-            <input type="file" id="newCommentFile">
-            <button type="button" id="postCommentBtn" class="btn btn-primary btn-small">Post reply</button>
-          </div>
-          <p class="comment-form-msg" id="commentFormMsg"></p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Case Studies tab -->
-  <section id="caseStudiesTab" class="tab-panel">
-    <div class="panel-head">
-      <h2>Case Studies</h2>
-      <button type="button" id="addCaseStudyBtn" class="btn btn-primary btn-small">+ Add case study</button>
     </div>
 
-    <div id="caseStudyModalOverlay" class="modal-overlay" hidden>
-    <div id="caseStudyForm" class="modal-box cs-form" role="dialog" aria-modal="true" aria-labelledby="csFormTitle">
-      <div class="modal-head">
-        <h3 id="csFormTitle">Add case study</h3>
-        <button type="button" id="caseStudyModalCloseBtn" class="modal-close" aria-label="Close">&times;</button>
-      </div>
-      <input type="hidden" id="csId">
-      <div class="cs-form-grid">
-        <div>
-          <label for="csBusinessName">Business name</label>
-          <input type="text" id="csBusinessName" required>
-        </div>
-        <div>
-          <label for="csCategory">Category</label>
-          <input type="text" id="csCategory" placeholder="e.g. Café & restaurant">
-        </div>
-        <div>
-          <label for="csSiteUrl">Site URL</label>
-          <input type="text" id="csSiteUrl" placeholder="example.pages.dev">
-        </div>
-        <div>
-          <label for="csImageFile">Image filename</label>
-          <input type="text" id="csImageFile" placeholder="case-placeholder.svg">
-        </div>
-        <div>
-          <label for="csSortOrder">Sort order</label>
-          <input type="number" id="csSortOrder" value="0">
-        </div>
-      </div>
-      <label for="csDescription">Description</label>
-      <textarea id="csDescription" rows="3"></textarea>
-
-      <p class="cs-stats-label">Stats (up to 3, label + value each — leave blank to omit)</p>
-      <div class="cs-form-grid cs-stats-grid">
-        <input type="text" id="csStat1Label" placeholder="Stat 1 label">
-        <input type="text" id="csStat1Value" placeholder="Stat 1 value">
-        <input type="text" id="csStat2Label" placeholder="Stat 2 label">
-        <input type="text" id="csStat2Value" placeholder="Stat 2 value">
-        <input type="text" id="csStat3Label" placeholder="Stat 3 label">
-        <input type="text" id="csStat3Value" placeholder="Stat 3 value">
-      </div>
-
-      <div class="cs-form-actions">
-        <button type="button" id="csSaveBtn" class="btn btn-primary">Save</button>
-        <button type="button" id="csCancelBtn" class="btn btn-outline">Cancel</button>
-      </div>
-    </div>
-    </div>
-
-    <div id="caseStudiesList" class="cs-list">
-      <p class="empty-note">Loading…</p>
-    </div>
-  </section>
-
-  <!-- Renewal tab -->
-  <section id="renewalsTab" class="tab-panel">
-    <div class="panel-head">
-      <h2>Renewals</h2>
-      <div style="display:flex; gap:8px;">
-        <button type="button" id="refreshRenewalsBtn" class="btn btn-outline btn-small">🔄 Refresh Renewals</button>
-        <button type="button" id="exportRenewalsBtn" class="btn btn-outline btn-small">Export</button>
-        <button type="button" id="addRenewalBtn" class="btn btn-primary btn-small">+ Create Renewal</button>
-      </div>
-    </div>
-
-    <div class="renewal-stats">
-      <div class="renewal-stat-card">
-        <span class="renewal-stat-icon renewal-stat-icon-blue">📅</span>
-        <div>
-          <p class="renewal-stat-label">Total Amount Due This Month</p>
-          <p class="renewal-stat-value" id="renewalStatMonth">₹0</p>
-        </div>
-      </div>
-      <div class="renewal-stat-card">
-        <span class="renewal-stat-icon renewal-stat-icon-green">💰</span>
-        <div>
-          <p class="renewal-stat-label">Amount Due This Year</p>
-          <p class="renewal-stat-value" id="renewalStatYear">₹0</p>
-        </div>
-      </div>
-      <div class="renewal-stat-card">
-        <span class="renewal-stat-icon renewal-stat-icon-purple">📄</span>
-        <div>
-          <p class="renewal-stat-label">Total Renewals</p>
-          <p class="renewal-stat-value" id="renewalStatCount">0</p>
-        </div>
-      </div>
-      <div class="renewal-stat-card">
-        <span class="renewal-stat-icon renewal-stat-icon-green">✅</span>
-        <div>
-          <p class="renewal-stat-label">Total Amount Renewed This Month</p>
-          <p class="renewal-stat-value" id="renewalStatRenewedMonth">₹0</p>
-        </div>
-      </div>
-      <div class="renewal-stat-card">
-        <span class="renewal-stat-icon renewal-stat-icon-green">✅</span>
-        <div>
-          <p class="renewal-stat-label">Total Amount Renewed This Year</p>
-          <p class="renewal-stat-value" id="renewalStatRenewedYear">₹0</p>
-        </div>
-      </div>
-    </div>
-
-    <div id="renewalModalOverlay" class="modal-overlay" hidden>
-      <div class="modal-box cs-form" role="dialog" aria-modal="true" aria-labelledby="renewalModalTitle">
-        <div class="modal-head">
-          <h3 id="renewalModalTitle">Create Renewal Record</h3>
-          <button type="button" id="renewalModalCloseBtn" class="modal-close" aria-label="Close">&times;</button>
-        </div>
-        <input type="hidden" id="renewalId">
-        <label for="renewalCustomer">Customer</label>
-        <select id="renewalCustomer" required>
-          <option value="">— Select a customer —</option>
-        </select>
-        <div class="cs-form-grid">
-          <div>
-            <label for="renewalFrequency">Frequency</label>
-            <select id="renewalFrequency">
-              <option value="Monthly">Monthly</option>
-              <option value="Half Yearly">Half Yearly</option>
-              <option value="Yearly" selected>Yearly</option>
-            </select>
-          </div>
-          <div>
-            <label for="renewalDueDate">Renewal Due Date</label>
-            <input type="date" id="renewalDueDate" required>
-          </div>
-        </div>
-        <div class="cs-form-grid">
-          <div>
-            <label for="renewalStatus">Status <span class="field-note">(use Renew on the list to process a renewal + log a transaction)</span></label>
-            <select id="renewalStatus">
-              <option value="Pending">Pending</option>
-              <option value="Renewed">Renewed</option>
-            </select>
-          </div>
-          <div>
-            <label for="renewalAmount">Amount (₹)</label>
-            <input type="number" id="renewalAmount" step="0.01" min="0" required>
-          </div>
-        </div>
-        <div class="cs-form-actions">
-          <button type="button" id="renewalSaveBtn" class="btn btn-primary">Save</button>
-          <button type="button" id="renewalCancelBtn" class="btn btn-outline">Cancel</button>
-        </div>
-      </div>
-    </div>
-
-    <div id="renewalSuccessOverlay" class="modal-overlay" hidden>
-      <div class="modal-box renewal-success-box" role="dialog" aria-modal="true" aria-labelledby="renewalSuccessTitle">
-        <div class="renewal-success-icon">✓</div>
-        <h3 id="renewalSuccessTitle">Renewal Successful!</h3>
-        <p>The renewal has been processed successfully.</p>
-        <p id="renewalSuccessDetails" class="renewal-success-details"></p>
-        <button type="button" id="renewalSuccessOkBtn" class="btn btn-primary">OK</button>
-      </div>
-    </div>
-
-    <div class="renewal-filters">
-      <div class="customer-search-bar renewal-search">
-        <span class="search-icon" aria-hidden="true">🔍</span>
-        <input type="search" id="renewalSearchInput" placeholder="Search by customer name, contact, phone, or email…" aria-label="Search renewals">
-      </div>
-      <select id="renewalFilterStatus">
-        <option value="">All Status</option>
-        <option value="Renewed">Renewed</option>
-        <option value="Due Soon">Due Soon</option>
-        <option value="Due">Due</option>
-      </select>
-      <select id="renewalFilterFrequency">
-        <option value="">All Frequency</option>
-        <option value="Monthly">Monthly</option>
-        <option value="Half Yearly">Half Yearly</option>
-        <option value="Yearly">Yearly</option>
-      </select>
-      <input type="date" id="renewalFilterFrom" aria-label="Due date from">
-      <input type="date" id="renewalFilterTo" aria-label="Due date to">
-    </div>
-
-    <div class="table-wrap">
-      <table id="renewalsTable">
-        <thead>
-          <tr>
-            <th>Customer Name</th>
-            <th>Customer ID</th>
-            <th>Frequency</th>
-            <th>Renewal Due Date</th>
-            <th>Amount Due</th>
-            <th>Status</th>
-            <th class="actions-col"></th>
-          </tr>
-        </thead>
-        <tbody id="renewalsTableBody">
-          <tr><td colspan="7" class="empty-note">Loading…</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
-
-    </div>
-  </div>
-</div>
-
-<!-- ===================== CUSTOMER DASHBOARD ===================== -->
-<div id="customerDashboard" class="dashboard" hidden>
-  <header class="admin-header">
-    <span class="brand"><img src="images/logo-horizontal-color.png" alt="SitePragati" class="brand-logo"> <span>Customer Portal</span></span>
-    <div class="header-right">
-      <span class="header-username" id="customerHeaderName"></span>
-      <button type="button" id="customerLogoutBtn" class="btn btn-outline btn-small">Log out</button>
-    </div>
-  </header>
-
-  <div class="subtab-nav">
-    <button type="button" class="subtab-btn active" data-customer-subtab="home">Home</button>
-    <button type="button" class="subtab-btn" data-customer-subtab="tickets">Tickets</button>
-    <button type="button" class="subtab-btn" data-customer-subtab="recommendations">Recommendation</button>
-  </div>
-
-  <div id="customerSubtabHome" class="cust-subtab-panel">
-    <div class="referral-banner">
-      <div class="referral-icon">🎁</div>
-      <div class="referral-text">
-        <strong>Refer a business, get 6 months of free maintenance</strong>
-        <p>Know a business that needs a website like yours? Refer them to SitePragati and enjoy 6 months of free site maintenance on your own website — including content updates, listing changes, and general support. (Offer excludes new development work.)</p>
-      </div>
-      <div class="referral-actions">
-        <button type="button" id="referralWhatsappBtn" class="btn btn-primary btn-small">Share on WhatsApp</button>
-        <button type="button" id="referralCopyBtn" class="btn btn-outline btn-small">Copy message</button>
-      </div>
-    </div>
-
-    <div id="noSubscriptionBanner" class="no-sub-banner" hidden>
-      <div class="no-sub-head">
-        <span class="no-sub-icon">!</span>
-        <h3>No active maintenance subscription</h3>
-      </div>
-      <p class="no-sub-copy">Your maintenance will be billed per ticket. Upgrade to a plan and reduce your monthly costs — perfect for businesses that regularly need tweaks, improvements, or guidance.</p>
-      <div id="subPlanCards" class="sub-plan-grid"></div>
-    </div>
-  </div>
-
-  <div id="customerSubtabTickets" class="cust-subtab-panel" hidden>
-    <div id="custTicketListView">
-      <div class="panel-head">
-        <h2>Support tickets</h2>
-        <button type="button" id="newTicketBtn" class="btn btn-primary btn-small">+ New ticket</button>
-      </div>
-
-      <div class="ticket-filters">
-        <div>
-          <label for="customerFilterName">Customer</label>
-          <input type="text" id="customerFilterName" disabled>
-        </div>
-        <div>
-          <label for="customerFilterStatus">Status</label>
-          <select id="customerFilterStatus">
-            <option value="">All statuses</option>
-            <option>Open</option>
-            <option>In Progress</option>
-            <option>Payment Pending</option>
-            <option>Payment Submitted</option>
-            <option>Payment Received</option>
-            <option>Resolved</option>
-            <option>Closed</option>
-          </select>
-        </div>
-      </div>
-
-      <div id="ticketsList" class="ticket-list">
-        <p class="empty-note">Loading…</p>
-      </div>
-
-      <div id="customerClosedSection" class="closed-tickets-section" hidden>
-        <button type="button" id="toggleCustomerClosed" class="btn btn-outline btn-small">
-          Show closed tickets (<span id="customerClosedCount">0</span>)
-        </button>
-        <div id="customerClosedList" class="ticket-list" hidden></div>
-      </div>
-    </div>
-
-    <div id="custTicketDetailView" hidden>
-      <button type="button" id="backToCustTicketsBtn" class="btn btn-outline btn-small back-btn">&larr; Back to tickets</button>
-
-      <div id="custTicketDetailInfo" class="customer-detail-info"></div>
-
-      <div id="custTicketDetailPayment"></div>
-
-      <div class="ticket-comments-section">
-        <h3>Comments</h3>
-        <div id="custTicketCommentsList" class="comments-list">
-          <p class="empty-note">Loading…</p>
-        </div>
-        <div class="comment-form">
-          <textarea id="custNewCommentText" rows="3" placeholder="Write a message…"></textarea>
-          <div class="comment-form-row">
-            <input type="file" id="custNewCommentFile">
-            <button type="button" id="custPostCommentBtn" class="btn btn-primary btn-small">Send</button>
-          </div>
-          <p class="comment-form-msg" id="custCommentFormMsg"></p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div id="customerSubtabRecommendations" class="cust-subtab-panel" hidden>
-    <div id="custRecListView">
-      <div class="panel-head">
-        <h2>Recommendations</h2>
-      </div>
-
-      <div id="customerRecommendationsList" class="ticket-list">
-        <p class="empty-note">Loading…</p>
-      </div>
-    </div>
-
-    <div id="custRecDetailView" hidden>
-      <button type="button" id="backToRecommendationsBtn" class="btn btn-outline btn-small back-btn">&larr; Back to recommendations</button>
-      <div id="custRecDetailContent"></div>
-    </div>
-  </div>
-
-  <div id="ticketModalOverlay" class="modal-overlay" hidden>
-  <div id="ticketForm" class="modal-box cs-form" role="dialog" aria-modal="true" aria-labelledby="ticketFormTitle">
-    <div class="modal-head">
-      <h3 id="ticketFormTitle">New ticket</h3>
-      <button type="button" id="ticketModalCloseBtn" class="modal-close" aria-label="Close">&times;</button>
-    </div>
-    <label for="ticketSubject">Subject</label>
-    <input type="text" id="ticketSubject" placeholder="e.g. Update menu prices, Fix broken image" required>
-    <label for="ticketDescription">Details</label>
-    <textarea id="ticketDescription" rows="4" placeholder="Describe what you need — the more detail, the faster we can help."></textarea>
-    <div class="cs-form-actions">
-      <button type="button" id="ticketSaveBtn" class="btn btn-primary">Submit ticket</button>
-      <button type="button" id="ticketCancelBtn" class="btn btn-outline">Cancel</button>
-    </div>
-  </div>
-  </div>
-</div>
-
-<script src="portal.js"></script>
-</body>
+    <script src="portal.js"></script>
+  </body>
 </html>
