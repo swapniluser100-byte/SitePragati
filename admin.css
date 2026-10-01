@@ -82,6 +82,14 @@ input, textarea, select, button{font-family:inherit;}
 .admin-header .brand{display:flex; align-items:center; gap:10px;}
 .admin-header .brand-logo{height:30px; width:auto; display:block;}
 .admin-header .brand span{color:var(--amber); font-weight:500; font-size:0.9rem; font-family:'Sora', sans-serif;}
+.header-right{display:flex; align-items:center; gap:14px;}
+.header-username{font-weight:600; color:var(--navy); font-size:0.92rem;}
+@media (max-width:480px){
+  /* Not enough room for brand text + name + logout button on one line —
+     drop the redundant bits; the name still shows in the welcome line below. */
+  .admin-header .brand span{display:none;}
+  .header-username{display:none;}
+}
 
 /* ===== Admin dashboard: left sidebar shell ===== */
 .dashboard-shell{display:flex; min-height:100vh; align-items:stretch;}
