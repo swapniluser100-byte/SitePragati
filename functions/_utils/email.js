@@ -15,7 +15,11 @@ export function esc(str) {
 // ctaText/ctaUrl: optional — renders a button-styled link (e.g. for a
 // password reset link, which needs to actually be clickable, unlike a
 // plain escaped-text row).
-export function brandedEmailHtml({ badgeText, introText, rows, footerText, ctaText, ctaUrl }) {
+// extraHtml: optional — raw HTML inserted after the rows table (e.g. a
+// payment QR code image), for callers that need markup rows can't
+// express. Callers are responsible for escaping any dynamic text they
+// put in it.
+export function brandedEmailHtml({ badgeText, introText, rows, footerText, ctaText, ctaUrl, extraHtml }) {
   const rowsHtml = rows
     .filter(([, value]) => !!value)
     .map(([label, value]) => `
@@ -52,6 +56,7 @@ export function brandedEmailHtml({ badgeText, introText, rows, footerText, ctaTe
             ${rowsHtml}
           </table>
           ${ctaHtml}
+          ${extraHtml || ''}
         </td>
       </tr>
       <tr>

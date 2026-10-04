@@ -759,11 +759,14 @@ function renderCustomerDetailActions(c) {
   const wrap = document.getElementById('customerDetailActions');
   wrap.innerHTML = `
     ${c.email ? `<button class="btn btn-outline btn-small btn-icon-label" data-send-creds="${c.id}" aria-label="Send login email" title="Email portal login credentials">${SEND_ICON_SVG}<span>Send login email</span></button>` : ''}
+    ${c.email ? `<button class="btn btn-outline btn-small btn-icon-label" data-send-invoice="${c.id}" aria-label="Send invoice" title="Email an invoice with payment instructions">${SEND_ICON_SVG}<span>Send invoice</span></button>` : ''}
     ${editButtonHtml('data-edit-cust', c.id, 'Edit')}
     ${deleteButtonHtml('data-delete-cust', c.id, 'Delete')}
   `;
   const sendBtn = wrap.querySelector('[data-send-creds]');
   if (sendBtn) sendBtn.addEventListener('click', () => sendCustomerCredentials(sendBtn));
+  const invoiceBtn = wrap.querySelector('[data-send-invoice]');
+  if (invoiceBtn) invoiceBtn.addEventListener('click', () => openInvoiceModal(c));
   wrap.querySelector('[data-edit-cust]').addEventListener('click', () => openCustomerForm(c.id));
   wrap.querySelector('[data-delete-cust]').addEventListener('click', () => deleteCustomer(c.id));
 }
@@ -789,6 +792,110 @@ async function sendCustomerCredentials(btn) {
       alert('Login credentials emailed to the customer.');
     } catch (err) {
       alert('Something went wrong sending the login email.');
+    }
+  });
+}
+
+// ===== Send invoice =====
+// Opens on the customer detail page's "Send invoice" button. First asks
+// whether to invoice an existing Pending/Overdue transaction as-is, or a
+// fresh amount typed on the spot — then shows the matching step inside
+// the same modal. Nothing is recorded on send; it's just an email.
+const invoiceModal = makeModal('invoiceModalOverlay');
+document.getElementById('invoiceModalCloseBtn').addEventListener('click', () => invoiceModal.hide());
+
+function openInvoiceModal(customer) {
+  renderInvoiceChoiceStep(customer);
+  invoiceModal.show();
+}
+
+function renderInvoiceChoiceStep(customer) {
+  const body = document.getElementById('invoiceModalBody');
+  body.innerHTML = `
+    <p>Invoice ${escapeHtml(customer.business_name)} for:</p>
+    <div class="cs-form-actions">
+      <button type="button" id="invoiceChooseOutstandingBtn" class="btn btn-primary">An outstanding transaction</button>
+      <button type="button" id="invoiceChooseNewBtn" class="btn btn-outline">A new invoice</button>
+    </div>
+  `;
+  document.getElementById('invoiceChooseOutstandingBtn').addEventListener('click', () => renderInvoiceOutstandingStep(customer));
+  document.getElementById('invoiceChooseNewBtn').addEventListener('click', () => renderInvoiceNewStep(customer));
+}
+
+function invoiceBackLinkHtml() {
+  return `<p><button type="button" id="invoiceBackBtn" class="btn btn-outline btn-small">&larr; Back</button></p>`;
+}
+
+function renderInvoiceOutstandingStep(customer) {
+  const body = document.getElementById('invoiceModalBody');
+  const outstanding = transactionsCache.filter(t => t.status === 'Pending' || t.status === 'Overdue');
+
+  if (!outstanding.length) {
+    body.innerHTML = `
+      ${invoiceBackLinkHtml()}
+      <p class="empty-note">No Pending or Overdue transactions for this customer.</p>`;
+  } else {
+    body.innerHTML = `
+      ${invoiceBackLinkHtml()}
+      ${outstanding.map(t => `
+        <div class="cs-card">
+          <div class="cs-card-info">
+            <h3>₹${escapeHtml(Number(t.amount).toLocaleString('en-IN'))} &middot; ${escapeHtml(t.status)}</h3>
+            <p>${escapeHtml(t.description || '')}</p>
+          </div>
+          <div class="cs-card-actions">
+            <button type="button" class="btn btn-primary btn-small" data-send-invoice-txn="${t.id}">Send</button>
+          </div>
+        </div>`).join('')}
+    `;
+    body.querySelectorAll('[data-send-invoice-txn]').forEach(btn => {
+      btn.addEventListener('click', () => sendInvoiceRequest(btn, { customerId: customer.id, transactionId: Number(btn.dataset.sendInvoiceTxn) }));
+    });
+  }
+  document.getElementById('invoiceBackBtn').addEventListener('click', () => renderInvoiceChoiceStep(customer));
+}
+
+function renderInvoiceNewStep(customer) {
+  const body = document.getElementById('invoiceModalBody');
+  body.innerHTML = `
+    ${invoiceBackLinkHtml()}
+    <label for="invoiceAmount">Amount (₹)</label>
+    <input type="number" id="invoiceAmount" min="1" step="1">
+    <label for="invoiceDescription">Description</label>
+    <textarea id="invoiceDescription" rows="3"></textarea>
+    <div class="cs-form-actions">
+      <button type="button" id="invoiceSendNewBtn" class="btn btn-primary">Send invoice</button>
+    </div>
+  `;
+  document.getElementById('invoiceBackBtn').addEventListener('click', () => renderInvoiceChoiceStep(customer));
+  document.getElementById('invoiceSendNewBtn').addEventListener('click', (e) => {
+    const amount = Number(document.getElementById('invoiceAmount').value);
+    const description = document.getElementById('invoiceDescription').value.trim();
+    if (!amount || amount <= 0) {
+      alert('Enter a valid amount.');
+      return;
+    }
+    sendInvoiceRequest(e.target, { customerId: customer.id, amount, description });
+  });
+}
+
+async function sendInvoiceRequest(btn, payload) {
+  await withButtonSpinner(btn, 'Sending…', async () => {
+    try {
+      const res = await fetch('/api/admin/send-invoice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || 'Could not send the invoice.');
+        return;
+      }
+      invoiceModal.hide();
+      alert('Invoice emailed to the customer.');
+    } catch (err) {
+      alert('Something went wrong sending the invoice.');
     }
   });
 }
