@@ -5,9 +5,22 @@
 // before knowing which kind of session exists yet.
 
 import { verifySessionToken, getCookieValue, json } from '../_utils/auth.js';
+import { sendDueRecommendationEmails } from '../_utils/recommendation-emails.js';
 
 export async function onRequestGet(context) {
   const { request, env } = context;
+
+  // Cloudflare Pages has no built-in cron, so the "send this recommendation
+  // on its visible_after date" email is piggybacked here — whoami runs on
+  // every portal page load/session check, which is as close to "check
+  // every day" as a scheduler-free app can get. Non-critical: never block
+  // or fail the session check over it.
+  try {
+    await sendDueRecommendationEmails(env, new URL(request.url).origin);
+  } catch (err) {
+    // Swallow — a missed/delayed recommendation email is not worth
+    // breaking session checks over.
+  }
 
   const adminToken = getCookieValue(request, 'admin_session');
   const adminPayload = adminToken && await verifySessionToken(adminToken, env.SESSION_SECRET);

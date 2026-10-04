@@ -2226,6 +2226,16 @@ async function deleteTransaction(id) {
 // ===== Recommendations (within a customer's detail page) =====
 let recommendationsCache = [];
 
+// A recommendation is still "scheduled" (not yet visible to the
+// customer, email not yet sent) only while its visible_after date is
+// strictly in the future — the date itself is already visible (see
+// visible_after's "inclusive" rule in functions/api/customer/recommendations.js).
+function isRecommendationScheduled(r) {
+  if (!r.visible_after) return false;
+  const today = new Date().toISOString().slice(0, 10);
+  return r.visible_after > today;
+}
+
 function renderRecommendationsList() {
   const list = document.getElementById("recommendationsList");
 
@@ -2241,6 +2251,7 @@ function renderRecommendationsList() {
       <div class="ticket-card-head">
         <h3>${escapeHtml(r.name)}</h3>
         <div class="cs-card-actions">
+          ${isRecommendationScheduled(r) ? `<span class="status-badge status-scheduled">Scheduled for ${escapeHtml(formatTicketDate(r.visible_after))}</span>` : ""}
           ${r.converted_ticket_id ? '<span class="status-badge status-renewed">Converted to ticket</span>' : ""}
           ${editButtonHtml("data-edit-rec", r.id)}
           ${deleteButtonHtml("data-delete-rec", r.id)}
@@ -2289,12 +2300,14 @@ const recFields = {
   customer_id: document.getElementById("recCustomerId"),
   name: document.getElementById("recName"),
   details: document.getElementById("recDetails"),
+  visible_after: document.getElementById("recVisibleAfter"),
 };
 
 function clearRecommendationForm() {
   recFields.id.value = "";
   recFields.name.value = "";
   recFields.details.value = "";
+  recFields.visible_after.value = "";
 }
 
 function openRecommendationForm(rec) {
@@ -2308,6 +2321,7 @@ function openRecommendationForm(rec) {
     recFields.id.value = rec.id;
     recFields.name.value = rec.name;
     recFields.details.value = rec.details || "";
+    recFields.visible_after.value = rec.visible_after || "";
   }
 
   recModal.show();
@@ -2334,6 +2348,7 @@ recSaveBtn.addEventListener("click", () => {
     customer_id: Number(recFields.customer_id.value),
     name: recFields.name.value.trim(),
     details: recFields.details.value,
+    visible_after: recFields.visible_after.value || null,
   };
 
   if (!payload.name) {
