@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS customers (
   is_actual_customer INTEGER DEFAULT 1, -- unchecked for demo/test entries you want excluded from the default Customers view
   subscription_plans TEXT, -- JSON array of up to 3 {price, features[]} objects, shown to the customer on their portal only when renewal_required is false
   upi_id TEXT, -- this customer's own UPI ID for their ticket-payment QR code — falls back to the app default when unset
+  quick_login_password TEXT, -- plaintext mirror of whatever the current portal password is, kept in sync on every password change — powers the one-click login link (?role=customer&email=&pw=) shown on the customer detail page. A deliberate exception to "never store plaintext passwords": this link has no value if the password can't be read back to build it.
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 

@@ -1,132 +1,156 @@
 // ===== Shared: role toggle + auth =====
-let loginRole = 'customer'; // default selected tab on the login screen
-let loggedInBusinessName = ''; // set on successful customer login/session check
+let loginRole = "customer"; // default selected tab on the login screen
+let loggedInBusinessName = ""; // set on successful customer login/session check
 
 function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str == null ? '' : str;
+  const div = document.createElement("div");
+  div.textContent = str == null ? "" : str;
   return div.innerHTML;
 }
 
 // Shared icon-only Edit/Delete button markup, used across the admin
 // console's Leads, Customers, Transactions, and Case Studies lists.
-const EDIT_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
-const DELETE_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>';
-const SEND_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4Z"/></svg>';
+const EDIT_ICON_SVG =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
+const DELETE_ICON_SVG =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>';
+const SEND_ICON_SVG =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4Z"/></svg>';
 
 // label is optional — omit it for the compact icon-only button used in
 // list rows; pass one (e.g. "Edit") for a labeled icon+text button where
 // there's room, like the customer detail page's action row.
 function editButtonHtml(dataAttr, id, label) {
-  const cls = label ? 'btn btn-outline btn-small btn-icon-label' : 'btn btn-outline btn-small btn-icon';
-  return `<button class="${cls}" ${dataAttr}="${id}" aria-label="Edit" title="Edit">${EDIT_ICON_SVG}${label ? `<span>${label}</span>` : ''}</button>`;
+  const cls = label
+    ? "btn btn-outline btn-small btn-icon-label"
+    : "btn btn-outline btn-small btn-icon";
+  return `<button class="${cls}" ${dataAttr}="${id}" aria-label="Edit" title="Edit">${EDIT_ICON_SVG}${label ? `<span>${label}</span>` : ""}</button>`;
 }
 function deleteButtonHtml(dataAttr, id, label) {
-  const cls = label ? 'btn-danger btn-icon-label' : 'btn-danger btn-icon';
-  return `<button class="${cls}" ${dataAttr}="${id}" aria-label="Delete" title="Delete">${DELETE_ICON_SVG}${label ? `<span>${label}</span>` : ''}</button>`;
+  const cls = label ? "btn-danger btn-icon-label" : "btn-danger btn-icon";
+  return `<button class="${cls}" ${dataAttr}="${id}" aria-label="Delete" title="Delete">${DELETE_ICON_SVG}${label ? `<span>${label}</span>` : ""}</button>`;
 }
 
 function setRole(role) {
   loginRole = role;
-  document.getElementById('roleCustomerBtn').classList.toggle('active', role === 'customer');
-  document.getElementById('roleAdminBtn').classList.toggle('active', role === 'admin');
-  document.getElementById('emailFieldWrap').hidden = (role === 'admin');
-  document.getElementById('email').required = (role === 'customer');
-  document.getElementById('loginSub').textContent = role === 'admin' ? 'Admin console' : 'Customer portal';
-  document.getElementById('loginHelp').hidden = (role === 'admin');
-  document.getElementById('adminForgotPasswordRow').hidden = (role !== 'admin');
-  document.getElementById('loginError').textContent = '';
+  document
+    .getElementById("roleCustomerBtn")
+    .classList.toggle("active", role === "customer");
+  document
+    .getElementById("roleAdminBtn")
+    .classList.toggle("active", role === "admin");
+  document.getElementById("emailFieldWrap").hidden = role === "admin";
+  document.getElementById("email").required = role === "customer";
+  document.getElementById("loginSub").textContent =
+    role === "admin" ? "Admin console" : "Customer portal";
+  document.getElementById("loginHelp").hidden = role === "admin";
+  document.getElementById("adminForgotPasswordRow").hidden = role !== "admin";
+  document.getElementById("loginError").textContent = "";
 }
 
-document.getElementById('roleCustomerBtn').addEventListener('click', () => setRole('customer'));
-document.getElementById('roleAdminBtn').addEventListener('click', () => setRole('admin'));
+document
+  .getElementById("roleCustomerBtn")
+  .addEventListener("click", () => setRole("customer"));
+document
+  .getElementById("roleAdminBtn")
+  .addEventListener("click", () => setRole("admin"));
 
 // ===== Admin: forgot password / reset password =====
 function showLoginCard(cardId) {
-  ['loginForm', 'forgotPasswordCard', 'resetPasswordCard'].forEach(id => {
-    document.getElementById(id).hidden = (id !== cardId);
+  ["loginForm", "forgotPasswordCard", "resetPasswordCard"].forEach((id) => {
+    document.getElementById(id).hidden = id !== cardId;
   });
 }
 
-document.getElementById('forgotPasswordLink').addEventListener('click', (e) => {
+document.getElementById("forgotPasswordLink").addEventListener("click", (e) => {
   e.preventDefault();
-  document.getElementById('forgotPasswordMsg').textContent = '';
-  document.getElementById('forgotPasswordMsg').classList.remove('success');
-  showLoginCard('forgotPasswordCard');
+  document.getElementById("forgotPasswordMsg").textContent = "";
+  document.getElementById("forgotPasswordMsg").classList.remove("success");
+  showLoginCard("forgotPasswordCard");
 });
 
-document.getElementById('backToLoginFromForgot').addEventListener('click', (e) => {
-  e.preventDefault();
-  showLoginCard('loginForm');
-});
+document
+  .getElementById("backToLoginFromForgot")
+  .addEventListener("click", (e) => {
+    e.preventDefault();
+    showLoginCard("loginForm");
+  });
 
-const sendResetEmailBtn = document.getElementById('sendResetEmailBtn');
-sendResetEmailBtn.addEventListener('click', () => {
-  withButtonSpinner(sendResetEmailBtn, 'Sending…', async () => {
-    const msg = document.getElementById('forgotPasswordMsg');
+const sendResetEmailBtn = document.getElementById("sendResetEmailBtn");
+sendResetEmailBtn.addEventListener("click", () => {
+  withButtonSpinner(sendResetEmailBtn, "Sending…", async () => {
+    const msg = document.getElementById("forgotPasswordMsg");
     try {
-      await fetch('/api/admin/forgot-password', { method: 'POST' });
-      msg.textContent = 'If email is configured, a reset link has been sent — check your inbox.';
-      msg.classList.add('success');
+      await fetch("/api/admin/forgot-password", { method: "POST" });
+      msg.textContent =
+        "If email is configured, a reset link has been sent — check your inbox.";
+      msg.classList.add("success");
     } catch (err) {
-      msg.textContent = 'Something went wrong. Please try again.';
-      msg.classList.remove('success');
+      msg.textContent = "Something went wrong. Please try again.";
+      msg.classList.remove("success");
     }
   });
 });
 
 let adminResetToken = null;
 
-const submitResetPasswordBtn = document.getElementById('submitResetPasswordBtn');
-submitResetPasswordBtn.addEventListener('click', () => {
-  const password = document.getElementById('resetNewPassword').value;
-  const confirmPassword = document.getElementById('resetConfirmPassword').value;
-  const msg = document.getElementById('resetPasswordMsg');
-  msg.classList.remove('success');
+const submitResetPasswordBtn = document.getElementById(
+  "submitResetPasswordBtn",
+);
+submitResetPasswordBtn.addEventListener("click", () => {
+  const password = document.getElementById("resetNewPassword").value;
+  const confirmPassword = document.getElementById("resetConfirmPassword").value;
+  const msg = document.getElementById("resetPasswordMsg");
+  msg.classList.remove("success");
 
   if (password.length < 8) {
-    msg.textContent = 'Password must be at least 8 characters.';
+    msg.textContent = "Password must be at least 8 characters.";
     return;
   }
   if (password !== confirmPassword) {
-    msg.textContent = 'Passwords do not match.';
+    msg.textContent = "Passwords do not match.";
     return;
   }
 
-  withButtonSpinner(submitResetPasswordBtn, 'Saving…', async () => {
+  withButtonSpinner(submitResetPasswordBtn, "Saving…", async () => {
     try {
-      const res = await fetch('/api/admin/reset-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: adminResetToken, password })
+      const res = await fetch("/api/admin/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: adminResetToken, password }),
       });
       const data = await res.json();
       if (!res.ok || data.error) {
-        msg.textContent = data.error || 'Could not reset the password.';
+        msg.textContent = data.error || "Could not reset the password.";
         return;
       }
-      msg.textContent = 'Password updated — you can log in now.';
-      msg.classList.add('success');
-      document.getElementById('resetNewPassword').value = '';
-      document.getElementById('resetConfirmPassword').value = '';
+      msg.textContent = "Password updated — you can log in now.";
+      msg.classList.add("success");
+      document.getElementById("resetNewPassword").value = "";
+      document.getElementById("resetConfirmPassword").value = "";
       setTimeout(() => {
-        setRole('admin');
-        showLoginCard('loginForm');
+        setRole("admin");
+        showLoginCard("loginForm");
       }, 1500);
     } catch (err) {
-      msg.textContent = 'Something went wrong. Please try again.';
+      msg.textContent = "Something went wrong. Please try again.";
     }
   });
 });
 
 async function checkSession() {
   try {
-    const res = await fetch('/api/whoami');
+    const res = await fetch("/api/whoami");
     const data = await res.json();
-    if (data.role === 'admin') {
+    if (data.role === "admin") {
       showAdminDashboard();
-    } else if (data.role === 'customer') {
-      showCustomerDashboard(data.businessName, data.renewalRequired, data.subscriptionPlans, data.upiId);
+    } else if (data.role === "customer") {
+      showCustomerDashboard(
+        data.businessName,
+        data.renewalRequired,
+        data.subscriptionPlans,
+        data.upiId,
+      );
     } else {
       showLogin();
     }
@@ -136,15 +160,15 @@ async function checkSession() {
 }
 
 function showLogin() {
-  document.getElementById('loginScreen').hidden = false;
-  document.getElementById('adminDashboard').hidden = true;
-  document.getElementById('customerDashboard').hidden = true;
+  document.getElementById("loginScreen").hidden = false;
+  document.getElementById("adminDashboard").hidden = true;
+  document.getElementById("customerDashboard").hidden = true;
 }
 
 function showAdminDashboard() {
-  document.getElementById('loginScreen').hidden = true;
-  document.getElementById('adminDashboard').hidden = false;
-  document.getElementById('customerDashboard').hidden = true;
+  document.getElementById("loginScreen").hidden = true;
+  document.getElementById("adminDashboard").hidden = false;
+  document.getElementById("customerDashboard").hidden = true;
   loadLeads();
   loadCustomers();
   loadTickets();
@@ -152,12 +176,18 @@ function showAdminDashboard() {
   loadRenewals();
 }
 
-function showCustomerDashboard(businessName, renewalRequired, subscriptionPlans, upiId) {
-  document.getElementById('loginScreen').hidden = true;
-  document.getElementById('adminDashboard').hidden = true;
-  document.getElementById('customerDashboard').hidden = false;
-  document.getElementById('customerHeaderName').textContent = businessName || '';
-  loggedInBusinessName = businessName || '';
+function showCustomerDashboard(
+  businessName,
+  renewalRequired,
+  subscriptionPlans,
+  upiId,
+) {
+  document.getElementById("loginScreen").hidden = true;
+  document.getElementById("adminDashboard").hidden = true;
+  document.getElementById("customerDashboard").hidden = false;
+  document.getElementById("customerHeaderName").textContent =
+    businessName || "";
+  loggedInBusinessName = businessName || "";
   customerUpiId = upiId || null; // used by the ticket-payment QR code below — falls back to the app default when unset
   renderSubscriptionBanner(renewalRequired, subscriptionPlans);
   // Lands on Home by default, but a deep link (?page=ticket, etc. —
@@ -170,33 +200,36 @@ function showCustomerDashboard(businessName, renewalRequired, subscriptionPlans,
 
 // Home / Tickets / Recommendation sub-tabs within the customer's own portal
 function setCustomerSubtab(name) {
-  document.querySelectorAll('[data-customer-subtab]').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.customerSubtab === name);
+  document.querySelectorAll("[data-customer-subtab]").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.customerSubtab === name);
   });
-  document.getElementById('customerSubtabHome').hidden = name !== 'home';
-  document.getElementById('customerSubtabTickets').hidden = name !== 'tickets';
-  document.getElementById('customerSubtabRecommendations').hidden = name !== 'recommendations';
+  document.getElementById("customerSubtabHome").hidden = name !== "home";
+  document.getElementById("customerSubtabTickets").hidden = name !== "tickets";
+  document.getElementById("customerSubtabRecommendations").hidden =
+    name !== "recommendations";
   // Always land back on each tab's own list, not wherever its detail view was left.
-  document.getElementById('custTicketListView').hidden = false;
-  document.getElementById('custTicketDetailView').hidden = true;
-  document.getElementById('custRecListView').hidden = false;
-  document.getElementById('custRecDetailView').hidden = true;
+  document.getElementById("custTicketListView").hidden = false;
+  document.getElementById("custTicketDetailView").hidden = true;
+  document.getElementById("custRecListView").hidden = false;
+  document.getElementById("custRecDetailView").hidden = true;
 }
-document.querySelectorAll('[data-customer-subtab]').forEach(btn => {
-  btn.addEventListener('click', () => setCustomerSubtab(btn.dataset.customerSubtab));
+document.querySelectorAll("[data-customer-subtab]").forEach((btn) => {
+  btn.addEventListener("click", () =>
+    setCustomerSubtab(btn.dataset.customerSubtab),
+  );
 });
 
 // Maps a ?page= URL value (singular/plural accepted) to the sub-tab it
 // should land on. Falls back to Home for anything unrecognized or absent.
 function mapPageParamToCustomerSubtab(page) {
   const map = {
-    home: 'home',
-    ticket: 'tickets',
-    tickets: 'tickets',
-    recommendation: 'recommendations',
-    recommendations: 'recommendations'
+    home: "home",
+    ticket: "tickets",
+    tickets: "tickets",
+    recommendation: "recommendations",
+    recommendations: "recommendations",
   };
-  return map[(page || '').toLowerCase()] || 'home';
+  return map[(page || "").toLowerCase()] || "home";
 }
 
 // Shows the "No active maintenance subscription" upsell banner + up to 3
@@ -204,68 +237,89 @@ function mapPageParamToCustomerSubtab(page) {
 // Renewal required checked — someone already on a renewal cycle doesn't
 // need to be sold a plan they're effectively already on.
 function renderSubscriptionBanner(renewalRequired, subscriptionPlans) {
-  const banner = document.getElementById('noSubscriptionBanner');
-  const plans = Array.isArray(subscriptionPlans) ? subscriptionPlans.filter(p => p && (p.price || (p.features || []).length)) : [];
+  const banner = document.getElementById("noSubscriptionBanner");
+  const plans = Array.isArray(subscriptionPlans)
+    ? subscriptionPlans.filter(
+        (p) => p && (p.price || (p.features || []).length),
+      )
+    : [];
 
   if (renewalRequired || plans.length === 0) {
     banner.hidden = true;
     return;
   }
 
-  document.getElementById('subPlanCards').innerHTML = plans.map(p => `
+  document.getElementById("subPlanCards").innerHTML = plans
+    .map(
+      (p) => `
     <div class="sub-plan-card">
       <p class="sub-plan-price">₹${escapeHtml(p.price)}<span>/month</span></p>
       <ul>
-        ${(p.features || []).map(f => `<li>${escapeHtml(f)}</li>`).join('')}
+        ${(p.features || []).map((f) => `<li>${escapeHtml(f)}</li>`).join("")}
       </ul>
     </div>
-  `).join('');
+  `,
+    )
+    .join("");
   banner.hidden = false;
 }
 
 // ===== Referral banner =====
-const REFERRAL_MESSAGE = "Hi! I've been using SitePragati for my business website — affordable, fast, with ordering and support built in. If you know a business that needs a website, tell them to check SitePragati out: https://sitepragati.in — I even get 6 months of free site maintenance for referring them!";
+const REFERRAL_MESSAGE =
+  "Hi! I've been using SitePragati for my business website — affordable, fast, with ordering and support built in. If you know a business that needs a website, tell them to check SitePragati out: https://sitepragati.in — I even get 6 months of free site maintenance for referring them!";
 
-document.getElementById('referralWhatsappBtn').addEventListener('click', () => {
-  window.open(`https://wa.me/?text=${encodeURIComponent(REFERRAL_MESSAGE)}`, '_blank');
+document.getElementById("referralWhatsappBtn").addEventListener("click", () => {
+  window.open(
+    `https://wa.me/?text=${encodeURIComponent(REFERRAL_MESSAGE)}`,
+    "_blank",
+  );
 });
 
-document.getElementById('referralCopyBtn').addEventListener('click', async (e) => {
-  const btn = e.currentTarget;
-  const original = btn.textContent;
-  try {
-    await navigator.clipboard.writeText(REFERRAL_MESSAGE);
-    btn.textContent = 'Copied!';
-  } catch (err) {
-    alert('Could not copy automatically — here\'s the message to share:\n\n' + REFERRAL_MESSAGE);
-  }
-  setTimeout(() => { btn.textContent = original; }, 2000);
-});
+document
+  .getElementById("referralCopyBtn")
+  .addEventListener("click", async (e) => {
+    const btn = e.currentTarget;
+    const original = btn.textContent;
+    try {
+      await navigator.clipboard.writeText(REFERRAL_MESSAGE);
+      btn.textContent = "Copied!";
+    } catch (err) {
+      alert(
+        "Could not copy automatically — here's the message to share:\n\n" +
+          REFERRAL_MESSAGE,
+      );
+    }
+    setTimeout(() => {
+      btn.textContent = original;
+    }, 2000);
+  });
 
-document.getElementById('loginForm').addEventListener('submit', async (e) => {
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const password = document.getElementById('password').value;
-  const errorEl = document.getElementById('loginError');
-  errorEl.textContent = '';
+  const password = document.getElementById("password").value;
+  const errorEl = document.getElementById("loginError");
+  errorEl.textContent = "";
 
-  const endpoint = loginRole === 'admin' ? '/api/admin/login' : '/api/customer/login';
-  const body = loginRole === 'admin'
-    ? { password }
-    : { email: document.getElementById('email').value, password };
+  const endpoint =
+    loginRole === "admin" ? "/api/admin/login" : "/api/customer/login";
+  const body =
+    loginRole === "admin"
+      ? { password }
+      : { email: document.getElementById("email").value, password };
 
   try {
     const res = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
     });
     const data = await res.json();
     if (!res.ok) {
-      errorEl.textContent = data.error || 'Login failed';
+      errorEl.textContent = data.error || "Login failed";
       return;
     }
-    document.getElementById('password').value = '';
-    if (loginRole === 'admin') {
+    document.getElementById("password").value = "";
+    if (loginRole === "admin") {
       showAdminDashboard();
     } else {
       // The login response only carries businessName — checkSession() calls
@@ -274,112 +328,150 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
       checkSession();
     }
   } catch (err) {
-    errorEl.textContent = 'Something went wrong. Please try again.';
+    errorEl.textContent = "Something went wrong. Please try again.";
   }
 });
 
-document.getElementById('adminLogoutBtn').addEventListener('click', async () => {
-  await fetch('/api/admin/logout', { method: 'POST' });
-  showLogin();
-});
+document
+  .getElementById("adminLogoutBtn")
+  .addEventListener("click", async () => {
+    await fetch("/api/admin/logout", { method: "POST" });
+    showLogin();
+  });
 
-document.getElementById('customerLogoutBtn').addEventListener('click', async () => {
-  await fetch('/api/customer/logout', { method: 'POST' });
-  showLogin();
-});
+document
+  .getElementById("customerLogoutBtn")
+  .addEventListener("click", async () => {
+    await fetch("/api/customer/logout", { method: "POST" });
+    showLogin();
+  });
 
 // ===== Admin dashboard =====
 
 // ===== Sidebar nav =====
-document.querySelectorAll('.sidebar-nav-item').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.sidebar-nav-item').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById(btn.dataset.tab + 'Tab').classList.add('active');
+document.querySelectorAll(".sidebar-nav-item").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document
+      .querySelectorAll(".sidebar-nav-item")
+      .forEach((b) => b.classList.remove("active"));
+    document
+      .querySelectorAll(".tab-panel")
+      .forEach((p) => p.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById(btn.dataset.tab + "Tab").classList.add("active");
   });
 });
 
 // ===== Leads =====
-const STATUS_OPTIONS = ['New', 'Contacted', 'In Progress', 'Converted', 'Lost'];
+const STATUS_OPTIONS = ["New", "Contacted", "In Progress", "Converted", "Lost"];
 // Cycled by row position to color each name avatar — purely decorative,
 // doesn't need to be stable per-lead across reloads.
-const LEAD_AVATAR_COLORS = ['#2F6F62', '#1B2544', '#C77F1F', '#B0453A', '#6D4AAE'];
+const LEAD_AVATAR_COLORS = [
+  "#2F6F62",
+  "#1B2544",
+  "#C77F1F",
+  "#B0453A",
+  "#6D4AAE",
+];
 
 function leadStatusClass(status) {
-  return 'lead-status-' + String(status || 'New').toLowerCase().replace(/\s+/g, '-');
+  return (
+    "lead-status-" +
+    String(status || "New")
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+  );
 }
 
 function leadInitials(name) {
   // Skip word-like tokens with no letter/number (e.g. the "-" in
   // "Demo - Prakruti Nursery") so a name in that shape still gets real
   // initials ("DP") instead of one letter and a stray dash.
-  const parts = String(name || '').trim().split(/\s+/).filter(w => /[a-zA-Z0-9]/.test(w));
-  const initials = (parts[0]?.[0] || '') + (parts[1]?.[0] || '');
-  return initials.toUpperCase() || '?';
+  const parts = String(name || "")
+    .trim()
+    .split(/\s+/)
+    .filter((w) => /[a-zA-Z0-9]/.test(w));
+  const initials = (parts[0]?.[0] || "") + (parts[1]?.[0] || "");
+  return initials.toUpperCase() || "?";
 }
 
 let leadsCache = [];
-let leadSearchTerm = '';
-let leadStatusFilter = ''; // '' = all — set by clicking a stat card
-let leadSortField = 'created_at';
-let leadSortDir = 'desc';
+let leadSearchTerm = "";
+let leadStatusFilter = ""; // '' = all — set by clicking a stat card
+let leadSortField = "created_at";
+let leadSortDir = "desc";
 
 async function loadLeads() {
-  const tbody = document.getElementById('leadsTableBody');
+  const tbody = document.getElementById("leadsTableBody");
   tbody.innerHTML = '<tr><td colspan="5" class="empty-note">Loading…</td></tr>';
 
   try {
-    const res = await fetch('/api/admin/leads');
+    const res = await fetch("/api/admin/leads");
     const data = await res.json();
     leadsCache = data.leads || [];
     computeLeadStats(leadsCache);
     renderLeadsTable();
   } catch (err) {
-    tbody.innerHTML = '<tr><td colspan="5" class="empty-note">Could not load leads.</td></tr>';
+    tbody.innerHTML =
+      '<tr><td colspan="5" class="empty-note">Could not load leads.</td></tr>';
   }
 }
 
 // The stat row always reflects every lead, regardless of the current
 // search term or status filter — same convention as the Customers tab.
 function computeLeadStats(leads) {
-  document.getElementById('leadStatTotal').textContent = leads.length;
-  document.getElementById('leadStatContacted').textContent = leads.filter(l => l.status === 'Contacted').length;
-  document.getElementById('leadStatInProgress').textContent = leads.filter(l => l.status === 'In Progress').length;
-  document.getElementById('leadStatConverted').textContent = leads.filter(l => l.status === 'Converted').length;
+  document.getElementById("leadStatTotal").textContent = leads.length;
+  document.getElementById("leadStatContacted").textContent = leads.filter(
+    (l) => l.status === "Contacted",
+  ).length;
+  document.getElementById("leadStatInProgress").textContent = leads.filter(
+    (l) => l.status === "In Progress",
+  ).length;
+  document.getElementById("leadStatConverted").textContent = leads.filter(
+    (l) => l.status === "Converted",
+  ).length;
 }
 
 function renderLeadsTable() {
-  const tbody = document.getElementById('leadsTableBody');
+  const tbody = document.getElementById("leadsTableBody");
 
   if (leadsCache.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" class="empty-note">No leads yet.</td></tr>';
+    tbody.innerHTML =
+      '<tr><td colspan="5" class="empty-note">No leads yet.</td></tr>';
     return;
   }
 
   const term = leadSearchTerm.trim().toLowerCase();
-  let rows = !term ? leadsCache : leadsCache.filter(l =>
-    [l.name, l.business, l.contact].some(v => v && String(v).toLowerCase().includes(term))
-  );
-  if (leadStatusFilter) rows = rows.filter(l => l.status === leadStatusFilter);
+  let rows = !term
+    ? leadsCache
+    : leadsCache.filter((l) =>
+        [l.name, l.business, l.contact].some(
+          (v) => v && String(v).toLowerCase().includes(term),
+        ),
+      );
+  if (leadStatusFilter)
+    rows = rows.filter((l) => l.status === leadStatusFilter);
 
   rows = rows.slice().sort((a, b) => {
-    const va = (a[leadSortField] ?? '').toString().toLowerCase();
-    const vb = (b[leadSortField] ?? '').toString().toLowerCase();
-    if (va < vb) return leadSortDir === 'asc' ? -1 : 1;
-    if (va > vb) return leadSortDir === 'asc' ? 1 : -1;
+    const va = (a[leadSortField] ?? "").toString().toLowerCase();
+    const vb = (b[leadSortField] ?? "").toString().toLowerCase();
+    if (va < vb) return leadSortDir === "asc" ? -1 : 1;
+    if (va > vb) return leadSortDir === "asc" ? 1 : -1;
     return 0;
   });
 
   if (rows.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" class="empty-note">No leads match your search.</td></tr>';
+    tbody.innerHTML =
+      '<tr><td colspan="5" class="empty-note">No leads match your search.</td></tr>';
     return;
   }
 
   // Business type, contact, and the full message now live on the lead's
   // own detail page (opened via View) instead of being crammed into the
   // table — same simplification already applied to Tickets/Customers.
-  tbody.innerHTML = rows.map((lead, i) => `
+  tbody.innerHTML = rows
+    .map(
+      (lead, i) => `
     <tr data-id="${lead.id}">
       <td>${escapeHtml(new Date(lead.created_at).toLocaleDateString())}</td>
       <td>
@@ -388,80 +480,86 @@ function renderLeadsTable() {
           ${escapeHtml(lead.name)}
         </span>
       </td>
-      <td>${escapeHtml(lead.business || '-')}</td>
+      <td>${escapeHtml(lead.business || "-")}</td>
       <td>
         <select class="lead-status-select ${leadStatusClass(lead.status)}" data-id="${lead.id}">
-          ${STATUS_OPTIONS.map(s => `<option value="${s}" ${s === lead.status ? 'selected' : ''}>${s}</option>`).join('')}
+          ${STATUS_OPTIONS.map((s) => `<option value="${s}" ${s === lead.status ? "selected" : ""}>${s}</option>`).join("")}
         </select>
       </td>
       <td class="actions-col">
         <button type="button" class="btn btn-outline btn-small" data-view-lead="${lead.id}">👁 View</button>
       </td>
     </tr>
-  `).join('');
+  `,
+    )
+    .join("");
 
-  tbody.querySelectorAll('.lead-status-select').forEach(select => {
-    select.addEventListener('change', () => {
-      select.className = 'lead-status-select ' + leadStatusClass(select.value);
+  tbody.querySelectorAll(".lead-status-select").forEach((select) => {
+    select.addEventListener("change", () => {
+      select.className = "lead-status-select " + leadStatusClass(select.value);
       updateLeadStatus(select.dataset.id, select.value);
     });
   });
-  tbody.querySelectorAll('[data-view-lead]').forEach(btn => {
-    btn.addEventListener('click', () => openLeadDetail(btn.dataset.viewLead));
+  tbody.querySelectorAll("[data-view-lead]").forEach((btn) => {
+    btn.addEventListener("click", () => openLeadDetail(btn.dataset.viewLead));
   });
 }
 
-document.getElementById('leadSearchInput').addEventListener('input', (e) => {
+document.getElementById("leadSearchInput").addEventListener("input", (e) => {
   leadSearchTerm = e.target.value;
   renderLeadsTable();
 });
 
-document.querySelectorAll('.lead-stat-card').forEach(card => {
-  card.addEventListener('click', () => {
+document.querySelectorAll(".lead-stat-card").forEach((card) => {
+  card.addEventListener("click", () => {
     leadStatusFilter = card.dataset.leadFilter;
-    document.querySelectorAll('.lead-stat-card').forEach(c => c.classList.toggle('active', c === card));
+    document
+      .querySelectorAll(".lead-stat-card")
+      .forEach((c) => c.classList.toggle("active", c === card));
     renderLeadsTable();
   });
 });
 
-document.querySelectorAll('#leadsTable .sortable-th').forEach(th => {
-  th.addEventListener('click', () => {
+document.querySelectorAll("#leadsTable .sortable-th").forEach((th) => {
+  th.addEventListener("click", () => {
     const field = th.dataset.sortField;
     if (leadSortField === field) {
-      leadSortDir = leadSortDir === 'asc' ? 'desc' : 'asc';
+      leadSortDir = leadSortDir === "asc" ? "desc" : "asc";
     } else {
       leadSortField = field;
-      leadSortDir = 'asc';
+      leadSortDir = "asc";
     }
-    document.querySelectorAll('#leadsTable .sortable-th').forEach(h => h.classList.toggle('sorted', h === th));
+    document
+      .querySelectorAll("#leadsTable .sortable-th")
+      .forEach((h) => h.classList.toggle("sorted", h === th));
     renderLeadsTable();
   });
 });
 
 async function updateLeadStatus(id, status) {
-  await fetch('/api/admin/leads', {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id: Number(id), status })
+  await fetch("/api/admin/leads", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id: Number(id), status }),
   });
-  const lead = leadsCache.find(l => String(l.id) === String(id));
+  const lead = leadsCache.find((l) => String(l.id) === String(id));
   if (lead) lead.status = status;
   computeLeadStats(leadsCache);
 }
 
 async function deleteLead(id) {
-  if (!confirm('Delete this lead? This cannot be undone.')) return;
-  await fetch('/api/admin/leads', {
-    method: 'DELETE',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id: Number(id) })
+  if (!confirm("Delete this lead? This cannot be undone.")) return;
+  await fetch("/api/admin/leads", {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id: Number(id) }),
   });
   loadLeads();
 
   // Deleted from its own detail page — nothing left there to show, so go back to the list.
   if (String(currentLeadDetailId) === String(id)) {
-    document.getElementById('leadDetailView').hidden = true;
-    document.getElementById('leadsListView').hidden = false;
+    document.getElementById("leadDetailView").hidden = true;
+    document.getElementById("leadsListView").hidden = false;
     currentLeadDetailId = null;
   }
 }
@@ -471,42 +569,47 @@ let currentLeadDetailId = null;
 
 function openLeadDetail(id) {
   currentLeadDetailId = id;
-  const lead = leadsCache.find(x => String(x.id) === String(id));
+  const lead = leadsCache.find((x) => String(x.id) === String(id));
   if (!lead) return;
 
-  document.getElementById('leadsListView').hidden = true;
-  document.getElementById('leadDetailView').hidden = false;
+  document.getElementById("leadsListView").hidden = true;
+  document.getElementById("leadDetailView").hidden = false;
 
   renderLeadDetailInfo(lead);
 }
 
 function renderLeadDetailInfo(lead) {
-  document.getElementById('leadDetailInfo').innerHTML = `
+  document.getElementById("leadDetailInfo").innerHTML = `
     <h3>${escapeHtml(lead.name)}</h3>
-    <p>${escapeHtml(lead.business || '')} ${lead.business_type ? `<span class="type-pill">${escapeHtml(lead.business_type)}</span>` : ''}</p>
-    <p>${escapeHtml(lead.contact || '')}</p>
+    <p>${escapeHtml(lead.business || "")} ${lead.business_type ? `<span class="type-pill">${escapeHtml(lead.business_type)}</span>` : ""}</p>
+    <p>${escapeHtml(lead.contact || "")}</p>
     <p class="ticket-date">Raised: ${escapeHtml(new Date(lead.created_at).toLocaleDateString())}</p>
-    ${lead.message ? `<p style="white-space:pre-wrap; margin-top:10px;">${escapeHtml(lead.message)}</p>` : ''}
+    ${lead.message ? `<p style="white-space:pre-wrap; margin-top:10px;">${escapeHtml(lead.message)}</p>` : ""}
   `;
 
-  const statusSelect = document.getElementById('leadDetailStatus');
-  statusSelect.innerHTML = STATUS_OPTIONS.map(s =>
-    `<option value="${s}" ${s === lead.status ? 'selected' : ''}>${s}</option>`
-  ).join('');
+  const statusSelect = document.getElementById("leadDetailStatus");
+  statusSelect.innerHTML = STATUS_OPTIONS.map(
+    (s) =>
+      `<option value="${s}" ${s === lead.status ? "selected" : ""}>${s}</option>`,
+  ).join("");
 
-  const wrap = document.getElementById('leadDetailActions');
-  wrap.innerHTML = `${editButtonHtml('data-edit-lead', lead.id, 'Edit')}${deleteButtonHtml('data-delete-lead', lead.id, 'Delete')}`;
-  wrap.querySelector('[data-edit-lead]').addEventListener('click', () => openLeadModal(lead.id));
-  wrap.querySelector('[data-delete-lead]').addEventListener('click', () => deleteLead(lead.id));
+  const wrap = document.getElementById("leadDetailActions");
+  wrap.innerHTML = `${editButtonHtml("data-edit-lead", lead.id, "Edit")}${deleteButtonHtml("data-delete-lead", lead.id, "Delete")}`;
+  wrap
+    .querySelector("[data-edit-lead]")
+    .addEventListener("click", () => openLeadModal(lead.id));
+  wrap
+    .querySelector("[data-delete-lead]")
+    .addEventListener("click", () => deleteLead(lead.id));
 }
 
-document.getElementById('backToLeadsBtn').addEventListener('click', () => {
-  document.getElementById('leadDetailView').hidden = true;
-  document.getElementById('leadsListView').hidden = false;
+document.getElementById("backToLeadsBtn").addEventListener("click", () => {
+  document.getElementById("leadDetailView").hidden = true;
+  document.getElementById("leadsListView").hidden = false;
   currentLeadDetailId = null;
 });
 
-document.getElementById('leadDetailStatus').addEventListener('change', (e) => {
+document.getElementById("leadDetailStatus").addEventListener("change", (e) => {
   updateLeadStatus(currentLeadDetailId, e.target.value);
 });
 
@@ -516,10 +619,18 @@ document.getElementById('leadDetailStatus').addEventListener('change', (e) => {
 // set title) and save/cancel logic — this just handles show/hide plumbing.
 function makeModal(overlayId) {
   const overlay = document.getElementById(overlayId);
-  function show() { overlay.hidden = false; }
-  function hide() { overlay.hidden = true; }
-  overlay.addEventListener('click', (e) => { if (e.target === overlay) hide(); });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !overlay.hidden) hide(); });
+  function show() {
+    overlay.hidden = false;
+  }
+  function hide() {
+    overlay.hidden = true;
+  }
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) hide();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !overlay.hidden) hide();
+  });
   return { show, hide };
 }
 
@@ -538,29 +649,33 @@ async function withButtonSpinner(btn, busyLabel, fn) {
   }
 }
 
-const leadModal = makeModal('leadModalOverlay');
+const leadModal = makeModal("leadModalOverlay");
 const leadFields = {
-  id: document.getElementById('leadId'),
-  name: document.getElementById('leadName'),
-  business: document.getElementById('leadBusiness'),
-  business_type: document.getElementById('leadBusinessType'),
-  contact: document.getElementById('leadContact'),
-  status: document.getElementById('leadStatus'),
-  message: document.getElementById('leadMessage')
+  id: document.getElementById("leadId"),
+  name: document.getElementById("leadName"),
+  business: document.getElementById("leadBusiness"),
+  business_type: document.getElementById("leadBusinessType"),
+  contact: document.getElementById("leadContact"),
+  status: document.getElementById("leadStatus"),
+  message: document.getElementById("leadMessage"),
 };
 
 function clearLeadForm() {
-  Object.entries(leadFields).forEach(([key, el]) => { el.value = key === 'status' ? 'New' : ''; });
+  Object.entries(leadFields).forEach(([key, el]) => {
+    el.value = key === "status" ? "New" : "";
+  });
 }
 
 function openLeadModal(id) {
   clearLeadForm();
-  document.getElementById('leadModalTitle').textContent = id ? 'Edit lead' : 'Add lead';
+  document.getElementById("leadModalTitle").textContent = id
+    ? "Edit lead"
+    : "Add lead";
 
   if (id) {
-    const lead = leadsCache.find(x => String(x.id) === String(id));
+    const lead = leadsCache.find((x) => String(x.id) === String(id));
     if (lead) {
-      Object.keys(leadFields).forEach(key => {
+      Object.keys(leadFields).forEach((key) => {
         if (lead[key] != null) leadFields[key].value = lead[key];
       });
     }
@@ -570,40 +685,44 @@ function openLeadModal(id) {
   leadFields.name.focus();
 }
 
-document.getElementById('addLeadBtn').addEventListener('click', () => openLeadModal(null));
-document.getElementById('leadCancelBtn').addEventListener('click', () => {
+document
+  .getElementById("addLeadBtn")
+  .addEventListener("click", () => openLeadModal(null));
+document.getElementById("leadCancelBtn").addEventListener("click", () => {
   leadModal.hide();
   clearLeadForm();
 });
-document.getElementById('leadModalCloseBtn').addEventListener('click', () => {
+document.getElementById("leadModalCloseBtn").addEventListener("click", () => {
   leadModal.hide();
   clearLeadForm();
 });
 
-const leadSaveBtn = document.getElementById('leadSaveBtn');
-leadSaveBtn.addEventListener('click', () => {
+const leadSaveBtn = document.getElementById("leadSaveBtn");
+leadSaveBtn.addEventListener("click", () => {
   const payload = {};
-  Object.entries(leadFields).forEach(([key, el]) => { payload[key] = el.value; });
+  Object.entries(leadFields).forEach(([key, el]) => {
+    payload[key] = el.value;
+  });
 
   if (!payload.name.trim()) {
-    alert('Name is required.');
+    alert("Name is required.");
     return;
   }
 
   const isEdit = !!payload.id;
-  const method = isEdit ? 'PUT' : 'POST';
+  const method = isEdit ? "PUT" : "POST";
   if (!isEdit) delete payload.id;
 
-  withButtonSpinner(leadSaveBtn, 'Saving…', async () => {
+  withButtonSpinner(leadSaveBtn, "Saving…", async () => {
     try {
-      const res = await fetch('/api/admin/leads', {
+      const res = await fetch("/api/admin/leads", {
         method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok || data.error) {
-        alert('Error: ' + (data.error || 'Could not save'));
+        alert("Error: " + (data.error || "Could not save"));
         return;
       }
       leadModal.hide();
@@ -611,30 +730,40 @@ leadSaveBtn.addEventListener('click', () => {
       await loadLeads();
       // Keep the open detail page (if any) in sync with what was just saved.
       if (currentLeadDetailId) {
-        const updated = leadsCache.find(x => String(x.id) === String(currentLeadDetailId));
+        const updated = leadsCache.find(
+          (x) => String(x.id) === String(currentLeadDetailId),
+        );
         if (updated) renderLeadDetailInfo(updated);
       }
     } catch (err) {
-      alert('Something went wrong saving this lead.');
+      alert("Something went wrong saving this lead.");
     }
   });
 });
 
 // ===== Customers =====
 
-// Builds the "Raise a Request" link customers put on their own website,
-// or shows a note that one isn't available yet (unique_id is only
-// generated once a customer has been saved at least once).
+// Builds a one-click portal login link (?role=customer&page=ticket&
+// email=&pw=) using this customer's current email/password, or a note
+// explaining how to get one if it doesn't have one yet. Replaces what
+// used to be the public "Raise a Request" link here — that link (for a
+// customer's own website) is still generated elsewhere from unique_id,
+// just no longer surfaced on this screen.
 function requestLinkBlockHtml(customer) {
-  if (!customer.unique_id) {
-    return `<p class="unique-id">ID: not yet assigned — edit and save to generate</p>`;
+  const idLine = customer.unique_id
+    ? `<p class="unique-id">ID: ${escapeHtml(customer.unique_id)}</p>`
+    : "";
+
+  if (!customer.quick_login_password || !customer.email) {
+    return `${idLine}<p class="unique-id">No quick login link yet — use "🔗 Generate quick login links" above the customer list, or "Send login email" below.</p>`;
   }
-  const url = `${window.location.origin}/raise-request?customerId=${encodeURIComponent(customer.unique_id)}`;
+
+  const url = `${window.location.origin}/portal?role=customer&page=ticket&email=${encodeURIComponent(customer.email)}&pw=${encodeURIComponent(customer.quick_login_password)}`;
   return `
-    <p class="unique-id">ID: ${escapeHtml(customer.unique_id)}</p>
+    ${idLine}
     <p class="request-link-row">
       <input type="text" class="request-link-field" value="${escapeHtml(url)}" readonly>
-      <button type="button" class="btn btn-outline btn-small" data-copy-link="${escapeHtml(url)}">Copy request link</button>
+      <button type="button" class="btn btn-outline btn-small" data-copy-link="${escapeHtml(url)}">Copy quick login link</button>
     </p>`;
 }
 
@@ -642,24 +771,34 @@ function requestLinkBlockHtml(customer) {
 // console, so you don't have to dig through old emails to find them.
 function customerLinksBlockHtml(c) {
   const links = [];
-  if (c.website_url) links.push(`<a href="${escapeHtml(c.website_url)}" target="_blank" rel="noopener">🌐 Website</a>`);
-  if (c.admin_console_url) links.push(`<a href="${escapeHtml(c.admin_console_url)}" target="_blank" rel="noopener">🔧 Admin console</a>`);
-  if (links.length === 0) return '';
-  return `<p class="customer-links">${links.join(' &nbsp;·&nbsp; ')}</p>`;
+  if (c.website_url)
+    links.push(
+      `<a href="${escapeHtml(c.website_url)}" target="_blank" rel="noopener">🌐 Website</a>`,
+    );
+  if (c.admin_console_url)
+    links.push(
+      `<a href="${escapeHtml(c.admin_console_url)}" target="_blank" rel="noopener">🔧 Admin console</a>`,
+    );
+  if (links.length === 0) return "";
+  return `<p class="customer-links">${links.join(" &nbsp;·&nbsp; ")}</p>`;
 }
 
 function wireCopyLinkButtons(root) {
-  root.querySelectorAll('[data-copy-link]').forEach(btn => {
-    btn.addEventListener('click', async () => {
+  root.querySelectorAll("[data-copy-link]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
       const url = btn.dataset.copyLink;
       const original = btn.textContent;
       try {
         await navigator.clipboard.writeText(url);
-        btn.textContent = 'Copied!';
+        btn.textContent = "Copied!";
       } catch (err) {
-        alert('Could not copy automatically — here\'s the link to share:\n\n' + url);
+        alert(
+          "Could not copy automatically — here's the link to share:\n\n" + url,
+        );
       }
-      setTimeout(() => { btn.textContent = original; }, 2000);
+      setTimeout(() => {
+        btn.textContent = original;
+      }, 2000);
     });
   });
 }
@@ -672,22 +811,25 @@ let currentCustomerId = null;
 let showActualCustomersOnly = true;
 
 function actualCustomerFiltered(list) {
-  return showActualCustomersOnly ? list.filter(c => c.is_actual_customer) : list;
+  return showActualCustomersOnly
+    ? list.filter((c) => c.is_actual_customer)
+    : list;
 }
 
 async function loadCustomers() {
-  const tbody = document.getElementById('customersTableBody');
+  const tbody = document.getElementById("customersTableBody");
   tbody.innerHTML = '<tr><td colspan="5" class="empty-note">Loading…</td></tr>';
 
   try {
-    const res = await fetch('/api/admin/customers');
+    const res = await fetch("/api/admin/customers");
     const data = await res.json();
     customersCache = data.customers || [];
     computeCustomerStats(actualCustomerFiltered(customersCache));
     populateTicketCustomerFilter(); // keep the Tickets tab's customer filter in sync
     filterCustomers(); // re-render, keeping whatever search term is already typed in
   } catch (err) {
-    tbody.innerHTML = '<tr><td colspan="5" class="empty-note">Could not load customers.</td></tr>';
+    tbody.innerHTML =
+      '<tr><td colspan="5" class="empty-note">Could not load customers.</td></tr>';
   }
 }
 
@@ -697,13 +839,21 @@ async function loadCustomers() {
 // this app yet (there's no way to deactivate a customer short of
 // deleting them), so it mirrors the total.
 function computeCustomerStats(customers) {
-  const totalPaid = customers.reduce((sum, c) => sum + Number(c.total_paid || 0), 0);
-  const totalPending = customers.reduce((sum, c) => sum + Number(c.total_pending || 0), 0);
+  const totalPaid = customers.reduce(
+    (sum, c) => sum + Number(c.total_paid || 0),
+    0,
+  );
+  const totalPending = customers.reduce(
+    (sum, c) => sum + Number(c.total_pending || 0),
+    0,
+  );
 
-  document.getElementById('custStatTotal').textContent = customers.length;
-  document.getElementById('custStatActive').textContent = customers.length;
-  document.getElementById('custStatPaid').textContent = '₹' + totalPaid.toLocaleString('en-IN');
-  document.getElementById('custStatPending').textContent = '₹' + totalPending.toLocaleString('en-IN');
+  document.getElementById("custStatTotal").textContent = customers.length;
+  document.getElementById("custStatActive").textContent = customers.length;
+  document.getElementById("custStatPaid").textContent =
+    "₹" + totalPaid.toLocaleString("en-IN");
+  document.getElementById("custStatPending").textContent =
+    "₹" + totalPending.toLocaleString("en-IN");
 }
 
 // Matches the Tickets tab's table row style — just enough to identify
@@ -720,8 +870,8 @@ function customerRowHtml(c, i) {
           ${escapeHtml(c.business_name)}
         </span>
       </td>
-      <td>${escapeHtml(c.contact_name || '')}</td>
-      <td><span class="status-pill ${isPending ? 'status-pill-pending' : 'status-pill-paid'}">${isPending ? 'Pending' : 'Paid'}</span></td>
+      <td>${escapeHtml(c.contact_name || "")}</td>
+      <td><span class="status-pill ${isPending ? "status-pill-pending" : "status-pill-paid"}">${isPending ? "Pending" : "Paid"}</span></td>
       <td class="actions-col">
         <button type="button" class="btn btn-outline btn-small" data-view-cust="${c.id}">👁 View</button>
       </td>
@@ -729,71 +879,59 @@ function customerRowHtml(c, i) {
 }
 
 function wireCustomerRowClicks(container) {
-  container.querySelectorAll('.clickable-row').forEach(row => {
-    row.addEventListener('click', () => openCustomerDetail(row.dataset.customerId));
+  container.querySelectorAll(".clickable-row").forEach((row) => {
+    row.addEventListener("click", () =>
+      openCustomerDetail(row.dataset.customerId),
+    );
   });
-  container.querySelectorAll('[data-view-cust]').forEach(btn => {
-    btn.addEventListener('click', (e) => { e.stopPropagation(); openCustomerDetail(btn.dataset.viewCust); });
+  container.querySelectorAll("[data-view-cust]").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      openCustomerDetail(btn.dataset.viewCust);
+    });
   });
 }
 
 function renderCustomersList(customers) {
-  const tbody = document.getElementById('customersTableBody');
+  const tbody = document.getElementById("customersTableBody");
 
   if (customersCache.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" class="empty-note">No customers yet.</td></tr>';
+    tbody.innerHTML =
+      '<tr><td colspan="5" class="empty-note">No customers yet.</td></tr>';
     return;
   }
   if (customers.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" class="empty-note">No customers match your search or filters.</td></tr>';
+    tbody.innerHTML =
+      '<tr><td colspan="5" class="empty-note">No customers match your search or filters.</td></tr>';
     return;
   }
 
-  tbody.innerHTML = customers.map(customerRowHtml).join('');
+  tbody.innerHTML = customers.map(customerRowHtml).join("");
   wireCustomerRowClicks(tbody);
 }
 
 // Send login email / Edit / Delete — moved off the list card onto the
 // customer's own detail page, since that's reached via View now anyway.
 function renderCustomerDetailActions(c) {
-  const wrap = document.getElementById('customerDetailActions');
+  const wrap = document.getElementById("customerDetailActions");
   wrap.innerHTML = `
-    ${c.email ? `<button class="btn btn-outline btn-small btn-icon-label" data-send-creds="${c.id}" aria-label="Send login email" title="Email portal login credentials">${SEND_ICON_SVG}<span>Send login email</span></button>` : ''}
-    ${c.email ? `<button class="btn btn-outline btn-small btn-icon-label" data-send-invoice="${c.id}" aria-label="Send invoice" title="Email an invoice with payment instructions">${SEND_ICON_SVG}<span>Send invoice</span></button>` : ''}
-    ${editButtonHtml('data-edit-cust', c.id, 'Edit')}
-    ${deleteButtonHtml('data-delete-cust', c.id, 'Delete')}
+    ${c.email ? `<button class="btn btn-outline btn-small btn-icon-label" data-send-creds="${c.id}" aria-label="Send login email" title="Email portal login credentials">${SEND_ICON_SVG}<span>Send login email</span></button>` : ""}
+    ${c.email ? `<button class="btn btn-outline btn-small btn-icon-label" data-send-invoice="${c.id}" aria-label="Send invoice" title="Email an invoice with payment instructions">${SEND_ICON_SVG}<span>Send invoice</span></button>` : ""}
+    ${editButtonHtml("data-edit-cust", c.id, "Edit")}
+    ${deleteButtonHtml("data-delete-cust", c.id, "Delete")}
   `;
-  const sendBtn = wrap.querySelector('[data-send-creds]');
-  if (sendBtn) sendBtn.addEventListener('click', () => sendCustomerCredentials(sendBtn));
-  const invoiceBtn = wrap.querySelector('[data-send-invoice]');
-  if (invoiceBtn) invoiceBtn.addEventListener('click', () => openInvoiceModal(c));
-  wrap.querySelector('[data-edit-cust]').addEventListener('click', () => openCustomerForm(c.id));
-  wrap.querySelector('[data-delete-cust]').addEventListener('click', () => deleteCustomer(c.id));
-}
-
-// Resets the customer's portal password to a new random one and emails
-// them the portal URL + login email + new password. A confirm() gate
-// since it invalidates whatever password they're already using.
-async function sendCustomerCredentials(btn) {
-  if (!confirm('Send this customer a new portal login password by email? Their current password will stop working.')) return;
-  const id = btn.dataset.sendCreds;
-  await withButtonSpinner(btn, 'Sending…', async () => {
-    try {
-      const res = await fetch('/api/admin/send-customer-credentials', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ customerId: Number(id) })
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        alert(data.error || 'Could not send the login email.');
-        return;
-      }
-      alert('Login credentials emailed to the customer.');
-    } catch (err) {
-      alert('Something went wrong sending the login email.');
-    }
-  });
+  const sendBtn = wrap.querySelector("[data-send-creds]");
+  if (sendBtn)
+    sendBtn.addEventListener("click", () => sendCustomerCredentials(sendBtn));
+  const invoiceBtn = wrap.querySelector("[data-send-invoice]");
+  if (invoiceBtn)
+    invoiceBtn.addEventListener("click", () => openInvoiceModal(c));
+  wrap
+    .querySelector("[data-edit-cust]")
+    .addEventListener("click", () => openCustomerForm(c.id));
+  wrap
+    .querySelector("[data-delete-cust]")
+    .addEventListener("click", () => deleteCustomer(c.id));
 }
 
 // ===== Send invoice =====
@@ -801,8 +939,10 @@ async function sendCustomerCredentials(btn) {
 // whether to invoice an existing Pending/Overdue transaction as-is, or a
 // fresh amount typed on the spot — then shows the matching step inside
 // the same modal. Nothing is recorded on send; it's just an email.
-const invoiceModal = makeModal('invoiceModalOverlay');
-document.getElementById('invoiceModalCloseBtn').addEventListener('click', () => invoiceModal.hide());
+const invoiceModal = makeModal("invoiceModalOverlay");
+document
+  .getElementById("invoiceModalCloseBtn")
+  .addEventListener("click", () => invoiceModal.hide());
 
 function openInvoiceModal(customer) {
   renderInvoiceChoiceStep(customer);
@@ -810,7 +950,7 @@ function openInvoiceModal(customer) {
 }
 
 function renderInvoiceChoiceStep(customer) {
-  const body = document.getElementById('invoiceModalBody');
+  const body = document.getElementById("invoiceModalBody");
   body.innerHTML = `
     <p>Invoice ${escapeHtml(customer.business_name)} for:</p>
     <div class="cs-form-actions">
@@ -818,8 +958,12 @@ function renderInvoiceChoiceStep(customer) {
       <button type="button" id="invoiceChooseNewBtn" class="btn btn-outline">A new invoice</button>
     </div>
   `;
-  document.getElementById('invoiceChooseOutstandingBtn').addEventListener('click', () => renderInvoiceOutstandingStep(customer));
-  document.getElementById('invoiceChooseNewBtn').addEventListener('click', () => renderInvoiceNewStep(customer));
+  document
+    .getElementById("invoiceChooseOutstandingBtn")
+    .addEventListener("click", () => renderInvoiceOutstandingStep(customer));
+  document
+    .getElementById("invoiceChooseNewBtn")
+    .addEventListener("click", () => renderInvoiceNewStep(customer));
 }
 
 function invoiceBackLinkHtml() {
@@ -827,8 +971,10 @@ function invoiceBackLinkHtml() {
 }
 
 function renderInvoiceOutstandingStep(customer) {
-  const body = document.getElementById('invoiceModalBody');
-  const outstanding = transactionsCache.filter(t => t.status === 'Pending' || t.status === 'Overdue');
+  const body = document.getElementById("invoiceModalBody");
+  const outstanding = transactionsCache.filter(
+    (t) => t.status === "Pending" || t.status === "Overdue",
+  );
 
   if (!outstanding.length) {
     body.innerHTML = `
@@ -837,26 +983,37 @@ function renderInvoiceOutstandingStep(customer) {
   } else {
     body.innerHTML = `
       ${invoiceBackLinkHtml()}
-      ${outstanding.map(t => `
+      ${outstanding
+        .map(
+          (t) => `
         <div class="cs-card">
           <div class="cs-card-info">
-            <h3>₹${escapeHtml(Number(t.amount).toLocaleString('en-IN'))} &middot; ${escapeHtml(t.status)}</h3>
-            <p>${escapeHtml(t.description || '')}</p>
+            <h3>₹${escapeHtml(Number(t.amount).toLocaleString("en-IN"))} &middot; ${escapeHtml(t.status)}</h3>
+            <p>${escapeHtml(t.description || "")}</p>
           </div>
           <div class="cs-card-actions">
             <button type="button" class="btn btn-primary btn-small" data-send-invoice-txn="${t.id}">Send</button>
           </div>
-        </div>`).join('')}
+        </div>`,
+        )
+        .join("")}
     `;
-    body.querySelectorAll('[data-send-invoice-txn]').forEach(btn => {
-      btn.addEventListener('click', () => sendInvoiceRequest(btn, { customerId: customer.id, transactionId: Number(btn.dataset.sendInvoiceTxn) }));
+    body.querySelectorAll("[data-send-invoice-txn]").forEach((btn) => {
+      btn.addEventListener("click", () =>
+        sendInvoiceRequest(btn, {
+          customerId: customer.id,
+          transactionId: Number(btn.dataset.sendInvoiceTxn),
+        }),
+      );
     });
   }
-  document.getElementById('invoiceBackBtn').addEventListener('click', () => renderInvoiceChoiceStep(customer));
+  document
+    .getElementById("invoiceBackBtn")
+    .addEventListener("click", () => renderInvoiceChoiceStep(customer));
 }
 
 function renderInvoiceNewStep(customer) {
-  const body = document.getElementById('invoiceModalBody');
+  const body = document.getElementById("invoiceModalBody");
   body.innerHTML = `
     ${invoiceBackLinkHtml()}
     <label for="invoiceAmount">Amount (₹)</label>
@@ -867,12 +1024,16 @@ function renderInvoiceNewStep(customer) {
       <button type="button" id="invoiceSendNewBtn" class="btn btn-primary">Send invoice</button>
     </div>
   `;
-  document.getElementById('invoiceBackBtn').addEventListener('click', () => renderInvoiceChoiceStep(customer));
-  document.getElementById('invoiceSendNewBtn').addEventListener('click', (e) => {
-    const amount = Number(document.getElementById('invoiceAmount').value);
-    const description = document.getElementById('invoiceDescription').value.trim();
+  document
+    .getElementById("invoiceBackBtn")
+    .addEventListener("click", () => renderInvoiceChoiceStep(customer));
+  document.getElementById("invoiceSendNewBtn").addEventListener("click", (e) => {
+    const amount = Number(document.getElementById("invoiceAmount").value);
+    const description = document
+      .getElementById("invoiceDescription")
+      .value.trim();
     if (!amount || amount <= 0) {
-      alert('Enter a valid amount.');
+      alert("Enter a valid amount.");
       return;
     }
     sendInvoiceRequest(e.target, { customerId: customer.id, amount, description });
@@ -880,22 +1041,52 @@ function renderInvoiceNewStep(customer) {
 }
 
 async function sendInvoiceRequest(btn, payload) {
-  await withButtonSpinner(btn, 'Sending…', async () => {
+  await withButtonSpinner(btn, "Sending…", async () => {
     try {
-      const res = await fetch('/api/admin/send-invoice', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+      const res = await fetch("/api/admin/send-invoice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok) {
-        alert(data.error || 'Could not send the invoice.');
+        alert(data.error || "Could not send the invoice.");
         return;
       }
       invoiceModal.hide();
-      alert('Invoice emailed to the customer.');
+      alert("Invoice emailed to the customer.");
     } catch (err) {
-      alert('Something went wrong sending the invoice.');
+      alert("Something went wrong sending the invoice.");
+    }
+  });
+}
+
+// Resets the customer's portal password to a new random one and emails
+// them the portal URL + login email + new password. A confirm() gate
+// since it invalidates whatever password they're already using.
+async function sendCustomerCredentials(btn) {
+  if (
+    !confirm(
+      "Send this customer a new portal login password by email? Their current password will stop working.",
+    )
+  )
+    return;
+  const id = btn.dataset.sendCreds;
+  await withButtonSpinner(btn, "Sending…", async () => {
+    try {
+      const res = await fetch("/api/admin/send-customer-credentials", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ customerId: Number(id) }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || "Could not send the login email.");
+        return;
+      }
+      alert("Login credentials emailed to the customer.");
+    } catch (err) {
+      alert("Something went wrong sending the login email.");
     }
   });
 }
@@ -905,87 +1096,117 @@ async function sendInvoiceRequest(btn, payload) {
 // to the server for something this small. Layers on top of whichever
 // actual-customer toggle state is active.
 function filterCustomers() {
-  const term = document.getElementById('customerSearchInput').value.trim().toLowerCase();
+  const term = document
+    .getElementById("customerSearchInput")
+    .value.trim()
+    .toLowerCase();
   const base = actualCustomerFiltered(customersCache);
-  const filtered = !term ? base : base.filter(c =>
-    [c.business_name, c.contact_name, c.phone, c.email].some(v => v && String(v).toLowerCase().includes(term))
-  );
+  const filtered = !term
+    ? base
+    : base.filter((c) =>
+        [c.business_name, c.contact_name, c.phone, c.email].some(
+          (v) => v && String(v).toLowerCase().includes(term),
+        ),
+      );
   renderCustomersList(filtered);
 }
 
-document.getElementById('customerSearchInput').addEventListener('input', filterCustomers);
+document
+  .getElementById("customerSearchInput")
+  .addEventListener("input", filterCustomers);
 
-const actualCustomerToggleBtn = document.getElementById('actualCustomerToggle');
-actualCustomerToggleBtn.addEventListener('click', () => {
+const actualCustomerToggleBtn = document.getElementById("actualCustomerToggle");
+actualCustomerToggleBtn.addEventListener("click", () => {
   showActualCustomersOnly = !showActualCustomersOnly;
-  actualCustomerToggleBtn.classList.toggle('active', showActualCustomersOnly);
-  actualCustomerToggleBtn.setAttribute('aria-pressed', String(showActualCustomersOnly));
-  actualCustomerToggleBtn.textContent = showActualCustomersOnly ? '✓ Actual Customers' : 'Showing All Customers';
+  actualCustomerToggleBtn.classList.toggle("active", showActualCustomersOnly);
+  actualCustomerToggleBtn.setAttribute(
+    "aria-pressed",
+    String(showActualCustomersOnly),
+  );
+  actualCustomerToggleBtn.textContent = showActualCustomersOnly
+    ? "✓ Actual Customers"
+    : "Showing All Customers";
   computeCustomerStats(actualCustomerFiltered(customersCache));
   filterCustomers();
 });
 
-const custModal = makeModal('customerModalOverlay');
+const custModal = makeModal("customerModalOverlay");
 const custFields = {
-  id: document.getElementById('custId'),
-  business_name: document.getElementById('custBusinessName'),
-  contact_name: document.getElementById('custContactName'),
-  email: document.getElementById('custEmail'),
-  password: document.getElementById('custPassword'),
-  phone: document.getElementById('custPhone'),
-  address: document.getElementById('custAddress'),
-  website_url: document.getElementById('custWebsiteUrl'),
-  admin_console_url: document.getElementById('custAdminConsoleUrl'),
-  upi_id: document.getElementById('custUpiId'),
-  notes: document.getElementById('custNotes'),
-  renewal_frequency: document.getElementById('custRenewalFrequency'),
-  renewal_amount: document.getElementById('custRenewalAmount'),
-  renewal_start_date: document.getElementById('custRenewalStartDate')
+  id: document.getElementById("custId"),
+  business_name: document.getElementById("custBusinessName"),
+  contact_name: document.getElementById("custContactName"),
+  email: document.getElementById("custEmail"),
+  password: document.getElementById("custPassword"),
+  phone: document.getElementById("custPhone"),
+  address: document.getElementById("custAddress"),
+  website_url: document.getElementById("custWebsiteUrl"),
+  admin_console_url: document.getElementById("custAdminConsoleUrl"),
+  upi_id: document.getElementById("custUpiId"),
+  notes: document.getElementById("custNotes"),
+  renewal_frequency: document.getElementById("custRenewalFrequency"),
+  renewal_amount: document.getElementById("custRenewalAmount"),
+  renewal_start_date: document.getElementById("custRenewalStartDate"),
 };
 // Handled separately from custFields — a checkbox's .value isn't its
 // checked state, so the generic value-based loops below don't apply to it.
-const custRenewalRequiredField = document.getElementById('custRenewalRequired');
-const custIsActualCustomerField = document.getElementById('custIsActualCustomer');
+const custRenewalRequiredField = document.getElementById("custRenewalRequired");
+const custIsActualCustomerField = document.getElementById(
+  "custIsActualCustomer",
+);
 
 // Also handled separately — these 6 inputs (3 plans x price/features) get
 // packed into a single subscription_plans JSON field on save, and unpacked
 // from it on load, rather than mapping 1:1 to a DB column like custFields.
-const custPlanFields = [1, 2, 3].map(n => ({
+const custPlanFields = [1, 2, 3].map((n) => ({
   price: document.getElementById(`custPlan${n}Price`),
-  features: document.getElementById(`custPlan${n}Features`)
+  features: document.getElementById(`custPlan${n}Features`),
 }));
 
 function clearCustomerForm() {
-  Object.values(custFields).forEach(el => el.value = '');
+  Object.values(custFields).forEach((el) => (el.value = ""));
   custRenewalRequiredField.checked = false;
   // Defaults checked for a new customer — most manually-added entries are
   // real customers; demo/test entries are the exception and get unchecked.
   custIsActualCustomerField.checked = true;
-  custPlanFields.forEach(p => { p.price.value = ''; p.features.value = ''; });
+  custPlanFields.forEach((p) => {
+    p.price.value = "";
+    p.features.value = "";
+  });
 }
 
 function openCustomerForm(id) {
   clearCustomerForm();
-  document.getElementById('customerFormTitle').textContent = id ? 'Edit customer' : 'Add customer';
-  document.getElementById('custPasswordNote').textContent = id
-    ? '(leave blank to keep current password)'
-    : '(required for new customers)';
+  document.getElementById("customerFormTitle").textContent = id
+    ? "Edit customer"
+    : "Add customer";
+  document.getElementById("custPasswordNote").textContent = id
+    ? "(leave blank to keep current password)"
+    : "(required for new customers)";
 
   if (id) {
-    const c = customersCache.find(x => String(x.id) === String(id));
+    const c = customersCache.find((x) => String(x.id) === String(id));
     if (c) {
-      Object.keys(custFields).forEach(key => {
+      Object.keys(custFields).forEach((key) => {
         // Never pre-fill the password field — it's write-only from the UI's perspective.
-        if (key !== 'password' && c[key] != null) custFields[key].value = c[key];
+        if (key !== "password" && c[key] != null)
+          custFields[key].value = c[key];
       });
       custRenewalRequiredField.checked = !!c.renewal_required;
       custIsActualCustomerField.checked = !!c.is_actual_customer;
 
       let plans = [];
-      try { plans = c.subscription_plans ? JSON.parse(c.subscription_plans) : []; } catch (err) { plans = []; }
+      try {
+        plans = c.subscription_plans ? JSON.parse(c.subscription_plans) : [];
+      } catch (err) {
+        plans = [];
+      }
       custPlanFields.forEach((p, i) => {
-        p.price.value = plans[i] && plans[i].price != null ? plans[i].price : '';
-        p.features.value = plans[i] && Array.isArray(plans[i].features) ? plans[i].features.join('\n') : '';
+        p.price.value =
+          plans[i] && plans[i].price != null ? plans[i].price : "";
+        p.features.value =
+          plans[i] && Array.isArray(plans[i].features)
+            ? plans[i].features.join("\n")
+            : "";
       });
     }
   }
@@ -993,73 +1214,117 @@ function openCustomerForm(id) {
   custModal.show();
 }
 
-document.getElementById('addCustomerBtn').addEventListener('click', () => openCustomerForm(null));
-document.getElementById('custCancelBtn').addEventListener('click', () => {
-  custModal.hide();
-  clearCustomerForm();
-});
-document.getElementById('customerModalCloseBtn').addEventListener('click', () => {
-  custModal.hide();
-  clearCustomerForm();
-});
+document
+  .getElementById("addCustomerBtn")
+  .addEventListener("click", () => openCustomerForm(null));
 
-const custSaveBtn = document.getElementById('custSaveBtn');
-custSaveBtn.addEventListener('click', () => {
+const bulkQuickLoginBtn = document.getElementById("bulkQuickLoginBtn");
+bulkQuickLoginBtn.addEventListener("click", () => {
+  if (
+    !confirm(
+      "Generate a quick login link for every customer with an email? This resets ALL of their portal passwords to new random ones — anyone using their current password won't be able to log in with it anymore. No one is emailed; you'll share each new link yourself.",
+    )
+  )
+    return;
+
+  withButtonSpinner(bulkQuickLoginBtn, "Generating…", async () => {
+    try {
+      const res = await fetch("/api/admin/bulk-quick-login", {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        alert(
+          "Error: " + (data.error || "Could not generate quick login links"),
+        );
+        return;
+      }
+      alert(
+        `Quick login links generated for ${data.updated} customer${data.updated === 1 ? "" : "s"}.`,
+      );
+      loadCustomers();
+    } catch (err) {
+      alert("Something went wrong generating quick login links.");
+    }
+  });
+});
+document.getElementById("custCancelBtn").addEventListener("click", () => {
+  custModal.hide();
+  clearCustomerForm();
+});
+document
+  .getElementById("customerModalCloseBtn")
+  .addEventListener("click", () => {
+    custModal.hide();
+    clearCustomerForm();
+  });
+
+const custSaveBtn = document.getElementById("custSaveBtn");
+custSaveBtn.addEventListener("click", () => {
   const payload = {};
-  Object.entries(custFields).forEach(([key, el]) => { payload[key] = el.value; });
+  Object.entries(custFields).forEach(([key, el]) => {
+    payload[key] = el.value;
+  });
   payload.renewal_required = custRenewalRequiredField.checked;
   payload.is_actual_customer = custIsActualCustomerField.checked;
 
   const plans = custPlanFields
-    .map(p => ({
+    .map((p) => ({
       price: p.price.value ? Number(p.price.value) : null,
-      features: p.features.value.split('\n').map(f => f.trim()).filter(Boolean)
+      features: p.features.value
+        .split("\n")
+        .map((f) => f.trim())
+        .filter(Boolean),
     }))
-    .filter(p => p.price != null || p.features.length > 0);
+    .filter((p) => p.price != null || p.features.length > 0);
   payload.subscription_plans = plans.length > 0 ? JSON.stringify(plans) : null;
 
   if (!payload.business_name.trim()) {
-    alert('Business name is required.');
+    alert("Business name is required.");
     return;
   }
 
   const isEdit = !!payload.id;
 
   if (!isEdit && !payload.email.trim()) {
-    alert('Email is required — it becomes the customer\'s portal login.');
+    alert("Email is required — it becomes the customer's portal login.");
     return;
   }
   if (!isEdit && !payload.password.trim()) {
-    alert('Password is required for a new customer.');
+    alert("Password is required for a new customer.");
     return;
   }
   if (payload.renewal_required && !payload.renewal_frequency) {
-    alert('Please select a frequency since Renewal required is checked.');
+    alert("Please select a frequency since Renewal required is checked.");
     return;
   }
   if (payload.renewal_required && !(Number(payload.renewal_amount) > 0)) {
-    alert('Please enter a renewal amount greater than 0 since Renewal required is checked.');
+    alert(
+      "Please enter a renewal amount greater than 0 since Renewal required is checked.",
+    );
     return;
   }
   if (payload.renewal_required && !payload.renewal_start_date) {
-    alert('Please enter a renewal start date since Renewal required is checked.');
+    alert(
+      "Please enter a renewal start date since Renewal required is checked.",
+    );
     return;
   }
 
-  const method = isEdit ? 'PUT' : 'POST';
+  const method = isEdit ? "PUT" : "POST";
   if (!isEdit) delete payload.id;
   if (isEdit && !payload.password.trim()) delete payload.password; // don't overwrite existing password
 
-  withButtonSpinner(custSaveBtn, 'Saving…', async () => {
+  withButtonSpinner(custSaveBtn, "Saving…", async () => {
     try {
-      const res = await fetch('/api/admin/customers', {
+      const res = await fetch("/api/admin/customers", {
         method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok || data.error) {
-        alert('Error: ' + (data.error || 'Could not save'));
+        alert("Error: " + (data.error || "Could not save"));
         return;
       }
       custModal.hide();
@@ -1067,34 +1332,47 @@ custSaveBtn.addEventListener('click', () => {
       loadCustomers();
       if (currentCustomerId) refreshCurrentCustomerTotal(); // keep the open detail page's info/actions in sync after an edit
     } catch (err) {
-      alert('Something went wrong saving this customer.');
+      alert("Something went wrong saving this customer.");
     }
   });
 });
 
 async function deleteCustomer(id) {
-  if (!confirm('Delete this customer and ALL their transactions? This cannot be undone.')) return;
-  await fetch('/api/admin/customers', {
-    method: 'DELETE',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id: Number(id) })
+  if (
+    !confirm(
+      "Delete this customer and ALL their transactions? This cannot be undone.",
+    )
+  )
+    return;
+  await fetch("/api/admin/customers", {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id: Number(id) }),
   });
   loadCustomers();
 
   // Deleted from their own detail page — nothing left there to show, so go back to the list.
   if (String(currentCustomerId) === String(id)) {
-    document.getElementById('customerDetailView').hidden = true;
-    document.getElementById('customersListView').hidden = false;
+    document.getElementById("customerDetailView").hidden = true;
+    document.getElementById("customersListView").hidden = false;
     currentCustomerId = null;
   }
 }
 
 // ===== Tickets (admin view — all customers) =====
-const TICKET_STATUS_OPTIONS = ['Open', 'In Progress', 'Payment Pending', 'Payment Submitted', 'Payment Received', 'Resolved', 'Closed'];
+const TICKET_STATUS_OPTIONS = [
+  "Open",
+  "In Progress",
+  "Payment Pending",
+  "Payment Submitted",
+  "Payment Received",
+  "Resolved",
+  "Closed",
+];
 let ticketsCache = [];
 let currentTicketId = null;
 
-const TICKET_CLOSED_STATUSES = ['Resolved', 'Closed'];
+const TICKET_CLOSED_STATUSES = ["Resolved", "Closed"];
 
 function ticketRowHtml(t, i) {
   return `
@@ -1121,28 +1399,40 @@ function ticketRowHtml(t, i) {
 }
 
 function wireTicketRowClicks(container) {
-  container.querySelectorAll('.clickable-row').forEach(row => {
-    row.addEventListener('click', () => openTicketDetail(row.dataset.ticketId));
+  container.querySelectorAll(".clickable-row").forEach((row) => {
+    row.addEventListener("click", () => openTicketDetail(row.dataset.ticketId));
   });
-  container.querySelectorAll('[data-view-ticket]').forEach(btn => {
-    btn.addEventListener('click', (e) => { e.stopPropagation(); openTicketDetail(btn.dataset.viewTicket); });
-  });
-  container.querySelectorAll('[data-menu-toggle]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
+  container.querySelectorAll("[data-view-ticket]").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
       e.stopPropagation();
-      const menu = container.querySelector(`[data-menu="${btn.dataset.menuToggle}"]`);
-      document.querySelectorAll('.row-menu').forEach(m => { if (m !== menu) m.hidden = true; });
+      openTicketDetail(btn.dataset.viewTicket);
+    });
+  });
+  container.querySelectorAll("[data-menu-toggle]").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const menu = container.querySelector(
+        `[data-menu="${btn.dataset.menuToggle}"]`,
+      );
+      document.querySelectorAll(".row-menu").forEach((m) => {
+        if (m !== menu) m.hidden = true;
+      });
       menu.hidden = !menu.hidden;
     });
   });
-  container.querySelectorAll('[data-delete-ticket]').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
+  container.querySelectorAll("[data-delete-ticket]").forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
       e.stopPropagation();
-      if (!confirm('Delete this ticket and its conversation? This cannot be undone.')) return;
-      await fetch('/api/admin/tickets', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: Number(btn.dataset.deleteTicket) })
+      if (
+        !confirm(
+          "Delete this ticket and its conversation? This cannot be undone.",
+        )
+      )
+        return;
+      await fetch("/api/admin/tickets", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: Number(btn.dataset.deleteTicket) }),
       });
       loadTickets();
     });
@@ -1150,83 +1440,94 @@ function wireTicketRowClicks(container) {
 }
 
 // Closes any open row "⋮" menu when clicking elsewhere on the page.
-document.addEventListener('click', () => {
-  document.querySelectorAll('.row-menu').forEach(m => m.hidden = true);
+document.addEventListener("click", () => {
+  document.querySelectorAll(".row-menu").forEach((m) => (m.hidden = true));
 });
 
 function populateTicketCustomerFilter() {
-  const select = document.getElementById('ticketFilterCustomer');
+  const select = document.getElementById("ticketFilterCustomer");
   const current = select.value;
-  const options = customersCache.map(c => `<option value="${c.id}">${escapeHtml(c.business_name)}</option>`).join('');
+  const options = customersCache
+    .map(
+      (c) => `<option value="${c.id}">${escapeHtml(c.business_name)}</option>`,
+    )
+    .join("");
   select.innerHTML = '<option value="">All customers</option>' + options;
   select.value = current; // preserve selection across refreshes, if still valid
 }
 
 // ===== Add a ticket on a customer's behalf (e.g. a phone request) =====
-const addTicketModal = makeModal('addTicketModalOverlay');
+const addTicketModal = makeModal("addTicketModalOverlay");
 const addTicketFields = {
-  customer_id: document.getElementById('addTicketCustomer'),
-  subject: document.getElementById('addTicketSubject'),
-  description: document.getElementById('addTicketDescription')
+  customer_id: document.getElementById("addTicketCustomer"),
+  subject: document.getElementById("addTicketSubject"),
+  description: document.getElementById("addTicketDescription"),
 };
 
 function clearAddTicketForm() {
-  addTicketFields.subject.value = '';
-  addTicketFields.description.value = '';
-  addTicketFields.customer_id.value = '';
+  addTicketFields.subject.value = "";
+  addTicketFields.description.value = "";
+  addTicketFields.customer_id.value = "";
 }
 
-document.getElementById('addTicketBtn').addEventListener('click', () => {
+document.getElementById("addTicketBtn").addEventListener("click", () => {
   clearAddTicketForm();
-  const options = customersCache.map(c => `<option value="${c.id}">${escapeHtml(c.business_name)}</option>`).join('');
-  addTicketFields.customer_id.innerHTML = '<option value="">— Select a customer —</option>' + options;
+  const options = customersCache
+    .map(
+      (c) => `<option value="${c.id}">${escapeHtml(c.business_name)}</option>`,
+    )
+    .join("");
+  addTicketFields.customer_id.innerHTML =
+    '<option value="">— Select a customer —</option>' + options;
   addTicketModal.show();
 });
 
-document.getElementById('addTicketCancelBtn').addEventListener('click', () => {
+document.getElementById("addTicketCancelBtn").addEventListener("click", () => {
   addTicketModal.hide();
   clearAddTicketForm();
 });
-document.getElementById('addTicketModalCloseBtn').addEventListener('click', () => {
-  addTicketModal.hide();
-  clearAddTicketForm();
-});
+document
+  .getElementById("addTicketModalCloseBtn")
+  .addEventListener("click", () => {
+    addTicketModal.hide();
+    clearAddTicketForm();
+  });
 
-const addTicketSaveBtn = document.getElementById('addTicketSaveBtn');
-addTicketSaveBtn.addEventListener('click', () => {
+const addTicketSaveBtn = document.getElementById("addTicketSaveBtn");
+addTicketSaveBtn.addEventListener("click", () => {
   const customerId = addTicketFields.customer_id.value;
   const subject = addTicketFields.subject.value.trim();
 
   if (!customerId) {
-    alert('Please select a customer.');
+    alert("Please select a customer.");
     return;
   }
   if (!subject) {
-    alert('Subject is required.');
+    alert("Subject is required.");
     return;
   }
 
-  withButtonSpinner(addTicketSaveBtn, 'Saving…', async () => {
+  withButtonSpinner(addTicketSaveBtn, "Saving…", async () => {
     try {
-      const res = await fetch('/api/admin/tickets', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/admin/tickets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           customer_id: Number(customerId),
           subject,
-          description: addTicketFields.description.value
-        })
+          description: addTicketFields.description.value,
+        }),
       });
       const data = await res.json();
       if (!res.ok || data.error) {
-        alert('Error: ' + (data.error || 'Could not save'));
+        alert("Error: " + (data.error || "Could not save"));
         return;
       }
       addTicketModal.hide();
       clearAddTicketForm();
       loadTickets();
     } catch (err) {
-      alert('Something went wrong saving this ticket.');
+      alert("Something went wrong saving this ticket.");
     }
   });
 });
@@ -1238,90 +1539,123 @@ addTicketSaveBtn.addEventListener('click', () => {
 // is that one exact status — together Open+InProgress+Resolved should
 // only double-count a ticket once each is figured by its own rule.
 function computeTicketStats(tickets) {
-  document.getElementById('ticketStatTotal').textContent = tickets.length;
-  document.getElementById('ticketStatOpen').textContent = tickets.filter(t => !TICKET_CLOSED_STATUSES.includes(t.status)).length;
-  document.getElementById('ticketStatInProgress').textContent = tickets.filter(t => t.status === 'In Progress').length;
-  document.getElementById('ticketStatResolved').textContent = tickets.filter(t => TICKET_CLOSED_STATUSES.includes(t.status)).length;
+  document.getElementById("ticketStatTotal").textContent = tickets.length;
+  document.getElementById("ticketStatOpen").textContent = tickets.filter(
+    (t) => !TICKET_CLOSED_STATUSES.includes(t.status),
+  ).length;
+  document.getElementById("ticketStatInProgress").textContent = tickets.filter(
+    (t) => t.status === "In Progress",
+  ).length;
+  document.getElementById("ticketStatResolved").textContent = tickets.filter(
+    (t) => TICKET_CLOSED_STATUSES.includes(t.status),
+  ).length;
 }
 
-let ticketSearchTerm = '';
-let ticketStatFilter = ''; // '' | 'open' | 'In Progress' | 'closed' — set by clicking a stat card
+let ticketSearchTerm = "";
+let ticketStatFilter = ""; // '' | 'open' | 'In Progress' | 'closed' — set by clicking a stat card
 
 function applyTicketFilters() {
-  const customerFilter = document.getElementById('ticketFilterCustomer').value;
-  const statusFilter = document.getElementById('ticketFilterStatus').value;
+  const customerFilter = document.getElementById("ticketFilterCustomer").value;
+  const statusFilter = document.getElementById("ticketFilterStatus").value;
   const term = ticketSearchTerm.trim().toLowerCase();
 
   let filtered = ticketsCache;
-  if (customerFilter) filtered = filtered.filter(t => String(t.customer_id) === customerFilter);
-  if (statusFilter) filtered = filtered.filter(t => t.status === statusFilter);
+  if (customerFilter)
+    filtered = filtered.filter((t) => String(t.customer_id) === customerFilter);
+  if (statusFilter)
+    filtered = filtered.filter((t) => t.status === statusFilter);
   if (term) {
-    filtered = filtered.filter(t =>
-      [t.business_name, t.subject, t.id, t.reference_code].some(v => v && String(v).toLowerCase().includes(term))
+    filtered = filtered.filter((t) =>
+      [t.business_name, t.subject, t.id, t.reference_code].some(
+        (v) => v && String(v).toLowerCase().includes(term),
+      ),
     );
   }
-  if (ticketStatFilter === 'open') filtered = filtered.filter(t => !TICKET_CLOSED_STATUSES.includes(t.status));
-  else if (ticketStatFilter === 'closed') filtered = filtered.filter(t => TICKET_CLOSED_STATUSES.includes(t.status));
-  else if (ticketStatFilter) filtered = filtered.filter(t => t.status === ticketStatFilter);
+  if (ticketStatFilter === "open")
+    filtered = filtered.filter(
+      (t) => !TICKET_CLOSED_STATUSES.includes(t.status),
+    );
+  else if (ticketStatFilter === "closed")
+    filtered = filtered.filter((t) =>
+      TICKET_CLOSED_STATUSES.includes(t.status),
+    );
+  else if (ticketStatFilter)
+    filtered = filtered.filter((t) => t.status === ticketStatFilter);
 
-  const open = filtered.filter(t => !TICKET_CLOSED_STATUSES.includes(t.status));
-  const closed = filtered.filter(t => TICKET_CLOSED_STATUSES.includes(t.status));
+  const open = filtered.filter(
+    (t) => !TICKET_CLOSED_STATUSES.includes(t.status),
+  );
+  const closed = filtered.filter((t) =>
+    TICKET_CLOSED_STATUSES.includes(t.status),
+  );
 
-  const tbody = document.getElementById('ticketsTableBody');
+  const tbody = document.getElementById("ticketsTableBody");
   tbody.innerHTML = open.length
-    ? open.map(ticketRowHtml).join('')
+    ? open.map(ticketRowHtml).join("")
     : '<tr><td colspan="5" class="empty-note">No open tickets match these filters.</td></tr>';
   wireTicketRowClicks(tbody.parentElement);
-  document.getElementById('openTicketsCount').textContent = open.length;
+  document.getElementById("openTicketsCount").textContent = open.length;
 
-  const closedTbody = document.getElementById('closedTicketsTableBody');
+  const closedTbody = document.getElementById("closedTicketsTableBody");
   closedTbody.innerHTML = closed.length
-    ? closed.map(ticketRowHtml).join('')
+    ? closed.map(ticketRowHtml).join("")
     : '<tr><td colspan="5" class="empty-note">No closed tickets match these filters.</td></tr>';
   wireTicketRowClicks(closedTbody.parentElement);
-  document.getElementById('closedTicketsCount').textContent = closed.length;
+  document.getElementById("closedTicketsCount").textContent = closed.length;
 }
 
-document.getElementById('ticketFilterCustomer').addEventListener('change', applyTicketFilters);
-document.getElementById('ticketFilterStatus').addEventListener('change', applyTicketFilters);
+document
+  .getElementById("ticketFilterCustomer")
+  .addEventListener("change", applyTicketFilters);
+document
+  .getElementById("ticketFilterStatus")
+  .addEventListener("change", applyTicketFilters);
 
-document.getElementById('ticketSearchInput').addEventListener('input', (e) => {
+document.getElementById("ticketSearchInput").addEventListener("input", (e) => {
   ticketSearchTerm = e.target.value;
   applyTicketFilters();
 });
 
-document.getElementById('resetTicketFiltersBtn').addEventListener('click', () => {
-  document.getElementById('ticketFilterCustomer').value = '';
-  document.getElementById('ticketFilterStatus').value = '';
-  document.getElementById('ticketSearchInput').value = '';
-  ticketSearchTerm = '';
-  ticketStatFilter = '';
-  document.querySelectorAll('.ticket-stat-card').forEach(c => c.classList.toggle('active', c.dataset.ticketStat === ''));
-  applyTicketFilters();
-});
+document
+  .getElementById("resetTicketFiltersBtn")
+  .addEventListener("click", () => {
+    document.getElementById("ticketFilterCustomer").value = "";
+    document.getElementById("ticketFilterStatus").value = "";
+    document.getElementById("ticketSearchInput").value = "";
+    ticketSearchTerm = "";
+    ticketStatFilter = "";
+    document
+      .querySelectorAll(".ticket-stat-card")
+      .forEach((c) =>
+        c.classList.toggle("active", c.dataset.ticketStat === ""),
+      );
+    applyTicketFilters();
+  });
 
-document.querySelectorAll('.ticket-stat-card').forEach(card => {
-  card.addEventListener('click', () => {
+document.querySelectorAll(".ticket-stat-card").forEach((card) => {
+  card.addEventListener("click", () => {
     ticketStatFilter = card.dataset.ticketStat;
-    document.querySelectorAll('.ticket-stat-card').forEach(c => c.classList.toggle('active', c === card));
+    document
+      .querySelectorAll(".ticket-stat-card")
+      .forEach((c) => c.classList.toggle("active", c === card));
     applyTicketFilters();
   });
 });
 
-document.querySelectorAll('.ticket-section-header').forEach(header => {
-  header.addEventListener('click', () => {
+document.querySelectorAll(".ticket-section-header").forEach((header) => {
+  header.addEventListener("click", () => {
     const target = document.getElementById(header.dataset.toggleSection);
     target.hidden = !target.hidden;
-    header.classList.toggle('collapsed', target.hidden);
+    header.classList.toggle("collapsed", target.hidden);
   });
 });
 
 async function loadTickets() {
-  const tbody = document.getElementById('ticketsTableBody');
+  const tbody = document.getElementById("ticketsTableBody");
   tbody.innerHTML = '<tr><td colspan="5" class="empty-note">Loading…</td></tr>';
 
   try {
-    const res = await fetch('/api/admin/tickets');
+    const res = await fetch("/api/admin/tickets");
     const data = await res.json();
     ticketsCache = data.tickets || [];
 
@@ -1329,104 +1663,110 @@ async function loadTickets() {
     populateTicketCustomerFilter();
     applyTicketFilters();
   } catch (err) {
-    tbody.innerHTML = '<tr><td colspan="5" class="empty-note">Could not load tickets.</td></tr>';
+    tbody.innerHTML =
+      '<tr><td colspan="5" class="empty-note">Could not load tickets.</td></tr>';
   }
 }
 
 function renderTicketDetailInfo(t) {
-  document.getElementById('ticketDetailInfo').innerHTML = `
+  document.getElementById("ticketDetailInfo").innerHTML = `
     <h3>${escapeHtml(t.subject)}</h3>
-    ${t.reference_code ? `<p class="unique-id">Request ID: ${escapeHtml(t.reference_code)}</p>` : ''}
+    ${t.reference_code ? `<p class="unique-id">Request ID: ${escapeHtml(t.reference_code)}</p>` : ""}
     <p>${escapeHtml(t.business_name)} · ${escapeHtml(new Date(t.created_at).toLocaleDateString())}</p>
-    <p style="white-space:pre-wrap; margin-top:10px;">${escapeHtml(t.description || 'No description provided.')}</p>
-    ${t.payment_amount ? `<p class="due-amount" style="margin-top:10px;">Amount due: ₹${escapeHtml(String(t.payment_amount))}</p>` : ''}
-    ${t.payment_reference ? `<p class="txn-ref">Transaction reference: ${escapeHtml(t.payment_reference)}</p>` : ''}
+    <p style="white-space:pre-wrap; margin-top:10px;">${escapeHtml(t.description || "No description provided.")}</p>
+    ${t.payment_amount ? `<p class="due-amount" style="margin-top:10px;">Amount due: ₹${escapeHtml(String(t.payment_amount))}</p>` : ""}
+    ${t.payment_reference ? `<p class="txn-ref">Transaction reference: ${escapeHtml(t.payment_reference)}</p>` : ""}
   `;
 }
 
 function openTicketDetail(id) {
   currentTicketId = id;
-  const t = ticketsCache.find(x => String(x.id) === String(id));
+  const t = ticketsCache.find((x) => String(x.id) === String(id));
   if (!t) return;
 
-  document.getElementById('ticketsListView').hidden = true;
-  document.getElementById('ticketDetailView').hidden = false;
+  document.getElementById("ticketsListView").hidden = true;
+  document.getElementById("ticketDetailView").hidden = false;
 
   renderTicketDetailInfo(t);
 
-  const statusSelect = document.getElementById('ticketDetailStatus');
-  statusSelect.innerHTML = TICKET_STATUS_OPTIONS.map(s =>
-    `<option value="${s}" ${s === t.status ? 'selected' : ''}>${s}</option>`
-  ).join('');
+  const statusSelect = document.getElementById("ticketDetailStatus");
+  statusSelect.innerHTML = TICKET_STATUS_OPTIONS.map(
+    (s) =>
+      `<option value="${s}" ${s === t.status ? "selected" : ""}>${s}</option>`,
+  ).join("");
 
-  document.getElementById('newCommentText').value = '';
-  document.getElementById('newCommentFile').value = '';
-  document.getElementById('commentFormMsg').textContent = '';
+  document.getElementById("newCommentText").value = "";
+  document.getElementById("newCommentFile").value = "";
+  document.getElementById("commentFormMsg").textContent = "";
   loadAdminTicketComments(id);
 }
 
 // ===== Edit a ticket's subject/description (status changes use the
 // dropdown above instead — they carry payment/email side effects) =====
-const ticketEditModal = makeModal('ticketEditModalOverlay');
+const ticketEditModal = makeModal("ticketEditModalOverlay");
 const ticketEditFields = {
-  id: document.getElementById('ticketEditId'),
-  subject: document.getElementById('ticketEditSubject'),
-  description: document.getElementById('ticketEditDescription')
+  id: document.getElementById("ticketEditId"),
+  subject: document.getElementById("ticketEditSubject"),
+  description: document.getElementById("ticketEditDescription"),
 };
 
 function clearTicketEditForm() {
-  Object.values(ticketEditFields).forEach(el => el.value = '');
+  Object.values(ticketEditFields).forEach((el) => (el.value = ""));
 }
 
-document.getElementById('editTicketBtn').addEventListener('click', () => {
-  const t = ticketsCache.find(x => String(x.id) === String(currentTicketId));
+document.getElementById("editTicketBtn").addEventListener("click", () => {
+  const t = ticketsCache.find((x) => String(x.id) === String(currentTicketId));
   if (!t) return;
   ticketEditFields.id.value = t.id;
-  ticketEditFields.subject.value = t.subject || '';
-  ticketEditFields.description.value = t.description || '';
+  ticketEditFields.subject.value = t.subject || "";
+  ticketEditFields.description.value = t.description || "";
   ticketEditModal.show();
 });
 
-document.getElementById('ticketEditCancelBtn').addEventListener('click', () => {
+document.getElementById("ticketEditCancelBtn").addEventListener("click", () => {
   ticketEditModal.hide();
   clearTicketEditForm();
 });
-document.getElementById('ticketEditModalCloseBtn').addEventListener('click', () => {
-  ticketEditModal.hide();
-  clearTicketEditForm();
-});
+document
+  .getElementById("ticketEditModalCloseBtn")
+  .addEventListener("click", () => {
+    ticketEditModal.hide();
+    clearTicketEditForm();
+  });
 
-const ticketEditSaveBtn = document.getElementById('ticketEditSaveBtn');
-ticketEditSaveBtn.addEventListener('click', () => {
+const ticketEditSaveBtn = document.getElementById("ticketEditSaveBtn");
+ticketEditSaveBtn.addEventListener("click", () => {
   const subject = ticketEditFields.subject.value.trim();
   if (!subject) {
-    alert('Subject is required.');
+    alert("Subject is required.");
     return;
   }
 
-  withButtonSpinner(ticketEditSaveBtn, 'Saving…', async () => {
+  withButtonSpinner(ticketEditSaveBtn, "Saving…", async () => {
     try {
-      const res = await fetch('/api/admin/tickets', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/admin/tickets", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id: Number(ticketEditFields.id.value),
           subject,
-          description: ticketEditFields.description.value
-        })
+          description: ticketEditFields.description.value,
+        }),
       });
       const data = await res.json();
       if (!res.ok || data.error) {
-        alert('Error: ' + (data.error || 'Could not save'));
+        alert("Error: " + (data.error || "Could not save"));
         return;
       }
       ticketEditModal.hide();
       clearTicketEditForm();
       await loadTickets();
-      const updated = ticketsCache.find(x => String(x.id) === String(currentTicketId));
+      const updated = ticketsCache.find(
+        (x) => String(x.id) === String(currentTicketId),
+      );
       if (updated) renderTicketDetailInfo(updated);
     } catch (err) {
-      alert('Something went wrong saving this ticket.');
+      alert("Something went wrong saving this ticket.");
     }
   });
 });
@@ -1435,131 +1775,163 @@ function renderCommentThread(comments, downloadBase) {
   if (!comments || comments.length === 0) {
     return '<p class="empty-note">No messages yet.</p>';
   }
-  return comments.map(c => `
+  return comments
+    .map(
+      (c) => `
     <div class="comment-bubble comment-${c.author_type}">
       <div class="comment-meta">
-        <strong>${escapeHtml(c.author_name || (c.author_type === 'admin' ? 'SitePragati' : 'Customer'))}</strong>
+        <strong>${escapeHtml(c.author_name || (c.author_type === "admin" ? "SitePragati" : "Customer"))}</strong>
         <span>${escapeHtml(new Date(c.created_at).toLocaleString())}</span>
       </div>
-      ${c.comment ? `<p class="comment-text">${escapeHtml(c.comment)}</p>` : ''}
-      ${c.file_key ? `<a class="comment-file" href="${downloadBase}?key=${encodeURIComponent(c.file_key)}&name=${encodeURIComponent(c.file_name || 'file')}" target="_blank" rel="noopener">📎 ${escapeHtml(c.file_name || 'Download file')}</a>` : ''}
+      ${c.comment ? `<p class="comment-text">${escapeHtml(c.comment)}</p>` : ""}
+      ${c.file_key ? `<a class="comment-file" href="${downloadBase}?key=${encodeURIComponent(c.file_key)}&name=${encodeURIComponent(c.file_name || "file")}" target="_blank" rel="noopener">📎 ${escapeHtml(c.file_name || "Download file")}</a>` : ""}
     </div>
-  `).join('');
+  `,
+    )
+    .join("");
 }
 
 async function loadAdminTicketComments(ticketId) {
-  const list = document.getElementById('ticketCommentsList');
+  const list = document.getElementById("ticketCommentsList");
   list.innerHTML = '<p class="empty-note">Loading…</p>';
   try {
     const res = await fetch(`/api/admin/ticket-comments?ticket_id=${ticketId}`);
     const data = await res.json();
-    list.innerHTML = renderCommentThread(data.comments, '/api/admin/ticket-file');
+    list.innerHTML = renderCommentThread(
+      data.comments,
+      "/api/admin/ticket-file",
+    );
   } catch (err) {
     list.innerHTML = '<p class="empty-note">Could not load conversation.</p>';
   }
 }
 
-document.getElementById('postCommentBtn').addEventListener('click', async () => {
-  const text = document.getElementById('newCommentText').value.trim();
-  const fileInput = document.getElementById('newCommentFile');
-  const msgEl = document.getElementById('commentFormMsg');
-  const file = fileInput.files[0];
+document
+  .getElementById("postCommentBtn")
+  .addEventListener("click", async () => {
+    const text = document.getElementById("newCommentText").value.trim();
+    const fileInput = document.getElementById("newCommentFile");
+    const msgEl = document.getElementById("commentFormMsg");
+    const file = fileInput.files[0];
 
-  if (!text && !file) {
-    msgEl.textContent = 'Write a message or attach a file.';
-    return;
-  }
-
-  const formData = new FormData();
-  formData.append('ticket_id', currentTicketId);
-  formData.append('comment', text);
-  if (file) formData.append('file', file);
-
-  msgEl.textContent = 'Posting…';
-
-  try {
-    const res = await fetch('/api/admin/ticket-comments', { method: 'POST', body: formData });
-    const data = await res.json();
-    if (!res.ok || data.error) {
-      msgEl.textContent = 'Error: ' + (data.error || 'Could not post');
+    if (!text && !file) {
+      msgEl.textContent = "Write a message or attach a file.";
       return;
     }
-    document.getElementById('newCommentText').value = '';
-    fileInput.value = '';
-    msgEl.textContent = '';
-    loadAdminTicketComments(currentTicketId);
-  } catch (err) {
-    msgEl.textContent = 'Something went wrong. Please try again.';
-  }
-});
 
-document.getElementById('backToTicketsBtn').addEventListener('click', () => {
-  document.getElementById('ticketDetailView').hidden = true;
-  document.getElementById('ticketsListView').hidden = false;
-  currentTicketId = null;
-  loadTickets();
-});
+    const formData = new FormData();
+    formData.append("ticket_id", currentTicketId);
+    formData.append("comment", text);
+    if (file) formData.append("file", file);
 
-document.getElementById('deleteTicketBtn').addEventListener('click', async () => {
-  if (!confirm('Delete this ticket and its conversation? This cannot be undone.')) return;
+    msgEl.textContent = "Posting…";
 
-  await fetch('/api/admin/tickets', {
-    method: 'DELETE',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id: Number(currentTicketId) })
+    try {
+      const res = await fetch("/api/admin/ticket-comments", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        msgEl.textContent = "Error: " + (data.error || "Could not post");
+        return;
+      }
+      document.getElementById("newCommentText").value = "";
+      fileInput.value = "";
+      msgEl.textContent = "";
+      loadAdminTicketComments(currentTicketId);
+    } catch (err) {
+      msgEl.textContent = "Something went wrong. Please try again.";
+    }
   });
 
-  document.getElementById('ticketDetailView').hidden = true;
-  document.getElementById('ticketsListView').hidden = false;
+document.getElementById("backToTicketsBtn").addEventListener("click", () => {
+  document.getElementById("ticketDetailView").hidden = true;
+  document.getElementById("ticketsListView").hidden = false;
   currentTicketId = null;
   loadTickets();
 });
 
-document.getElementById('ticketDetailStatus').addEventListener('change', async (e) => {
-  const status = e.target.value;
-  let paymentAmount = null;
-
-  if (status === 'Payment Pending') {
-    const entered = prompt('Enter the amount due from the customer (₹):');
-    if (entered === null) {
-      const t = ticketsCache.find(x => String(x.id) === String(currentTicketId));
-      if (t) e.target.value = t.status; // revert dropdown
+document
+  .getElementById("deleteTicketBtn")
+  .addEventListener("click", async () => {
+    if (
+      !confirm(
+        "Delete this ticket and its conversation? This cannot be undone.",
+      )
+    )
       return;
+
+    await fetch("/api/admin/tickets", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: Number(currentTicketId) }),
+    });
+
+    document.getElementById("ticketDetailView").hidden = true;
+    document.getElementById("ticketsListView").hidden = false;
+    currentTicketId = null;
+    loadTickets();
+  });
+
+document
+  .getElementById("ticketDetailStatus")
+  .addEventListener("change", async (e) => {
+    const status = e.target.value;
+    let paymentAmount = null;
+
+    if (status === "Payment Pending") {
+      const entered = prompt("Enter the amount due from the customer (₹):");
+      if (entered === null) {
+        const t = ticketsCache.find(
+          (x) => String(x.id) === String(currentTicketId),
+        );
+        if (t) e.target.value = t.status; // revert dropdown
+        return;
+      }
+      paymentAmount = Number(entered);
+      if (!paymentAmount || paymentAmount <= 0) {
+        alert("Please enter a valid amount greater than 0.");
+        const t = ticketsCache.find(
+          (x) => String(x.id) === String(currentTicketId),
+        );
+        if (t) e.target.value = t.status;
+        return;
+      }
     }
-    paymentAmount = Number(entered);
-    if (!paymentAmount || paymentAmount <= 0) {
-      alert('Please enter a valid amount greater than 0.');
-      const t = ticketsCache.find(x => String(x.id) === String(currentTicketId));
+
+    const res = await fetch("/api/admin/tickets", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: Number(currentTicketId),
+        status,
+        payment_amount: paymentAmount,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok || data.error) {
+      alert("Error: " + (data.error || "Could not update status"));
+      const t = ticketsCache.find(
+        (x) => String(x.id) === String(currentTicketId),
+      );
       if (t) e.target.value = t.status;
       return;
     }
-  }
 
-  const res = await fetch('/api/admin/tickets', {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id: Number(currentTicketId), status, payment_amount: paymentAmount })
+    // Refresh cached data and re-render the detail panel with the new state
+    const listRes = await fetch("/api/admin/tickets");
+    const listData = await listRes.json();
+    ticketsCache = listData.tickets || [];
+    const updated = ticketsCache.find(
+      (x) => String(x.id) === String(currentTicketId),
+    );
+    if (updated) renderTicketDetailInfo(updated);
   });
-  const data = await res.json();
-  if (!res.ok || data.error) {
-    alert('Error: ' + (data.error || 'Could not update status'));
-    const t = ticketsCache.find(x => String(x.id) === String(currentTicketId));
-    if (t) e.target.value = t.status;
-    return;
-  }
-
-  // Refresh cached data and re-render the detail panel with the new state
-  const listRes = await fetch('/api/admin/tickets');
-  const listData = await listRes.json();
-  ticketsCache = listData.tickets || [];
-  const updated = ticketsCache.find(x => String(x.id) === String(currentTicketId));
-  if (updated) renderTicketDetailInfo(updated);
-});
-
 
 // ===== Customer detail view (transactions) =====
 function renderCustomerDetailInfo(c) {
-  const info = document.getElementById('customerDetailInfo');
+  const info = document.getElementById("customerDetailInfo");
   info.innerHTML = `
     <div class="cust-info-card">
       <span class="cust-info-avatar" aria-hidden="true">👤</span>
@@ -1567,9 +1939,9 @@ function renderCustomerDetailInfo(c) {
         <h3>${escapeHtml(c.business_name)}</h3>
         ${requestLinkBlockHtml(c)}
         ${customerLinksBlockHtml(c)}
-        <p>${escapeHtml(c.contact_name || '')} ${c.phone ? '· ' + escapeHtml(c.phone) : ''}</p>
-        <p>${escapeHtml(c.address || '')}</p>
-        ${c.notes ? `<p><strong>Notes:</strong></p><p style="white-space:pre-wrap;">${escapeHtml(c.notes)}</p>` : ''}
+        <p>${escapeHtml(c.contact_name || "")} ${c.phone ? "· " + escapeHtml(c.phone) : ""}</p>
+        <p>${escapeHtml(c.address || "")}</p>
+        ${c.notes ? `<p><strong>Notes:</strong></p><p style="white-space:pre-wrap;">${escapeHtml(c.notes)}</p>` : ""}
       </div>
     </div>
   `;
@@ -1578,12 +1950,12 @@ function renderCustomerDetailInfo(c) {
 
 function openCustomerDetail(id) {
   currentCustomerId = id;
-  const c = customersCache.find(x => String(x.id) === String(id));
+  const c = customersCache.find((x) => String(x.id) === String(id));
   if (!c) return;
 
-  document.getElementById('customersListView').hidden = true;
-  document.getElementById('customerDetailView').hidden = false;
-  setCustomerDetailSubtab('details'); // always land on Details first, regardless of what was open last time
+  document.getElementById("customersListView").hidden = true;
+  document.getElementById("customerDetailView").hidden = false;
+  setCustomerDetailSubtab("details"); // always land on Details first, regardless of what was open last time
 
   renderCustomerDetailInfo(c);
   renderCustomerDetailActions(c);
@@ -1591,61 +1963,78 @@ function openCustomerDetail(id) {
   loadRecommendations(id);
 }
 
-document.getElementById('backToCustomersBtn').addEventListener('click', () => {
-  document.getElementById('customerDetailView').hidden = true;
-  document.getElementById('customersListView').hidden = false;
+document.getElementById("backToCustomersBtn").addEventListener("click", () => {
+  document.getElementById("customerDetailView").hidden = true;
+  document.getElementById("customersListView").hidden = false;
   currentCustomerId = null;
 });
 
 // Details / Transactions / Recommendation sub-tabs within a customer's detail page
 function setCustomerDetailSubtab(name) {
-  document.querySelectorAll('[data-cust-subtab]').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.custSubtab === name);
+  document.querySelectorAll("[data-cust-subtab]").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.custSubtab === name);
   });
-  document.getElementById('custSubtabDetails').hidden = name !== 'details';
-  document.getElementById('custSubtabTransactions').hidden = name !== 'transactions';
-  document.getElementById('custSubtabRecommendations').hidden = name !== 'recommendations';
+  document.getElementById("custSubtabDetails").hidden = name !== "details";
+  document.getElementById("custSubtabTransactions").hidden =
+    name !== "transactions";
+  document.getElementById("custSubtabRecommendations").hidden =
+    name !== "recommendations";
 }
-document.querySelectorAll('[data-cust-subtab]').forEach(btn => {
-  btn.addEventListener('click', () => setCustomerDetailSubtab(btn.dataset.custSubtab));
+document.querySelectorAll("[data-cust-subtab]").forEach((btn) => {
+  btn.addEventListener("click", () =>
+    setCustomerDetailSubtab(btn.dataset.custSubtab),
+  );
 });
 
 let transactionsCache = [];
-let transactionStatusFilter = '';
+let transactionStatusFilter = "";
 
 const TXN_STAT_CARDS = [
-  { status: 'Paid', label: 'Paid Amount', icon: '💰', cls: 'txn-stat-paid' },
-  { status: 'Pending', label: 'Pending Amount', icon: '🕐', cls: 'txn-stat-pending' },
-  { status: 'Overdue', label: 'Overdue Amount', icon: '⚠️', cls: 'txn-stat-overdue' }
+  { status: "Paid", label: "Paid Amount", icon: "💰", cls: "txn-stat-paid" },
+  {
+    status: "Pending",
+    label: "Pending Amount",
+    icon: "🕐",
+    cls: "txn-stat-pending",
+  },
+  {
+    status: "Overdue",
+    label: "Overdue Amount",
+    icon: "⚠️",
+    cls: "txn-stat-overdue",
+  },
 ];
 
 function renderTransactionStats() {
   const sums = { Paid: 0, Pending: 0, Overdue: 0 };
   const counts = { Paid: 0, Pending: 0, Overdue: 0 };
 
-  transactionsCache.forEach(t => {
+  transactionsCache.forEach((t) => {
     if (sums[t.status] === undefined) return;
     sums[t.status] += Number(t.amount);
     counts[t.status]++;
   });
 
-  const wrap = document.getElementById('customerTxnStats');
-  wrap.innerHTML = TXN_STAT_CARDS.map(card => `
-    <button type="button" class="txn-stat-card ${card.cls} ${transactionStatusFilter === card.status ? 'active' : ''}" data-txn-stat="${card.status}">
+  const wrap = document.getElementById("customerTxnStats");
+  wrap.innerHTML = TXN_STAT_CARDS.map(
+    (card) => `
+    <button type="button" class="txn-stat-card ${card.cls} ${transactionStatusFilter === card.status ? "active" : ""}" data-txn-stat="${card.status}">
       <span class="txn-stat-icon">${card.icon}</span>
       <span class="txn-stat-text">
         <span class="txn-stat-label">${card.label}</span>
-        <span class="txn-stat-value">₹${sums[card.status].toLocaleString('en-IN')}</span>
-        <span class="txn-stat-count">${counts[card.status]} transaction${counts[card.status] === 1 ? '' : 's'}</span>
+        <span class="txn-stat-value">₹${sums[card.status].toLocaleString("en-IN")}</span>
+        <span class="txn-stat-count">${counts[card.status]} transaction${counts[card.status] === 1 ? "" : "s"}</span>
       </span>
       <span class="txn-stat-chevron" aria-hidden="true">&rsaquo;</span>
     </button>
-  `).join('');
+  `,
+  ).join("");
 
-  wrap.querySelectorAll('[data-txn-stat]').forEach(btn => {
-    btn.addEventListener('click', () => {
+  wrap.querySelectorAll("[data-txn-stat]").forEach((btn) => {
+    btn.addEventListener("click", () => {
       const status = btn.dataset.txnStat;
-      transactionStatusFilter = transactionStatusFilter === status ? '' : status;
+      transactionStatusFilter =
+        transactionStatusFilter === status ? "" : status;
       renderTransactionStats();
       renderTransactionsTable();
     });
@@ -1653,126 +2042,145 @@ function renderTransactionStats() {
 }
 
 function renderTransactionsTable() {
-  const tbody = document.getElementById('transactionsTableBody');
+  const tbody = document.getElementById("transactionsTableBody");
   const filtered = transactionStatusFilter
-    ? transactionsCache.filter(t => t.status === transactionStatusFilter)
+    ? transactionsCache.filter((t) => t.status === transactionStatusFilter)
     : transactionsCache;
 
   if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" class="empty-note">${transactionStatusFilter ? 'No ' + transactionStatusFilter.toLowerCase() + ' transactions.' : 'No transactions yet.'}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" class="empty-note">${transactionStatusFilter ? "No " + transactionStatusFilter.toLowerCase() + " transactions." : "No transactions yet."}</td></tr>`;
     return;
   }
 
-  tbody.innerHTML = filtered.map(t => `
+  tbody.innerHTML = filtered
+    .map(
+      (t) => `
     <tr>
-      <td>${escapeHtml(t.transaction_date || '')}</td>
+      <td>${escapeHtml(t.transaction_date || "")}</td>
       <td>₹${escapeHtml(String(t.amount))}</td>
-      <td>${escapeHtml(t.description || '')}</td>
+      <td>${escapeHtml(t.description || "")}</td>
       <td>${escapeHtml(t.status)}</td>
       <td class="actions-col">
-        ${editButtonHtml('data-edit-txn', t.id)}
-        ${deleteButtonHtml('data-delete-txn', t.id)}
+        ${editButtonHtml("data-edit-txn", t.id)}
+        ${deleteButtonHtml("data-delete-txn", t.id)}
       </td>
     </tr>
-  `).join('');
+  `,
+    )
+    .join("");
 
-  tbody.querySelectorAll('[data-edit-txn]').forEach(btn => {
-    btn.addEventListener('click', () => openTransactionForm(transactionsCache.find(t => String(t.id) === btn.dataset.editTxn)));
+  tbody.querySelectorAll("[data-edit-txn]").forEach((btn) => {
+    btn.addEventListener("click", () =>
+      openTransactionForm(
+        transactionsCache.find((t) => String(t.id) === btn.dataset.editTxn),
+      ),
+    );
   });
-  tbody.querySelectorAll('[data-delete-txn]').forEach(btn => {
-    btn.addEventListener('click', () => deleteTransaction(btn.dataset.deleteTxn));
+  tbody.querySelectorAll("[data-delete-txn]").forEach((btn) => {
+    btn.addEventListener("click", () =>
+      deleteTransaction(btn.dataset.deleteTxn),
+    );
   });
 }
 
 async function loadTransactions(customerId) {
-  const tbody = document.getElementById('transactionsTableBody');
+  const tbody = document.getElementById("transactionsTableBody");
   tbody.innerHTML = '<tr><td colspan="5" class="empty-note">Loading…</td></tr>';
-  transactionStatusFilter = '';
+  transactionStatusFilter = "";
 
   try {
-    const res = await fetch(`/api/admin/transactions?customer_id=${customerId}`);
+    const res = await fetch(
+      `/api/admin/transactions?customer_id=${customerId}`,
+    );
     const data = await res.json();
     transactionsCache = data.transactions || [];
     renderTransactionStats();
     renderTransactionsTable();
   } catch (err) {
-    tbody.innerHTML = '<tr><td colspan="5" class="empty-note">Could not load transactions.</td></tr>';
+    tbody.innerHTML =
+      '<tr><td colspan="5" class="empty-note">Could not load transactions.</td></tr>';
   }
 }
 
-const txnModal = makeModal('transactionModalOverlay');
+const txnModal = makeModal("transactionModalOverlay");
 const txnFields = {
-  id: document.getElementById('txnId'),
-  customer_id: document.getElementById('txnCustomerId'),
-  amount: document.getElementById('txnAmount'),
-  transaction_date: document.getElementById('txnDate'),
-  status: document.getElementById('txnStatus'),
-  description: document.getElementById('txnDescription')
+  id: document.getElementById("txnId"),
+  customer_id: document.getElementById("txnCustomerId"),
+  amount: document.getElementById("txnAmount"),
+  transaction_date: document.getElementById("txnDate"),
+  status: document.getElementById("txnStatus"),
+  description: document.getElementById("txnDescription"),
 };
 
 function clearTransactionForm() {
-  txnFields.id.value = '';
-  txnFields.amount.value = '';
-  txnFields.transaction_date.value = '';
-  txnFields.status.value = 'Paid';
-  txnFields.description.value = '';
+  txnFields.id.value = "";
+  txnFields.amount.value = "";
+  txnFields.transaction_date.value = "";
+  txnFields.status.value = "Paid";
+  txnFields.description.value = "";
 }
 
 function openTransactionForm(txn) {
   clearTransactionForm();
-  document.getElementById('transactionFormTitle').textContent = txn ? 'Edit transaction' : 'Add transaction';
+  document.getElementById("transactionFormTitle").textContent = txn
+    ? "Edit transaction"
+    : "Add transaction";
   txnFields.customer_id.value = currentCustomerId;
 
   if (txn) {
     txnFields.id.value = txn.id;
     txnFields.amount.value = txn.amount;
-    txnFields.transaction_date.value = txn.transaction_date || '';
-    txnFields.status.value = txn.status || 'Paid';
-    txnFields.description.value = txn.description || '';
+    txnFields.transaction_date.value = txn.transaction_date || "";
+    txnFields.status.value = txn.status || "Paid";
+    txnFields.description.value = txn.description || "";
   }
 
   txnModal.show();
 }
 
-document.getElementById('addTransactionBtn').addEventListener('click', () => openTransactionForm(null));
-document.getElementById('txnCancelBtn').addEventListener('click', () => {
+document
+  .getElementById("addTransactionBtn")
+  .addEventListener("click", () => openTransactionForm(null));
+document.getElementById("txnCancelBtn").addEventListener("click", () => {
   txnModal.hide();
   clearTransactionForm();
 });
-document.getElementById('transactionModalCloseBtn').addEventListener('click', () => {
-  txnModal.hide();
-  clearTransactionForm();
-});
+document
+  .getElementById("transactionModalCloseBtn")
+  .addEventListener("click", () => {
+    txnModal.hide();
+    clearTransactionForm();
+  });
 
-const txnSaveBtn = document.getElementById('txnSaveBtn');
-txnSaveBtn.addEventListener('click', () => {
+const txnSaveBtn = document.getElementById("txnSaveBtn");
+txnSaveBtn.addEventListener("click", () => {
   const payload = {
     id: txnFields.id.value || undefined,
     customer_id: Number(txnFields.customer_id.value),
     amount: Number(txnFields.amount.value),
     transaction_date: txnFields.transaction_date.value,
     status: txnFields.status.value,
-    description: txnFields.description.value
+    description: txnFields.description.value,
   };
 
   if (!payload.amount) {
-    alert('Amount is required.');
+    alert("Amount is required.");
     return;
   }
 
   const isEdit = !!payload.id;
-  const method = isEdit ? 'PUT' : 'POST';
+  const method = isEdit ? "PUT" : "POST";
 
-  withButtonSpinner(txnSaveBtn, 'Saving…', async () => {
+  withButtonSpinner(txnSaveBtn, "Saving…", async () => {
     try {
-      const res = await fetch('/api/admin/transactions', {
+      const res = await fetch("/api/admin/transactions", {
         method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok || data.error) {
-        alert('Error: ' + (data.error || 'Could not save'));
+        alert("Error: " + (data.error || "Could not save"));
         return;
       }
       txnModal.hide();
@@ -1780,7 +2188,7 @@ txnSaveBtn.addEventListener('click', () => {
       loadTransactions(currentCustomerId);
       refreshCurrentCustomerTotal();
     } catch (err) {
-      alert('Something went wrong saving this transaction.');
+      alert("Something went wrong saving this transaction.");
     }
   });
 });
@@ -1789,10 +2197,12 @@ txnSaveBtn.addEventListener('click', () => {
 // panel in place, without leaving the transactions view.
 async function refreshCurrentCustomerTotal() {
   try {
-    const res = await fetch('/api/admin/customers');
+    const res = await fetch("/api/admin/customers");
     const data = await res.json();
     customersCache = data.customers || [];
-    const c = customersCache.find(x => String(x.id) === String(currentCustomerId));
+    const c = customersCache.find(
+      (x) => String(x.id) === String(currentCustomerId),
+    );
     if (c) {
       renderCustomerDetailInfo(c);
       renderCustomerDetailActions(c);
@@ -1803,11 +2213,11 @@ async function refreshCurrentCustomerTotal() {
 }
 
 async function deleteTransaction(id) {
-  if (!confirm('Delete this transaction? This cannot be undone.')) return;
-  await fetch('/api/admin/transactions', {
-    method: 'DELETE',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id: Number(id) })
+  if (!confirm("Delete this transaction? This cannot be undone.")) return;
+  await fetch("/api/admin/transactions", {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id: Number(id) }),
   });
   loadTransactions(currentCustomerId);
   refreshCurrentCustomerTotal();
@@ -1817,131 +2227,150 @@ async function deleteTransaction(id) {
 let recommendationsCache = [];
 
 function renderRecommendationsList() {
-  const list = document.getElementById('recommendationsList');
+  const list = document.getElementById("recommendationsList");
 
   if (recommendationsCache.length === 0) {
     list.innerHTML = '<p class="empty-note">No recommendations yet.</p>';
     return;
   }
 
-  list.innerHTML = recommendationsCache.map(r => `
+  list.innerHTML = recommendationsCache
+    .map(
+      (r) => `
     <div class="ticket-card">
       <div class="ticket-card-head">
         <h3>${escapeHtml(r.name)}</h3>
         <div class="cs-card-actions">
-          ${r.converted_ticket_id ? '<span class="status-badge status-renewed">Converted to ticket</span>' : ''}
-          ${editButtonHtml('data-edit-rec', r.id)}
-          ${deleteButtonHtml('data-delete-rec', r.id)}
+          ${r.converted_ticket_id ? '<span class="status-badge status-renewed">Converted to ticket</span>' : ""}
+          ${editButtonHtml("data-edit-rec", r.id)}
+          ${deleteButtonHtml("data-delete-rec", r.id)}
         </div>
       </div>
-      ${r.details ? `<p style="white-space:pre-wrap;">${escapeHtml(r.details)}</p>` : ''}
+      ${r.details ? `<p style="white-space:pre-wrap;">${escapeHtml(r.details)}</p>` : ""}
     </div>
-  `).join('');
+  `,
+    )
+    .join("");
 
-  list.querySelectorAll('[data-edit-rec]').forEach(btn => {
-    btn.addEventListener('click', () => openRecommendationForm(recommendationsCache.find(r => String(r.id) === btn.dataset.editRec)));
+  list.querySelectorAll("[data-edit-rec]").forEach((btn) => {
+    btn.addEventListener("click", () =>
+      openRecommendationForm(
+        recommendationsCache.find((r) => String(r.id) === btn.dataset.editRec),
+      ),
+    );
   });
-  list.querySelectorAll('[data-delete-rec]').forEach(btn => {
-    btn.addEventListener('click', () => deleteRecommendation(btn.dataset.deleteRec));
+  list.querySelectorAll("[data-delete-rec]").forEach((btn) => {
+    btn.addEventListener("click", () =>
+      deleteRecommendation(btn.dataset.deleteRec),
+    );
   });
 }
 
 async function loadRecommendations(customerId) {
-  const list = document.getElementById('recommendationsList');
+  const list = document.getElementById("recommendationsList");
   list.innerHTML = '<p class="empty-note">Loading…</p>';
 
   try {
-    const res = await fetch(`/api/admin/recommendations?customer_id=${customerId}`);
+    const res = await fetch(
+      `/api/admin/recommendations?customer_id=${customerId}`,
+    );
     const data = await res.json();
     recommendationsCache = data.recommendations || [];
     renderRecommendationsList();
   } catch (err) {
-    list.innerHTML = '<p class="empty-note">Could not load recommendations.</p>';
+    list.innerHTML =
+      '<p class="empty-note">Could not load recommendations.</p>';
   }
 }
 
-const recModal = makeModal('recommendationModalOverlay');
+const recModal = makeModal("recommendationModalOverlay");
 const recFields = {
-  id: document.getElementById('recId'),
-  customer_id: document.getElementById('recCustomerId'),
-  name: document.getElementById('recName'),
-  details: document.getElementById('recDetails')
+  id: document.getElementById("recId"),
+  customer_id: document.getElementById("recCustomerId"),
+  name: document.getElementById("recName"),
+  details: document.getElementById("recDetails"),
 };
 
 function clearRecommendationForm() {
-  recFields.id.value = '';
-  recFields.name.value = '';
-  recFields.details.value = '';
+  recFields.id.value = "";
+  recFields.name.value = "";
+  recFields.details.value = "";
 }
 
 function openRecommendationForm(rec) {
   clearRecommendationForm();
-  document.getElementById('recommendationFormTitle').textContent = rec ? 'Edit recommendation' : 'Add recommendation';
+  document.getElementById("recommendationFormTitle").textContent = rec
+    ? "Edit recommendation"
+    : "Add recommendation";
   recFields.customer_id.value = currentCustomerId;
 
   if (rec) {
     recFields.id.value = rec.id;
     recFields.name.value = rec.name;
-    recFields.details.value = rec.details || '';
+    recFields.details.value = rec.details || "";
   }
 
   recModal.show();
 }
 
-document.getElementById('addRecommendationBtn').addEventListener('click', () => openRecommendationForm(null));
-document.getElementById('recCancelBtn').addEventListener('click', () => {
+document
+  .getElementById("addRecommendationBtn")
+  .addEventListener("click", () => openRecommendationForm(null));
+document.getElementById("recCancelBtn").addEventListener("click", () => {
   recModal.hide();
   clearRecommendationForm();
 });
-document.getElementById('recommendationModalCloseBtn').addEventListener('click', () => {
-  recModal.hide();
-  clearRecommendationForm();
-});
+document
+  .getElementById("recommendationModalCloseBtn")
+  .addEventListener("click", () => {
+    recModal.hide();
+    clearRecommendationForm();
+  });
 
-const recSaveBtn = document.getElementById('recSaveBtn');
-recSaveBtn.addEventListener('click', () => {
+const recSaveBtn = document.getElementById("recSaveBtn");
+recSaveBtn.addEventListener("click", () => {
   const payload = {
     id: recFields.id.value || undefined,
     customer_id: Number(recFields.customer_id.value),
     name: recFields.name.value.trim(),
-    details: recFields.details.value
+    details: recFields.details.value,
   };
 
   if (!payload.name) {
-    alert('Name is required.');
+    alert("Name is required.");
     return;
   }
 
   const isEdit = !!payload.id;
-  const method = isEdit ? 'PUT' : 'POST';
+  const method = isEdit ? "PUT" : "POST";
 
-  withButtonSpinner(recSaveBtn, 'Saving…', async () => {
+  withButtonSpinner(recSaveBtn, "Saving…", async () => {
     try {
-      const res = await fetch('/api/admin/recommendations', {
+      const res = await fetch("/api/admin/recommendations", {
         method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok || data.error) {
-        alert('Error: ' + (data.error || 'Could not save'));
+        alert("Error: " + (data.error || "Could not save"));
         return;
       }
       recModal.hide();
       clearRecommendationForm();
       loadRecommendations(currentCustomerId);
     } catch (err) {
-      alert('Something went wrong saving this recommendation.');
+      alert("Something went wrong saving this recommendation.");
     }
   });
 });
 
 async function deleteRecommendation(id) {
-  if (!confirm('Delete this recommendation? This cannot be undone.')) return;
-  await fetch('/api/admin/recommendations', {
-    method: 'DELETE',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id: Number(id) })
+  if (!confirm("Delete this recommendation? This cannot be undone.")) return;
+  await fetch("/api/admin/recommendations", {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id: Number(id) }),
   });
   loadRecommendations(currentCustomerId);
 }
@@ -1950,11 +2379,11 @@ async function deleteRecommendation(id) {
 let caseStudiesCache = [];
 
 async function loadCaseStudies() {
-  const list = document.getElementById('caseStudiesList');
+  const list = document.getElementById("caseStudiesList");
   list.innerHTML = '<p class="empty-note">Loading…</p>';
 
   try {
-    const res = await fetch('/api/admin/case-studies');
+    const res = await fetch("/api/admin/case-studies");
     const data = await res.json();
     caseStudiesCache = data.case_studies || [];
 
@@ -1963,62 +2392,72 @@ async function loadCaseStudies() {
       return;
     }
 
-    list.innerHTML = caseStudiesCache.map(cs => `
+    list.innerHTML = caseStudiesCache
+      .map(
+        (cs) => `
       <div class="cs-card">
         <div class="cs-card-info">
           <h3>${escapeHtml(cs.business_name)}</h3>
-          <p>${escapeHtml(cs.category || '')} · sort order ${cs.sort_order}</p>
-          <p>${escapeHtml((cs.description || '').slice(0, 120))}${(cs.description || '').length > 120 ? '…' : ''}</p>
+          <p>${escapeHtml(cs.category || "")} · sort order ${cs.sort_order}</p>
+          <p>${escapeHtml((cs.description || "").slice(0, 120))}${(cs.description || "").length > 120 ? "…" : ""}</p>
         </div>
         <div class="cs-card-actions">
-          ${editButtonHtml('data-edit-cs', cs.id)}
-          ${deleteButtonHtml('data-delete-cs', cs.id)}
+          ${editButtonHtml("data-edit-cs", cs.id)}
+          ${deleteButtonHtml("data-delete-cs", cs.id)}
         </div>
       </div>
-    `).join('');
+    `,
+      )
+      .join("");
 
-    list.querySelectorAll('[data-edit-cs]').forEach(btn => {
-      btn.addEventListener('click', () => openCaseStudyForm(btn.dataset.editCs));
+    list.querySelectorAll("[data-edit-cs]").forEach((btn) => {
+      btn.addEventListener("click", () =>
+        openCaseStudyForm(btn.dataset.editCs),
+      );
     });
-    list.querySelectorAll('[data-delete-cs]').forEach(btn => {
-      btn.addEventListener('click', () => deleteCaseStudy(btn.dataset.deleteCs));
+    list.querySelectorAll("[data-delete-cs]").forEach((btn) => {
+      btn.addEventListener("click", () =>
+        deleteCaseStudy(btn.dataset.deleteCs),
+      );
     });
   } catch (err) {
     list.innerHTML = '<p class="empty-note">Could not load case studies.</p>';
   }
 }
 
-const csModal = makeModal('caseStudyModalOverlay');
+const csModal = makeModal("caseStudyModalOverlay");
 const csFields = {
-  id: document.getElementById('csId'),
-  business_name: document.getElementById('csBusinessName'),
-  category: document.getElementById('csCategory'),
-  site_url: document.getElementById('csSiteUrl'),
-  image_file: document.getElementById('csImageFile'),
-  sort_order: document.getElementById('csSortOrder'),
-  description: document.getElementById('csDescription'),
-  stat1_label: document.getElementById('csStat1Label'),
-  stat1_value: document.getElementById('csStat1Value'),
-  stat2_label: document.getElementById('csStat2Label'),
-  stat2_value: document.getElementById('csStat2Value'),
-  stat3_label: document.getElementById('csStat3Label'),
-  stat3_value: document.getElementById('csStat3Value')
+  id: document.getElementById("csId"),
+  business_name: document.getElementById("csBusinessName"),
+  category: document.getElementById("csCategory"),
+  site_url: document.getElementById("csSiteUrl"),
+  image_file: document.getElementById("csImageFile"),
+  sort_order: document.getElementById("csSortOrder"),
+  description: document.getElementById("csDescription"),
+  stat1_label: document.getElementById("csStat1Label"),
+  stat1_value: document.getElementById("csStat1Value"),
+  stat2_label: document.getElementById("csStat2Label"),
+  stat2_value: document.getElementById("csStat2Value"),
+  stat3_label: document.getElementById("csStat3Label"),
+  stat3_value: document.getElementById("csStat3Value"),
 };
 
 function clearCaseStudyForm() {
   Object.entries(csFields).forEach(([key, el]) => {
-    el.value = key === 'sort_order' ? '0' : '';
+    el.value = key === "sort_order" ? "0" : "";
   });
 }
 
 function openCaseStudyForm(id) {
   clearCaseStudyForm();
-  document.getElementById('csFormTitle').textContent = id ? 'Edit case study' : 'Add case study';
+  document.getElementById("csFormTitle").textContent = id
+    ? "Edit case study"
+    : "Add case study";
 
   if (id) {
-    const cs = caseStudiesCache.find(c => String(c.id) === String(id));
+    const cs = caseStudiesCache.find((c) => String(c.id) === String(id));
     if (cs) {
-      Object.keys(csFields).forEach(key => {
+      Object.keys(csFields).forEach((key) => {
         if (cs[key] != null) csFields[key].value = cs[key];
       });
     }
@@ -2027,59 +2466,63 @@ function openCaseStudyForm(id) {
   csModal.show();
 }
 
-document.getElementById('addCaseStudyBtn').addEventListener('click', () => openCaseStudyForm(null));
-document.getElementById('csCancelBtn').addEventListener('click', () => {
+document
+  .getElementById("addCaseStudyBtn")
+  .addEventListener("click", () => openCaseStudyForm(null));
+document.getElementById("csCancelBtn").addEventListener("click", () => {
   csModal.hide();
   clearCaseStudyForm();
 });
-document.getElementById('caseStudyModalCloseBtn').addEventListener('click', () => {
-  csModal.hide();
-  clearCaseStudyForm();
-});
+document
+  .getElementById("caseStudyModalCloseBtn")
+  .addEventListener("click", () => {
+    csModal.hide();
+    clearCaseStudyForm();
+  });
 
-const csSaveBtn = document.getElementById('csSaveBtn');
-csSaveBtn.addEventListener('click', () => {
+const csSaveBtn = document.getElementById("csSaveBtn");
+csSaveBtn.addEventListener("click", () => {
   const payload = {};
   Object.entries(csFields).forEach(([key, el]) => {
     payload[key] = el.value;
   });
 
   if (!payload.business_name.trim()) {
-    alert('Business name is required.');
+    alert("Business name is required.");
     return;
   }
 
   const isEdit = !!payload.id;
-  const method = isEdit ? 'PUT' : 'POST';
+  const method = isEdit ? "PUT" : "POST";
   if (!isEdit) delete payload.id;
 
-  withButtonSpinner(csSaveBtn, 'Saving…', async () => {
+  withButtonSpinner(csSaveBtn, "Saving…", async () => {
     try {
-      const res = await fetch('/api/admin/case-studies', {
+      const res = await fetch("/api/admin/case-studies", {
         method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok || data.error) {
-        alert('Error: ' + (data.error || 'Could not save'));
+        alert("Error: " + (data.error || "Could not save"));
         return;
       }
       csModal.hide();
       clearCaseStudyForm();
       loadCaseStudies();
     } catch (err) {
-      alert('Something went wrong saving this case study.');
+      alert("Something went wrong saving this case study.");
     }
   });
 });
 
 async function deleteCaseStudy(id) {
-  if (!confirm('Delete this case study? This cannot be undone.')) return;
-  await fetch('/api/admin/case-studies', {
-    method: 'DELETE',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id: Number(id) })
+  if (!confirm("Delete this case study? This cannot be undone.")) return;
+  await fetch("/api/admin/case-studies", {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id: Number(id) }),
   });
   loadCaseStudies();
 }
@@ -2089,57 +2532,58 @@ const RENEWAL_DUE_SOON_DAYS = 7;
 
 function todayISODate() {
   const d = new Date();
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
   return `${d.getFullYear()}-${mm}-${dd}`;
 }
 
 function addDaysISO(isoDate, days) {
-  const [y, m, d] = isoDate.split('-').map(Number);
+  const [y, m, d] = isoDate.split("-").map(Number);
   const date = new Date(y, m - 1, d + days);
-  const mm = String(date.getMonth() + 1).padStart(2, '0');
-  const dd = String(date.getDate()).padStart(2, '0');
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
   return `${date.getFullYear()}-${mm}-${dd}`;
 }
 
 // Renewed is stored; Due / Due Soon are computed live from due_date vs
 // today every time this renders, so the badge never goes stale.
 function renewalDisplayStatus(r) {
-  if (r.status === 'Renewed') return 'Renewed';
+  if (r.status === "Renewed") return "Renewed";
   const today = todayISODate();
   const dueSoonCutoff = addDaysISO(today, RENEWAL_DUE_SOON_DAYS);
-  if (r.due_date >= today && r.due_date <= dueSoonCutoff) return 'Due Soon';
-  return 'Due';
+  if (r.due_date >= today && r.due_date <= dueSoonCutoff) return "Due Soon";
+  return "Due";
 }
 
 let renewalsCache = [];
 
 function renewalFrequencyBadge(frequency) {
-  const cls = 'freq-' + (frequency || '').toLowerCase().replace(/\s+/g, '-');
+  const cls = "freq-" + (frequency || "").toLowerCase().replace(/\s+/g, "-");
   return `<span class="freq-badge ${cls}">${escapeHtml(frequency)}</span>`;
 }
 
 function renewalRowHtml(r) {
   const displayStatus = renewalDisplayStatus(r);
-  const actionBtn = displayStatus === 'Renewed'
-    ? `<button type="button" class="btn btn-outline btn-small" data-view-renewal="${r.id}">View</button>`
-    : `<button type="button" class="btn btn-primary btn-small" data-renew="${r.id}">Renew</button>`;
+  const actionBtn =
+    displayStatus === "Renewed"
+      ? `<button type="button" class="btn btn-outline btn-small" data-view-renewal="${r.id}">View</button>`
+      : `<button type="button" class="btn btn-primary btn-small" data-renew="${r.id}">Renew</button>`;
 
   return `
     <tr data-id="${r.id}">
       <td>
         <strong>${escapeHtml(r.business_name)}</strong><br>
-        <span class="renewal-subtext">${escapeHtml(r.email || r.phone || '')}</span>
+        <span class="renewal-subtext">${escapeHtml(r.email || r.phone || "")}</span>
       </td>
-      <td class="unique-id">${escapeHtml(r.customer_unique_id || '')}</td>
+      <td class="unique-id">${escapeHtml(r.customer_unique_id || "")}</td>
       <td>${renewalFrequencyBadge(r.frequency)}</td>
       <td>${escapeHtml(r.due_date)}</td>
       <td>₹${escapeHtml(String(r.amount))}</td>
       <td><span class="status-badge ${statusClass(displayStatus)}">${escapeHtml(displayStatus)}</span></td>
       <td class="actions-col">
         ${actionBtn}
-        ${editButtonHtml('data-edit-renewal', r.id)}
-        ${deleteButtonHtml('data-delete-renewal', r.id)}
+        ${editButtonHtml("data-edit-renewal", r.id)}
+        ${deleteButtonHtml("data-delete-renewal", r.id)}
       </td>
     </tr>
   `;
@@ -2155,86 +2599,112 @@ function computeRenewalStats(list) {
   let renewedThisMonth = 0;
   let renewedThisYear = 0;
 
-  list.forEach(r => {
-    if (r.status === 'Renewed') {
+  list.forEach((r) => {
+    if (r.status === "Renewed") {
       if (!r.renewed_at) return;
       const renewedDate = new Date(r.renewed_at);
       if (renewedDate.getFullYear() === currentYear) {
         renewedThisYear += Number(r.amount);
-        if (renewedDate.getMonth() === currentMonth) renewedThisMonth += Number(r.amount);
+        if (renewedDate.getMonth() === currentMonth)
+          renewedThisMonth += Number(r.amount);
       }
       return;
     }
-    const [y, m] = r.due_date.split('-').map(Number);
+    const [y, m] = r.due_date.split("-").map(Number);
     if (y === currentYear) {
       dueThisYear += Number(r.amount);
       if (m - 1 === currentMonth) dueThisMonth += Number(r.amount);
     }
   });
 
-  document.getElementById('renewalStatMonth').textContent = '₹' + dueThisMonth.toLocaleString('en-IN');
-  document.getElementById('renewalStatYear').textContent = '₹' + dueThisYear.toLocaleString('en-IN');
-  document.getElementById('renewalStatCount').textContent = list.length;
-  document.getElementById('renewalStatRenewedMonth').textContent = '₹' + renewedThisMonth.toLocaleString('en-IN');
-  document.getElementById('renewalStatRenewedYear').textContent = '₹' + renewedThisYear.toLocaleString('en-IN');
+  document.getElementById("renewalStatMonth").textContent =
+    "₹" + dueThisMonth.toLocaleString("en-IN");
+  document.getElementById("renewalStatYear").textContent =
+    "₹" + dueThisYear.toLocaleString("en-IN");
+  document.getElementById("renewalStatCount").textContent = list.length;
+  document.getElementById("renewalStatRenewedMonth").textContent =
+    "₹" + renewedThisMonth.toLocaleString("en-IN");
+  document.getElementById("renewalStatRenewedYear").textContent =
+    "₹" + renewedThisYear.toLocaleString("en-IN");
 }
 
 function applyRenewalFilters() {
-  const term = document.getElementById('renewalSearchInput').value.trim().toLowerCase();
-  const statusFilter = document.getElementById('renewalFilterStatus').value;
-  const freqFilter = document.getElementById('renewalFilterFrequency').value;
-  const fromFilter = document.getElementById('renewalFilterFrom').value;
-  const toFilter = document.getElementById('renewalFilterTo').value;
+  const term = document
+    .getElementById("renewalSearchInput")
+    .value.trim()
+    .toLowerCase();
+  const statusFilter = document.getElementById("renewalFilterStatus").value;
+  const freqFilter = document.getElementById("renewalFilterFrequency").value;
+  const fromFilter = document.getElementById("renewalFilterFrom").value;
+  const toFilter = document.getElementById("renewalFilterTo").value;
 
   let filtered = renewalsCache;
 
   if (term) {
-    filtered = filtered.filter(r =>
-      (r.business_name || '').toLowerCase().includes(term) ||
-      (r.contact_name || '').toLowerCase().includes(term) ||
-      (r.email || '').toLowerCase().includes(term) ||
-      (r.phone || '').toLowerCase().includes(term)
+    filtered = filtered.filter(
+      (r) =>
+        (r.business_name || "").toLowerCase().includes(term) ||
+        (r.contact_name || "").toLowerCase().includes(term) ||
+        (r.email || "").toLowerCase().includes(term) ||
+        (r.phone || "").toLowerCase().includes(term),
     );
   }
-  if (statusFilter) filtered = filtered.filter(r => renewalDisplayStatus(r) === statusFilter);
-  if (freqFilter) filtered = filtered.filter(r => r.frequency === freqFilter);
-  if (fromFilter) filtered = filtered.filter(r => r.due_date >= fromFilter);
-  if (toFilter) filtered = filtered.filter(r => r.due_date <= toFilter);
+  if (statusFilter)
+    filtered = filtered.filter((r) => renewalDisplayStatus(r) === statusFilter);
+  if (freqFilter) filtered = filtered.filter((r) => r.frequency === freqFilter);
+  if (fromFilter) filtered = filtered.filter((r) => r.due_date >= fromFilter);
+  if (toFilter) filtered = filtered.filter((r) => r.due_date <= toFilter);
 
-  const tbody = document.getElementById('renewalsTableBody');
+  const tbody = document.getElementById("renewalsTableBody");
   tbody.innerHTML = filtered.length
-    ? filtered.map(renewalRowHtml).join('')
+    ? filtered.map(renewalRowHtml).join("")
     : '<tr><td colspan="7" class="empty-note">No renewals match these filters.</td></tr>';
 
-  tbody.querySelectorAll('[data-renew]').forEach(btn => {
-    btn.addEventListener('click', () => renewRenewal(btn.dataset.renew));
+  tbody.querySelectorAll("[data-renew]").forEach((btn) => {
+    btn.addEventListener("click", () => renewRenewal(btn.dataset.renew));
   });
-  tbody.querySelectorAll('[data-view-renewal]').forEach(btn => {
-    btn.addEventListener('click', () => openRenewalModal(btn.dataset.viewRenewal));
+  tbody.querySelectorAll("[data-view-renewal]").forEach((btn) => {
+    btn.addEventListener("click", () =>
+      openRenewalModal(btn.dataset.viewRenewal),
+    );
   });
-  tbody.querySelectorAll('[data-edit-renewal]').forEach(btn => {
-    btn.addEventListener('click', () => openRenewalModal(btn.dataset.editRenewal));
+  tbody.querySelectorAll("[data-edit-renewal]").forEach((btn) => {
+    btn.addEventListener("click", () =>
+      openRenewalModal(btn.dataset.editRenewal),
+    );
   });
-  tbody.querySelectorAll('[data-delete-renewal]').forEach(btn => {
-    btn.addEventListener('click', () => deleteRenewalRecord(btn.dataset.deleteRenewal));
+  tbody.querySelectorAll("[data-delete-renewal]").forEach((btn) => {
+    btn.addEventListener("click", () =>
+      deleteRenewalRecord(btn.dataset.deleteRenewal),
+    );
   });
 }
 
-document.getElementById('renewalSearchInput').addEventListener('input', applyRenewalFilters);
-document.getElementById('renewalFilterStatus').addEventListener('change', applyRenewalFilters);
-document.getElementById('renewalFilterFrequency').addEventListener('change', applyRenewalFilters);
-document.getElementById('renewalFilterFrom').addEventListener('change', applyRenewalFilters);
-document.getElementById('renewalFilterTo').addEventListener('change', applyRenewalFilters);
+document
+  .getElementById("renewalSearchInput")
+  .addEventListener("input", applyRenewalFilters);
+document
+  .getElementById("renewalFilterStatus")
+  .addEventListener("change", applyRenewalFilters);
+document
+  .getElementById("renewalFilterFrequency")
+  .addEventListener("change", applyRenewalFilters);
+document
+  .getElementById("renewalFilterFrom")
+  .addEventListener("change", applyRenewalFilters);
+document
+  .getElementById("renewalFilterTo")
+  .addEventListener("change", applyRenewalFilters);
 
 // `announceAutoCreated`: when true (the "Refresh Renewals" button), tells
 // the admin how many missing renewal records the check just created —
 // skipped on the tab's normal/passive loads so it doesn't pop up unasked.
 async function loadRenewals(announceAutoCreated = false) {
-  const tbody = document.getElementById('renewalsTableBody');
+  const tbody = document.getElementById("renewalsTableBody");
   tbody.innerHTML = '<tr><td colspan="7" class="empty-note">Loading…</td></tr>';
 
   try {
-    const res = await fetch('/api/admin/renewals');
+    const res = await fetch("/api/admin/renewals");
     const data = await res.json();
     renewalsCache = data.renewals || [];
     computeRenewalStats(renewalsCache);
@@ -2242,47 +2712,57 @@ async function loadRenewals(announceAutoCreated = false) {
 
     if (announceAutoCreated) {
       const count = data.auto_created || 0;
-      alert(count > 0
-        ? `Created ${count} missing renewal record${count === 1 ? '' : 's'}.`
-        : 'No missing renewals found — every renewal-required customer already has one queued up.');
+      alert(
+        count > 0
+          ? `Created ${count} missing renewal record${count === 1 ? "" : "s"}.`
+          : "No missing renewals found — every renewal-required customer already has one queued up.",
+      );
     }
   } catch (err) {
-    tbody.innerHTML = '<tr><td colspan="7" class="empty-note">Could not load renewals.</td></tr>';
+    tbody.innerHTML =
+      '<tr><td colspan="7" class="empty-note">Could not load renewals.</td></tr>';
   }
 }
 
 function populateRenewalCustomerSelect() {
-  const select = document.getElementById('renewalCustomer');
-  const options = customersCache.map(c => `<option value="${c.id}">${escapeHtml(c.business_name)}</option>`).join('');
-  select.innerHTML = '<option value="">— Select a customer —</option>' + options;
+  const select = document.getElementById("renewalCustomer");
+  const options = customersCache
+    .map(
+      (c) => `<option value="${c.id}">${escapeHtml(c.business_name)}</option>`,
+    )
+    .join("");
+  select.innerHTML =
+    '<option value="">— Select a customer —</option>' + options;
 }
 
-const renewalModal = makeModal('renewalModalOverlay');
+const renewalModal = makeModal("renewalModalOverlay");
 const renewalFields = {
-  id: document.getElementById('renewalId'),
-  customer_id: document.getElementById('renewalCustomer'),
-  frequency: document.getElementById('renewalFrequency'),
-  due_date: document.getElementById('renewalDueDate'),
-  amount: document.getElementById('renewalAmount'),
-  status: document.getElementById('renewalStatus')
+  id: document.getElementById("renewalId"),
+  customer_id: document.getElementById("renewalCustomer"),
+  frequency: document.getElementById("renewalFrequency"),
+  due_date: document.getElementById("renewalDueDate"),
+  amount: document.getElementById("renewalAmount"),
+  status: document.getElementById("renewalStatus"),
 };
 
 function clearRenewalForm() {
-  renewalFields.id.value = '';
-  renewalFields.customer_id.value = '';
-  renewalFields.frequency.value = 'Yearly';
-  renewalFields.due_date.value = '';
-  renewalFields.amount.value = '';
-  renewalFields.status.value = 'Pending';
+  renewalFields.id.value = "";
+  renewalFields.customer_id.value = "";
+  renewalFields.frequency.value = "Yearly";
+  renewalFields.due_date.value = "";
+  renewalFields.amount.value = "";
+  renewalFields.status.value = "Pending";
 }
 
 function openRenewalModal(id) {
   clearRenewalForm();
   populateRenewalCustomerSelect();
-  document.getElementById('renewalModalTitle').textContent = id ? 'Update Renewal Record' : 'Create Renewal Record';
+  document.getElementById("renewalModalTitle").textContent = id
+    ? "Update Renewal Record"
+    : "Create Renewal Record";
 
   if (id) {
-    const r = renewalsCache.find(x => String(x.id) === String(id));
+    const r = renewalsCache.find((x) => String(x.id) === String(id));
     if (r) {
       renewalFields.id.value = r.id;
       renewalFields.customer_id.value = r.customer_id;
@@ -2296,120 +2776,153 @@ function openRenewalModal(id) {
   renewalModal.show();
 }
 
-document.getElementById('addRenewalBtn').addEventListener('click', () => openRenewalModal(null));
-document.getElementById('renewalCancelBtn').addEventListener('click', () => {
+document
+  .getElementById("addRenewalBtn")
+  .addEventListener("click", () => openRenewalModal(null));
+document.getElementById("renewalCancelBtn").addEventListener("click", () => {
   renewalModal.hide();
   clearRenewalForm();
 });
-document.getElementById('renewalModalCloseBtn').addEventListener('click', () => {
-  renewalModal.hide();
-  clearRenewalForm();
-});
+document
+  .getElementById("renewalModalCloseBtn")
+  .addEventListener("click", () => {
+    renewalModal.hide();
+    clearRenewalForm();
+  });
 
-const renewalSaveBtn = document.getElementById('renewalSaveBtn');
-renewalSaveBtn.addEventListener('click', () => {
+const renewalSaveBtn = document.getElementById("renewalSaveBtn");
+renewalSaveBtn.addEventListener("click", () => {
   const payload = {
     id: renewalFields.id.value,
     customer_id: Number(renewalFields.customer_id.value),
     frequency: renewalFields.frequency.value,
     due_date: renewalFields.due_date.value,
     amount: Number(renewalFields.amount.value),
-    status: renewalFields.status.value
+    status: renewalFields.status.value,
   };
 
   if (!payload.customer_id) {
-    alert('Please select a customer.');
+    alert("Please select a customer.");
     return;
   }
   if (!payload.due_date) {
-    alert('Please set a renewal due date.');
+    alert("Please set a renewal due date.");
     return;
   }
   if (!payload.amount || payload.amount <= 0) {
-    alert('Please enter an amount greater than 0.');
+    alert("Please enter an amount greater than 0.");
     return;
   }
 
   const isEdit = !!payload.id;
-  const method = isEdit ? 'PUT' : 'POST';
+  const method = isEdit ? "PUT" : "POST";
   if (!isEdit) delete payload.id;
 
-  withButtonSpinner(renewalSaveBtn, 'Saving…', async () => {
+  withButtonSpinner(renewalSaveBtn, "Saving…", async () => {
     try {
-      const res = await fetch('/api/admin/renewals', {
+      const res = await fetch("/api/admin/renewals", {
         method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok || data.error) {
-        alert('Error: ' + (data.error || 'Could not save'));
+        alert("Error: " + (data.error || "Could not save"));
         return;
       }
       renewalModal.hide();
       clearRenewalForm();
       loadRenewals();
     } catch (err) {
-      alert('Something went wrong saving this renewal.');
+      alert("Something went wrong saving this renewal.");
     }
   });
 });
 
-const renewalSuccessModal = makeModal('renewalSuccessOverlay');
+const renewalSuccessModal = makeModal("renewalSuccessOverlay");
 
 async function renewRenewal(id) {
-  if (!confirm('Mark this renewal as Renewed? This will automatically create the next renewal cycle.')) return;
+  if (
+    !confirm(
+      "Mark this renewal as Renewed? This will automatically create the next renewal cycle.",
+    )
+  )
+    return;
 
   try {
-    const res = await fetch('/api/admin/renewals', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: Number(id) })
+    const res = await fetch("/api/admin/renewals", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: Number(id) }),
     });
     const data = await res.json();
     if (!res.ok || data.error) {
-      alert('Error: ' + (data.error || 'Could not renew'));
+      alert("Error: " + (data.error || "Could not renew"));
       return;
     }
 
-    const r = renewalsCache.find(x => String(x.id) === String(id));
-    document.getElementById('renewalSuccessDetails').textContent =
-      `Customer: ${r ? r.business_name : ''}\nNew Due Date: ${data.next.due_date}\nAmount: ₹${data.next.amount}`;
+    const r = renewalsCache.find((x) => String(x.id) === String(id));
+    document.getElementById("renewalSuccessDetails").textContent =
+      `Customer: ${r ? r.business_name : ""}\nNew Due Date: ${data.next.due_date}\nAmount: ₹${data.next.amount}`;
     await loadRenewals();
     renewalSuccessModal.show();
   } catch (err) {
-    alert('Something went wrong processing this renewal.');
+    alert("Something went wrong processing this renewal.");
   }
 }
 
-document.getElementById('renewalSuccessOkBtn').addEventListener('click', () => renewalSuccessModal.hide());
+document
+  .getElementById("renewalSuccessOkBtn")
+  .addEventListener("click", () => renewalSuccessModal.hide());
 
 async function deleteRenewalRecord(id) {
-  if (!confirm('Delete this renewal record? This cannot be undone.')) return;
-  await fetch('/api/admin/renewals', {
-    method: 'DELETE',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id: Number(id) })
+  if (!confirm("Delete this renewal record? This cannot be undone.")) return;
+  await fetch("/api/admin/renewals", {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id: Number(id) }),
   });
   loadRenewals();
 }
 
-const refreshRenewalsBtn = document.getElementById('refreshRenewalsBtn');
-refreshRenewalsBtn.addEventListener('click', () => {
-  withButtonSpinner(refreshRenewalsBtn, 'Checking…', () => loadRenewals(true));
+const refreshRenewalsBtn = document.getElementById("refreshRenewalsBtn");
+refreshRenewalsBtn.addEventListener("click", () => {
+  withButtonSpinner(refreshRenewalsBtn, "Checking…", () => loadRenewals(true));
 });
 
-document.getElementById('exportRenewalsBtn').addEventListener('click', () => {
-  const rows = [['Customer Name', 'Customer ID', 'Frequency', 'Renewal Due Date', 'Amount Due', 'Status']];
-  renewalsCache.forEach(r => {
-    rows.push([r.business_name, r.customer_unique_id || '', r.frequency, r.due_date, r.amount, renewalDisplayStatus(r)]);
+document.getElementById("exportRenewalsBtn").addEventListener("click", () => {
+  const rows = [
+    [
+      "Customer Name",
+      "Customer ID",
+      "Frequency",
+      "Renewal Due Date",
+      "Amount Due",
+      "Status",
+    ],
+  ];
+  renewalsCache.forEach((r) => {
+    rows.push([
+      r.business_name,
+      r.customer_unique_id || "",
+      r.frequency,
+      r.due_date,
+      r.amount,
+      renewalDisplayStatus(r),
+    ]);
   });
-  const csv = rows.map(row => row.map(cell => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
-  const blob = new Blob([csv], { type: 'text/csv' });
+  const csv = rows
+    .map((row) =>
+      row
+        .map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`)
+        .join(","),
+    )
+    .join("\n");
+  const blob = new Blob([csv], { type: "text/csv" });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
-  a.download = 'renewals.csv';
+  a.download = "renewals.csv";
   a.click();
   URL.revokeObjectURL(url);
 });
@@ -2419,34 +2932,54 @@ document.getElementById('exportRenewalsBtn').addEventListener('click', () => {
 // ===== Tickets =====
 
 function statusClass(status) {
-  return 'status-' + (status || 'open').toLowerCase().replace(/\s+/g, '-');
+  return "status-" + (status || "open").toLowerCase().replace(/\s+/g, "-");
 }
 
-const TICKET_DATE_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
+const TICKET_DATE_MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sept",
+  "Oct",
+  "Nov",
+  "Dec",
+];
 function formatTicketDate(dateStr) {
   const d = new Date(dateStr);
   return `${d.getDate()} ${TICKET_DATE_MONTHS[d.getMonth()]} ${d.getFullYear()}`;
 }
 
-const PAYMENT_UPI_ID = 'swapnil.barad@axisbank'; // fallback used when a customer has no upi_id of their own set
-const PAYMENT_PAYEE_NAME = 'SitePragati';
+const PAYMENT_UPI_ID = "swapnil.barad@axisbank"; // fallback used when a customer has no upi_id of their own set
+const PAYMENT_PAYEE_NAME = "SitePragati";
 let customerUpiId = null; // set from /api/whoami on login/session-check — this customer's own UPI ID, if any
 
 function buildUpiLink(amount, note) {
-  const params = new URLSearchParams({ pa: customerUpiId || PAYMENT_UPI_ID, pn: PAYMENT_PAYEE_NAME, cu: 'INR' });
-  if (amount) params.set('am', amount);
-  if (note) params.set('tn', note);
-  return 'upi://pay?' + params.toString();
+  const params = new URLSearchParams({
+    pa: customerUpiId || PAYMENT_UPI_ID,
+    pn: PAYMENT_PAYEE_NAME,
+    cu: "INR",
+  });
+  if (amount) params.set("am", amount);
+  if (note) params.set("tn", note);
+  return "upi://pay?" + params.toString();
 }
 
 function upiQrUrl(amount, note) {
   const link = buildUpiLink(amount, note);
-  return 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(link);
+  return (
+    "https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=" +
+    encodeURIComponent(link)
+  );
 }
 
 function renderTicketPaymentSection(t) {
-  if (t.status === 'Payment Pending') {
-    const amount = Number(t.payment_amount || 0).toLocaleString('en-IN');
+  if (t.status === "Payment Pending") {
+    const amount = Number(t.payment_amount || 0).toLocaleString("en-IN");
     const upiId = customerUpiId || PAYMENT_UPI_ID;
     return `
       <div class="ticket-payment">
@@ -2465,20 +2998,20 @@ function renderTicketPaymentSection(t) {
         <p class="payment-status-msg" data-ticket-id="${t.id}"></p>
       </div>`;
   }
-  if (t.status === 'Payment Submitted') {
+  if (t.status === "Payment Submitted") {
     return `
       <div class="ticket-payment ticket-payment-submitted">
-        <p>Payment reference submitted: <strong>${escapeHtml(t.payment_reference || '')}</strong></p>
+        <p>Payment reference submitted: <strong>${escapeHtml(t.payment_reference || "")}</strong></p>
         <p class="payment-note">Awaiting verification from SitePragati.</p>
       </div>`;
   }
-  if (t.status === 'Payment Received') {
+  if (t.status === "Payment Received") {
     return `
       <div class="ticket-payment ticket-payment-confirmed">
-        <p>✓ Payment of ₹${escapeHtml(String(t.payment_amount))} confirmed${t.payment_reference ? ` — ref: ${escapeHtml(t.payment_reference)}` : ''}</p>
+        <p>✓ Payment of ₹${escapeHtml(String(t.payment_amount))} confirmed${t.payment_reference ? ` — ref: ${escapeHtml(t.payment_reference)}` : ""}</p>
       </div>`;
   }
-  return '';
+  return "";
 }
 
 // A compact, clickable summary row — the Tickets tab only ever shows
@@ -2491,73 +3024,81 @@ function buildCustomerTicketRowHtml(t) {
           <h3>${escapeHtml(t.subject)}</h3>
           <span class="status-badge ${statusClass(t.status)}">${escapeHtml(t.status)}</span>
         </div>
-        <p class="ticket-date">Raised: ${escapeHtml(formatTicketDate(t.created_at))}${t.reference_code ? ` · Request ID: ${escapeHtml(t.reference_code)}` : ''}</p>
+        <p class="ticket-date">Raised: ${escapeHtml(formatTicketDate(t.created_at))}${t.reference_code ? ` · Request ID: ${escapeHtml(t.reference_code)}` : ""}</p>
       </div>`;
 }
 
 function wireCustomerTicketRowEvents(container) {
-  container.querySelectorAll('[data-ticket-row]').forEach(row => {
-    row.addEventListener('click', () => openCustomerTicketDetail(row.dataset.ticketRow));
+  container.querySelectorAll("[data-ticket-row]").forEach((row) => {
+    row.addEventListener("click", () =>
+      openCustomerTicketDetail(row.dataset.ticketRow),
+    );
   });
 }
 
 let customerTicketsCache = [];
 
 function applyCustomerTicketFilters() {
-  const statusFilter = document.getElementById('customerFilterStatus').value;
+  const statusFilter = document.getElementById("customerFilterStatus").value;
   let filtered = customerTicketsCache;
-  if (statusFilter) filtered = filtered.filter(t => t.status === statusFilter);
+  if (statusFilter)
+    filtered = filtered.filter((t) => t.status === statusFilter);
 
-  const list = document.getElementById('ticketsList');
-  const closedSection = document.getElementById('customerClosedSection');
+  const list = document.getElementById("ticketsList");
+  const closedSection = document.getElementById("customerClosedSection");
 
-  if (statusFilter === 'Closed') {
+  if (statusFilter === "Closed") {
     list.innerHTML = filtered.length
-      ? filtered.map(buildCustomerTicketRowHtml).join('')
+      ? filtered.map(buildCustomerTicketRowHtml).join("")
       : '<p class="empty-note">No closed tickets match this filter.</p>';
     wireCustomerTicketRowEvents(list);
     closedSection.hidden = true;
     return;
   }
 
-  const active = filtered.filter(t => t.status !== 'Closed');
-  const closed = filtered.filter(t => t.status === 'Closed');
+  const active = filtered.filter((t) => t.status !== "Closed");
+  const closed = filtered.filter((t) => t.status === "Closed");
 
   list.innerHTML = active.length
-    ? active.map(buildCustomerTicketRowHtml).join('')
+    ? active.map(buildCustomerTicketRowHtml).join("")
     : '<p class="empty-note">No tickets yet — raise one above if you need something updated or fixed.</p>';
   wireCustomerTicketRowEvents(list);
 
-  document.getElementById('customerClosedCount').textContent = closed.length;
+  document.getElementById("customerClosedCount").textContent = closed.length;
   closedSection.hidden = closed.length === 0;
 
-  const closedList = document.getElementById('customerClosedList');
-  closedList.innerHTML = closed.map(buildCustomerTicketRowHtml).join('');
+  const closedList = document.getElementById("customerClosedList");
+  closedList.innerHTML = closed.map(buildCustomerTicketRowHtml).join("");
   wireCustomerTicketRowEvents(closedList);
 }
 
-document.getElementById('customerFilterStatus').addEventListener('change', applyCustomerTicketFilters);
+document
+  .getElementById("customerFilterStatus")
+  .addEventListener("change", applyCustomerTicketFilters);
 
-document.getElementById('toggleCustomerClosed').addEventListener('click', () => {
-  const closedList = document.getElementById('customerClosedList');
-  const isHidden = closedList.hidden;
-  closedList.hidden = !isHidden;
-  const count = document.getElementById('customerClosedCount').textContent;
-  document.getElementById('toggleCustomerClosed').innerHTML = isHidden
-    ? `Hide closed tickets (<span id="customerClosedCount">${count}</span>)`
-    : `Show closed tickets (<span id="customerClosedCount">${count}</span>)`;
-});
+document
+  .getElementById("toggleCustomerClosed")
+  .addEventListener("click", () => {
+    const closedList = document.getElementById("customerClosedList");
+    const isHidden = closedList.hidden;
+    closedList.hidden = !isHidden;
+    const count = document.getElementById("customerClosedCount").textContent;
+    document.getElementById("toggleCustomerClosed").innerHTML = isHidden
+      ? `Hide closed tickets (<span id="customerClosedCount">${count}</span>)`
+      : `Show closed tickets (<span id="customerClosedCount">${count}</span>)`;
+  });
 
 async function loadCustomerTickets() {
-  const list = document.getElementById('ticketsList');
+  const list = document.getElementById("ticketsList");
   list.innerHTML = '<p class="empty-note">Loading…</p>';
 
   try {
-    const res = await fetch('/api/customer/tickets');
+    const res = await fetch("/api/customer/tickets");
     const data = await res.json();
     customerTicketsCache = data.tickets || [];
 
-    document.getElementById('customerFilterName').value = loggedInBusinessName || '';
+    document.getElementById("customerFilterName").value =
+      loggedInBusinessName || "";
     applyCustomerTicketFilters();
   } catch (err) {
     list.innerHTML = '<p class="empty-note">Could not load tickets.</p>';
@@ -2569,54 +3110,65 @@ async function loadCustomerTickets() {
 let customerRecommendationsCache = [];
 
 async function loadCustomerRecommendationsList() {
-  const list = document.getElementById('customerRecommendationsList');
+  const list = document.getElementById("customerRecommendationsList");
   list.innerHTML = '<p class="empty-note">Loading…</p>';
 
   try {
-    const res = await fetch('/api/customer/recommendations');
+    const res = await fetch("/api/customer/recommendations");
     const data = await res.json();
     customerRecommendationsCache = data.recommendations || [];
     renderCustomerRecommendationsList();
   } catch (err) {
-    list.innerHTML = '<p class="empty-note">Could not load recommendations.</p>';
+    list.innerHTML =
+      '<p class="empty-note">Could not load recommendations.</p>';
   }
 }
 
 function renderCustomerRecommendationsList() {
-  const list = document.getElementById('customerRecommendationsList');
+  const list = document.getElementById("customerRecommendationsList");
 
   if (customerRecommendationsCache.length === 0) {
     list.innerHTML = '<p class="empty-note">No recommendations yet.</p>';
     return;
   }
 
-  list.innerHTML = customerRecommendationsCache.map(r => `
+  list.innerHTML = customerRecommendationsCache
+    .map(
+      (r) => `
     <div class="ticket-card rec-card" data-rec-id="${r.id}">
       <div class="ticket-card-head">
         <h3>${escapeHtml(r.name)}</h3>
-        ${r.converted_ticket_id ? '<span class="status-badge status-renewed">Converted to ticket</span>' : ''}
+        ${r.converted_ticket_id ? '<span class="status-badge status-renewed">Converted to ticket</span>' : ""}
       </div>
-      ${r.details ? `<p style="white-space:pre-wrap;">${escapeHtml(r.details)}</p>` : ''}
+      ${r.details ? `<p style="white-space:pre-wrap;">${escapeHtml(r.details)}</p>` : ""}
     </div>
-  `).join('');
+  `,
+    )
+    .join("");
 
-  list.querySelectorAll('[data-rec-id]').forEach(card => {
-    card.addEventListener('click', () => openCustomerRecommendationDetail(card.dataset.recId));
+  list.querySelectorAll("[data-rec-id]").forEach((card) => {
+    card.addEventListener("click", () =>
+      openCustomerRecommendationDetail(card.dataset.recId),
+    );
   });
 }
 
 function openCustomerRecommendationDetail(id) {
-  const r = customerRecommendationsCache.find(x => String(x.id) === String(id));
+  const r = customerRecommendationsCache.find(
+    (x) => String(x.id) === String(id),
+  );
   if (!r) return;
 
-  document.getElementById('custRecListView').hidden = true;
-  document.getElementById('custRecDetailView').hidden = false;
+  document.getElementById("custRecListView").hidden = true;
+  document.getElementById("custRecDetailView").hidden = false;
 
-  const convertSectionHtml = r.converted_ticket_id ? `
+  const convertSectionHtml = r.converted_ticket_id
+    ? `
     <div class="rec-convert-box rec-convert-done">
       <p>✓ You've already converted this into a support ticket. Check your <strong>Tickets</strong> tab for updates from the SitePragati team.</p>
     </div>
-  ` : `
+  `
+    : `
     <div class="rec-convert-box">
       <h3>Ready to move forward?</h3>
       <p>Convert this recommendation into a support ticket and the SitePragati team will review it, work out the costing, and keep you updated — right from your Tickets tab.</p>
@@ -2624,40 +3176,49 @@ function openCustomerRecommendationDetail(id) {
     </div>
   `;
 
-  document.getElementById('custRecDetailContent').innerHTML = `
+  document.getElementById("custRecDetailContent").innerHTML = `
     <div class="customer-detail-info">
       <h3>${escapeHtml(r.name)}</h3>
-      ${r.details ? `<p style="white-space:pre-wrap; margin-top:8px;">${escapeHtml(r.details)}</p>` : ''}
+      ${r.details ? `<p style="white-space:pre-wrap; margin-top:8px;">${escapeHtml(r.details)}</p>` : ""}
     </div>
     ${convertSectionHtml}
   `;
 
-  const convertBtn = document.getElementById('convertRecToTicketBtn');
-  if (convertBtn) convertBtn.addEventListener('click', () => convertRecommendationToTicket(r, convertBtn));
+  const convertBtn = document.getElementById("convertRecToTicketBtn");
+  if (convertBtn)
+    convertBtn.addEventListener("click", () =>
+      convertRecommendationToTicket(r, convertBtn),
+    );
 }
 
-document.getElementById('backToRecommendationsBtn').addEventListener('click', () => {
-  document.getElementById('custRecDetailView').hidden = true;
-  document.getElementById('custRecListView').hidden = false;
-});
+document
+  .getElementById("backToRecommendationsBtn")
+  .addEventListener("click", () => {
+    document.getElementById("custRecDetailView").hidden = true;
+    document.getElementById("custRecListView").hidden = false;
+  });
 
 async function convertRecommendationToTicket(rec, btn) {
   const payload = {
     subject: rec.name,
-    description: `I'd like to proceed with this recommendation — please share the costing and next steps.\n\n${rec.details || ''}`,
-    recommendation_id: rec.id
+    description: `I'd like to proceed with this recommendation — please share the costing and next steps.\n\n${rec.details || ""}`,
+    recommendation_id: rec.id,
   };
 
-  await withButtonSpinner(btn, 'Converting…', async () => {
+  await withButtonSpinner(btn, "Converting…", async () => {
     try {
-      const res = await fetch('/api/customer/tickets', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+      const res = await fetch("/api/customer/tickets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok || data.error) {
-        alert('Error: ' + (data.error || 'Could not convert this recommendation to a ticket.'));
+        alert(
+          "Error: " +
+            (data.error ||
+              "Could not convert this recommendation to a ticket."),
+        );
         return;
       }
       rec.converted_ticket_id = true; // just needs to be truthy locally until the next full reload
@@ -2665,7 +3226,7 @@ async function convertRecommendationToTicket(rec, btn) {
       openCustomerRecommendationDetail(rec.id);
       loadCustomerTickets();
     } catch (err) {
-      alert('Something went wrong converting this recommendation to a ticket.');
+      alert("Something went wrong converting this recommendation to a ticket.");
     }
   });
 }
@@ -2675,230 +3236,260 @@ let currentCustomerTicketId = null;
 
 function openCustomerTicketDetail(id) {
   currentCustomerTicketId = id;
-  const t = customerTicketsCache.find(x => String(x.id) === String(id));
+  const t = customerTicketsCache.find((x) => String(x.id) === String(id));
   if (!t) return;
 
-  document.getElementById('custTicketListView').hidden = true;
-  document.getElementById('custTicketDetailView').hidden = false;
+  document.getElementById("custTicketListView").hidden = true;
+  document.getElementById("custTicketDetailView").hidden = false;
 
   renderCustomerTicketDetailInfo(t);
 
-  document.getElementById('custNewCommentText').value = '';
-  document.getElementById('custNewCommentFile').value = '';
-  document.getElementById('custCommentFormMsg').textContent = '';
+  document.getElementById("custNewCommentText").value = "";
+  document.getElementById("custNewCommentFile").value = "";
+  document.getElementById("custCommentFormMsg").textContent = "";
   loadCustomerTicketDetailComments(id);
 }
 
 function renderCustomerTicketDetailInfo(t) {
-  document.getElementById('custTicketDetailInfo').innerHTML = `
+  document.getElementById("custTicketDetailInfo").innerHTML = `
     <h3>${escapeHtml(t.subject)}</h3>
-    ${t.reference_code ? `<p class="unique-id">Request ID: ${escapeHtml(t.reference_code)}</p>` : ''}
+    ${t.reference_code ? `<p class="unique-id">Request ID: ${escapeHtml(t.reference_code)}</p>` : ""}
     <p class="ticket-date">Raised: ${escapeHtml(formatTicketDate(t.created_at))}</p>
-    <p style="white-space:pre-wrap; margin-top:10px;">${escapeHtml(t.description || 'No description provided.')}</p>
+    <p style="white-space:pre-wrap; margin-top:10px;">${escapeHtml(t.description || "No description provided.")}</p>
   `;
 
-  const paymentWrap = document.getElementById('custTicketDetailPayment');
+  const paymentWrap = document.getElementById("custTicketDetailPayment");
   paymentWrap.innerHTML = renderTicketPaymentSection(t);
-  paymentWrap.querySelectorAll('.payment-submit-btn').forEach(btn => {
-    btn.addEventListener('click', () => submitPaymentReference(btn.dataset.ticketId));
+  paymentWrap.querySelectorAll(".payment-submit-btn").forEach((btn) => {
+    btn.addEventListener("click", () =>
+      submitPaymentReference(btn.dataset.ticketId),
+    );
   });
 }
 
-document.getElementById('backToCustTicketsBtn').addEventListener('click', () => {
-  document.getElementById('custTicketDetailView').hidden = true;
-  document.getElementById('custTicketListView').hidden = false;
-  currentCustomerTicketId = null;
-  loadCustomerTickets();
-});
+document
+  .getElementById("backToCustTicketsBtn")
+  .addEventListener("click", () => {
+    document.getElementById("custTicketDetailView").hidden = true;
+    document.getElementById("custTicketListView").hidden = false;
+    currentCustomerTicketId = null;
+    loadCustomerTickets();
+  });
 
 async function loadCustomerTicketDetailComments(ticketId) {
-  const list = document.getElementById('custTicketCommentsList');
+  const list = document.getElementById("custTicketCommentsList");
   list.innerHTML = '<p class="empty-note">Loading…</p>';
   try {
-    const res = await fetch(`/api/customer/ticket-comments?ticket_id=${ticketId}`);
+    const res = await fetch(
+      `/api/customer/ticket-comments?ticket_id=${ticketId}`,
+    );
     const data = await res.json();
-    list.innerHTML = renderCommentThread(data.comments, '/api/customer/ticket-file');
+    list.innerHTML = renderCommentThread(
+      data.comments,
+      "/api/customer/ticket-file",
+    );
   } catch (err) {
     list.innerHTML = '<p class="empty-note">Could not load comments.</p>';
   }
 }
 
-document.getElementById('custPostCommentBtn').addEventListener('click', async () => {
-  const textEl = document.getElementById('custNewCommentText');
-  const fileEl = document.getElementById('custNewCommentFile');
-  const msgEl = document.getElementById('custCommentFormMsg');
-  const text = textEl.value.trim();
-  const file = fileEl.files[0];
+document
+  .getElementById("custPostCommentBtn")
+  .addEventListener("click", async () => {
+    const textEl = document.getElementById("custNewCommentText");
+    const fileEl = document.getElementById("custNewCommentFile");
+    const msgEl = document.getElementById("custCommentFormMsg");
+    const text = textEl.value.trim();
+    const file = fileEl.files[0];
 
-  if (!text && !file) {
-    msgEl.textContent = 'Write a message or attach a file.';
-    return;
-  }
-
-  const formData = new FormData();
-  formData.append('ticket_id', currentCustomerTicketId);
-  formData.append('comment', text);
-  if (file) formData.append('file', file);
-
-  msgEl.textContent = 'Sending…';
-
-  try {
-    const res = await fetch('/api/customer/ticket-comments', { method: 'POST', body: formData });
-    const data = await res.json();
-    if (!res.ok || data.error) {
-      msgEl.textContent = 'Error: ' + (data.error || 'Could not send');
+    if (!text && !file) {
+      msgEl.textContent = "Write a message or attach a file.";
       return;
     }
-    textEl.value = '';
-    fileEl.value = '';
-    msgEl.textContent = '';
-    loadCustomerTicketDetailComments(currentCustomerTicketId);
-  } catch (err) {
-    msgEl.textContent = 'Something went wrong. Please try again.';
-  }
-});
+
+    const formData = new FormData();
+    formData.append("ticket_id", currentCustomerTicketId);
+    formData.append("comment", text);
+    if (file) formData.append("file", file);
+
+    msgEl.textContent = "Sending…";
+
+    try {
+      const res = await fetch("/api/customer/ticket-comments", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        msgEl.textContent = "Error: " + (data.error || "Could not send");
+        return;
+      }
+      textEl.value = "";
+      fileEl.value = "";
+      msgEl.textContent = "";
+      loadCustomerTicketDetailComments(currentCustomerTicketId);
+    } catch (err) {
+      msgEl.textContent = "Something went wrong. Please try again.";
+    }
+  });
 
 async function submitPaymentReference(ticketId) {
-  const input = document.querySelector(`.payment-ref-input[data-ticket-id="${ticketId}"]`);
-  const msgEl = document.querySelector(`.payment-status-msg[data-ticket-id="${ticketId}"]`);
+  const input = document.querySelector(
+    `.payment-ref-input[data-ticket-id="${ticketId}"]`,
+  );
+  const msgEl = document.querySelector(
+    `.payment-status-msg[data-ticket-id="${ticketId}"]`,
+  );
   const reference = input.value.trim();
 
   if (!reference) {
-    msgEl.textContent = 'Please enter your transaction reference number.';
+    msgEl.textContent = "Please enter your transaction reference number.";
     return;
   }
 
-  msgEl.textContent = 'Submitting…';
+  msgEl.textContent = "Submitting…";
 
   try {
-    const res = await fetch('/api/customer/tickets', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: Number(ticketId), payment_reference: reference })
+    const res = await fetch("/api/customer/tickets", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: Number(ticketId),
+        payment_reference: reference,
+      }),
     });
     const data = await res.json();
     if (!res.ok || data.error) {
-      msgEl.textContent = 'Error: ' + (data.error || 'Could not submit payment');
+      msgEl.textContent =
+        "Error: " + (data.error || "Could not submit payment");
       return;
     }
     await loadCustomerTickets();
     // Stay on the detail page and reflect the new status, instead of
     // bouncing back to the list the customer just submitted payment from.
-    const updated = customerTicketsCache.find(x => String(x.id) === String(ticketId));
-    if (updated && String(currentCustomerTicketId) === String(ticketId)) renderCustomerTicketDetailInfo(updated);
+    const updated = customerTicketsCache.find(
+      (x) => String(x.id) === String(ticketId),
+    );
+    if (updated && String(currentCustomerTicketId) === String(ticketId))
+      renderCustomerTicketDetailInfo(updated);
   } catch (err) {
-    msgEl.textContent = 'Something went wrong. Please try again.';
+    msgEl.textContent = "Something went wrong. Please try again.";
   }
 }
 
-const ticketModal = makeModal('ticketModalOverlay');
+const ticketModal = makeModal("ticketModalOverlay");
 
-document.getElementById('newTicketBtn').addEventListener('click', () => {
+document.getElementById("newTicketBtn").addEventListener("click", () => {
   ticketModal.show();
 });
 
-document.getElementById('ticketCancelBtn').addEventListener('click', () => {
+document.getElementById("ticketCancelBtn").addEventListener("click", () => {
   ticketModal.hide();
-  document.getElementById('ticketSubject').value = '';
-  document.getElementById('ticketDescription').value = '';
+  document.getElementById("ticketSubject").value = "";
+  document.getElementById("ticketDescription").value = "";
 });
-document.getElementById('ticketModalCloseBtn').addEventListener('click', () => {
+document.getElementById("ticketModalCloseBtn").addEventListener("click", () => {
   ticketModal.hide();
-  document.getElementById('ticketSubject').value = '';
-  document.getElementById('ticketDescription').value = '';
+  document.getElementById("ticketSubject").value = "";
+  document.getElementById("ticketDescription").value = "";
 });
 
-const ticketSaveBtn = document.getElementById('ticketSaveBtn');
-ticketSaveBtn.addEventListener('click', () => {
-  const subject = document.getElementById('ticketSubject').value.trim();
-  const description = document.getElementById('ticketDescription').value.trim();
+const ticketSaveBtn = document.getElementById("ticketSaveBtn");
+ticketSaveBtn.addEventListener("click", () => {
+  const subject = document.getElementById("ticketSubject").value.trim();
+  const description = document.getElementById("ticketDescription").value.trim();
 
   if (!subject) {
-    alert('Please enter a subject for the ticket.');
+    alert("Please enter a subject for the ticket.");
     return;
   }
 
-  withButtonSpinner(ticketSaveBtn, 'Submitting…', async () => {
+  withButtonSpinner(ticketSaveBtn, "Submitting…", async () => {
     try {
-      const res = await fetch('/api/customer/tickets', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subject, description })
+      const res = await fetch("/api/customer/tickets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subject, description }),
       });
       const data = await res.json();
       if (!res.ok || data.error) {
-        alert('Error: ' + (data.error || 'Could not submit ticket'));
+        alert("Error: " + (data.error || "Could not submit ticket"));
         return;
       }
       ticketModal.hide();
-      document.getElementById('ticketSubject').value = '';
-      document.getElementById('ticketDescription').value = '';
+      document.getElementById("ticketSubject").value = "";
+      document.getElementById("ticketDescription").value = "";
       loadCustomerTickets();
     } catch (err) {
-      alert('Something went wrong submitting this ticket.');
+      alert("Something went wrong submitting this ticket.");
     }
   });
 });
 
-
 // ===== Init =====
 // If arriving via a link like portal.html?role=admin, pre-select that tab
 // on the login screen (only matters if not already logged in).
-const requestedRole = new URLSearchParams(window.location.search).get('role');
-if (requestedRole === 'admin' || requestedRole === 'customer') {
+const requestedRole = new URLSearchParams(window.location.search).get("role");
+if (requestedRole === "admin" || requestedRole === "customer") {
   setRole(requestedRole);
 }
 
 // A password-reset email link (?admin_reset_token=...) always wins over
 // whatever checkSession() would otherwise show — even an existing admin
 // session shouldn't hide an explicit reset request.
-const resetTokenFromUrl = new URLSearchParams(window.location.search).get('admin_reset_token');
+const resetTokenFromUrl = new URLSearchParams(window.location.search).get(
+  "admin_reset_token",
+);
 
 // A direct customer login link (?role=customer&email=...&pw=...) — e.g.
 // shared over WhatsApp/email for one-click access — logs the customer
 // straight in instead of making them type credentials. Always attempted
 // when present, even over an existing session, since following such a
 // link is an explicit request to be that customer.
-const autoLoginEmail = new URLSearchParams(window.location.search).get('email');
-const autoLoginPw = new URLSearchParams(window.location.search).get('pw');
+const autoLoginEmail = new URLSearchParams(window.location.search).get("email");
+const autoLoginPw = new URLSearchParams(window.location.search).get("pw");
 
 // A deep link (?page=ticket, etc.) to land on a specific customer
 // sub-tab. Read here, before the auto-login flow below scrubs the URL,
 // and consumed by showCustomerDashboard() once the customer is shown.
-const requestedCustomerPage = new URLSearchParams(window.location.search).get('page');
+const requestedCustomerPage = new URLSearchParams(window.location.search).get(
+  "page",
+);
 
 checkSession().then(async () => {
   if (resetTokenFromUrl) {
     adminResetToken = resetTokenFromUrl;
     showLogin();
-    setRole('admin');
-    showLoginCard('resetPasswordCard');
-    window.history.replaceState({}, '', window.location.pathname);
+    setRole("admin");
+    showLoginCard("resetPasswordCard");
+    window.history.replaceState({}, "", window.location.pathname);
     return;
   }
 
-  if (requestedRole === 'customer' && autoLoginEmail && autoLoginPw) {
+  if (requestedRole === "customer" && autoLoginEmail && autoLoginPw) {
     // Scrub the password out of the visible URL/history right away,
     // whether or not the login below actually succeeds.
-    window.history.replaceState({}, '', window.location.pathname);
+    window.history.replaceState({}, "", window.location.pathname);
     try {
-      const res = await fetch('/api/customer/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: autoLoginEmail, password: autoLoginPw })
+      const res = await fetch("/api/customer/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: autoLoginEmail, password: autoLoginPw }),
       });
       const data = await res.json();
       if (res.ok) {
         checkSession();
       } else {
         showLogin();
-        setRole('customer');
-        document.getElementById('loginError').textContent = data.error || 'Login failed';
+        setRole("customer");
+        document.getElementById("loginError").textContent =
+          data.error || "Login failed";
       }
     } catch (err) {
       showLogin();
-      setRole('customer');
-      document.getElementById('loginError').textContent = 'Something went wrong. Please try again.';
+      setRole("customer");
+      document.getElementById("loginError").textContent =
+        "Something went wrong. Please try again.";
     }
   }
 });
