@@ -1,13 +1,18 @@
 // /api/admin/recommendations — protected by _middleware.js
 // GET    ?customer_id=X → list recommendations for one customer, newest first
-// POST   → create a new recommendation { customer_id, name, details }
+// POST   → create a new recommendation { customer_id, name, details,
+//          visible_after }. visible_after is an optional ISO date
+//          (YYYY-MM-DD) — leave it blank for the original behavior
+//          (visible immediately, emailed immediately); set a future date
+//          to hold it back from the customer portal and delay the email
+//          until that date (see functions/_utils/recommendation-emails.js)
 // PUT    → { id, ...fields } → update an existing recommendation
 // DELETE → { id } → remove one
 
 import { json } from '../../_utils/auth.js';
-import { brandedEmailHtml, sendResendEmail } from '../../_utils/email.js';
+import { sendDueRecommendationEmails } from '../../_utils/recommendation-emails.js';
 
-const FIELDS = ['customer_id', 'name', 'details'];
+const FIELDS = ['customer_id', 'name', 'details', 'visible_after'];
 
 export async function onRequestGet(context) {
   const { request, env } = context;
@@ -36,7 +41,7 @@ export async function onRequestPost(context) {
     }
 
     const customer = await env.DB.prepare(
-      'SELECT business_name, email FROM customers WHERE id = ?'
+      'SELECT id FROM customers WHERE id = ?'
     ).bind(body.customer_id).first();
     if (!customer) return json({ error: 'Customer not found' }, 404);
 
@@ -47,29 +52,11 @@ export async function onRequestPost(context) {
       `INSERT INTO recommendations (${FIELDS.join(', ')}) VALUES (${placeholders})`
     ).bind(...values).run();
 
-    if (customer.email) {
-      const portalUrl = `${new URL(request.url).origin}/portal.html`;
-      const emailSubject = `A new recommendation for ${customer.business_name}: ${body.name}`;
-      const bodyText =
-        `Hi ${customer.business_name}, our team has a new recommendation to help improve your website:\n\n` +
-        `${body.name}\n${body.details || ''}\n\n` +
-        `Log in to your customer portal to view this and any other recommendations: ${portalUrl}`;
-
-      const html = brandedEmailHtml({
-        badgeText: 'New recommendation',
-        introText: `Hi ${customer.business_name}, we've been reviewing your website and have a new recommendation we think could help your business — take a look below, and let us know if you'd like help putting it in place.`,
-        rows: [
-          ['Recommendation', body.name],
-          ['Why it helps', body.details || '']
-        ],
-        ctaText: 'View in your portal',
-        ctaUrl: portalUrl,
-        footerText: 'Log in to your customer portal any time to see this and any other recommendations.'
-      });
-
-      await sendResendEmail(env, { to: customer.email, subject: emailSubject, text: bodyText, html });
-      // Recommendation is already saved in D1 regardless of whether the email succeeds.
-    }
+    // Sends immediately if this (or anything else) is due right now — no
+    // visible_after, or one that's already today-or-past. Same check the
+    // scheduled catch-up uses, so there's one source of truth for "is
+    // this due yet" instead of duplicating the email-sending logic here.
+    await sendDueRecommendationEmails(env, new URL(request.url).origin);
 
     return json({ result: 'success' });
   } catch (err) {

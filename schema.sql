@@ -92,6 +92,8 @@ CREATE TABLE IF NOT EXISTS recommendations (
   name TEXT NOT NULL,
   details TEXT,
   converted_ticket_id INTEGER, -- set once the customer converts this into a support ticket, via their portal's recommendation detail page
+  visible_after TEXT, -- ISO date (YYYY-MM-DD) the customer should first see this recommendation; NULL means visible immediately, same as before this field existed
+  email_sent_at TEXT, -- ISO timestamp once the "new recommendation" email has actually gone out — NULL means still pending, either because visible_after hasn't arrived yet or the customer has no email on file. Set by sendDueRecommendationEmails (functions/_utils/recommendation-emails.js), which is piggybacked onto /api/whoami since Cloudflare Pages has no built-in cron scheduler.
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
 );
