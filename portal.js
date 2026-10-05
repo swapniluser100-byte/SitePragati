@@ -8,6 +8,21 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+// Plain-text version of rich-text HTML (e.g. a recommendation's Details
+// field) for contexts that can't render markup, like a ticket description.
+function stripHtml(html) {
+  const div = document.createElement("div");
+  div.innerHTML = html == null ? "" : html;
+  // A newline after each block-level element so list items, table rows,
+  // and paragraphs don't run together once tags are stripped.
+  div.querySelectorAll("p, li, tr, br, h1, h2, h3, h4, h5, h6, div").forEach(
+    (el) => {
+      el.insertAdjacentText("afterend", "\n");
+    },
+  );
+  return (div.textContent || div.innerText || "").replace(/\n{3,}/g, "\n\n").trim();
+}
+
 // Shared icon-only Edit/Delete button markup, used across the admin
 // console's Leads, Customers, Transactions, and Case Studies lists.
 const EDIT_ICON_SVG =
@@ -2257,7 +2272,7 @@ function renderRecommendationsList() {
           ${deleteButtonHtml("data-delete-rec", r.id)}
         </div>
       </div>
-      ${r.details ? `<p style="white-space:pre-wrap;">${escapeHtml(r.details)}</p>` : ""}
+      ${r.details ? `<div class="rec-details-rich">${r.details}</div>` : ""}
     </div>
   `,
     )
@@ -2299,18 +2314,54 @@ const recFields = {
   id: document.getElementById("recId"),
   customer_id: document.getElementById("recCustomerId"),
   name: document.getElementById("recName"),
-  details: document.getElementById("recDetails"),
   visible_after: document.getElementById("recVisibleAfter"),
 };
+
+// Loads the rich-text editor for the Details field from this app's own
+// vendored copy (vendor/tinymce/ — no CDN dependency) the first time the
+// recommendation form is opened, rather than on every portal page load —
+// customers never pay for this ~1.4MB download, and it only costs an
+// admin the one-time load the first time they add/edit a recommendation.
+// Cached so later opens reuse the same already-initialized editor.
+let tinyMceReadyPromise = null;
+function loadTinyMCE() {
+  if (tinyMceReadyPromise) return tinyMceReadyPromise;
+  tinyMceReadyPromise = new Promise((resolve) => {
+    if (window.tinymce) {
+      resolve();
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "vendor/tinymce/tinymce.min.js";
+    script.onload = resolve;
+    document.head.appendChild(script);
+  }).then(() =>
+    tinymce.init({
+      selector: "#recDetails",
+      height: 300,
+      menubar: false,
+      plugins: "lists advlist link image table charmap code wordcount autolink",
+      toolbar:
+        "undo redo | blocks | bold italic underline forecolor backcolor | bullist numlist | link image table | alignleft aligncenter alignright | removeformat | code",
+      table_default_attributes: { border: "1" },
+      table_default_styles: { "border-collapse": "collapse", width: "100%" },
+      content_style:
+        "body { font-family: Arial, Helvetica, sans-serif; font-size:14px; color:#1B2544; }",
+    }),
+  );
+  return tinyMceReadyPromise;
+}
 
 function clearRecommendationForm() {
   recFields.id.value = "";
   recFields.name.value = "";
-  recFields.details.value = "";
   recFields.visible_after.value = "";
+  const editor = window.tinymce && tinymce.get("recDetails");
+  if (editor) editor.setContent("");
 }
 
-function openRecommendationForm(rec) {
+async function openRecommendationForm(rec) {
+  await loadTinyMCE();
   clearRecommendationForm();
   document.getElementById("recommendationFormTitle").textContent = rec
     ? "Edit recommendation"
@@ -2320,8 +2371,8 @@ function openRecommendationForm(rec) {
   if (rec) {
     recFields.id.value = rec.id;
     recFields.name.value = rec.name;
-    recFields.details.value = rec.details || "";
     recFields.visible_after.value = rec.visible_after || "";
+    tinymce.get("recDetails").setContent(rec.details || "");
   }
 
   recModal.show();
@@ -2347,7 +2398,7 @@ recSaveBtn.addEventListener("click", () => {
     id: recFields.id.value || undefined,
     customer_id: Number(recFields.customer_id.value),
     name: recFields.name.value.trim(),
-    details: recFields.details.value,
+    details: tinymce.get("recDetails").getContent(),
     visible_after: recFields.visible_after.value || null,
   };
 
@@ -3155,7 +3206,7 @@ function renderCustomerRecommendationsList() {
         <h3>${escapeHtml(r.name)}</h3>
         ${r.converted_ticket_id ? '<span class="status-badge status-renewed">Converted to ticket</span>' : ""}
       </div>
-      ${r.details ? `<p style="white-space:pre-wrap;">${escapeHtml(r.details)}</p>` : ""}
+      ${r.details ? `<div class="rec-details-rich">${r.details}</div>` : ""}
     </div>
   `,
     )
@@ -3194,7 +3245,7 @@ function openCustomerRecommendationDetail(id) {
   document.getElementById("custRecDetailContent").innerHTML = `
     <div class="customer-detail-info">
       <h3>${escapeHtml(r.name)}</h3>
-      ${r.details ? `<p style="white-space:pre-wrap; margin-top:8px;">${escapeHtml(r.details)}</p>` : ""}
+      ${r.details ? `<div class="rec-details-rich" style="margin-top:8px;">${r.details}</div>` : ""}
     </div>
     ${convertSectionHtml}
   `;
@@ -3216,7 +3267,7 @@ document
 async function convertRecommendationToTicket(rec, btn) {
   const payload = {
     subject: rec.name,
-    description: `I'd like to proceed with this recommendation — please share the costing and next steps.\n\n${rec.details || ""}`,
+    description: `I'd like to proceed with this recommendation — please share the costing and next steps.\n\n${stripHtml(rec.details)}`,
     recommendation_id: rec.id,
   };
 
