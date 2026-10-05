@@ -94,6 +94,18 @@
 .rec-card{cursor:pointer; transition:box-shadow 0.15s, transform 0.15s;}
 .rec-card:hover{box-shadow:0 6px 16px rgba(27,37,68,0.1); transform:translateY(-1px);}
 
+/* Renders a recommendation's rich-text Details field (authored via the
+   admin console's TinyMCE editor) — admin-authored HTML, trusted the
+   same way every other admin-entered field in this app already is. */
+.rec-details-rich{line-height:1.5; color:var(--slate);}
+.rec-details-rich p{margin:0 0 10px;}
+.rec-details-rich ul, .rec-details-rich ol{margin:0 0 10px; padding-left:22px;}
+.rec-details-rich img{max-width:100%; height:auto; border-radius:6px;}
+.rec-details-rich table{border-collapse:collapse; width:100%; margin:0 0 10px;}
+.rec-details-rich table td, .rec-details-rich table th{border:1px solid rgba(27,37,68,0.15); padding:6px 10px;}
+.rec-details-rich h1, .rec-details-rich h2, .rec-details-rich h3, .rec-details-rich h4{margin:0 0 8px; color:var(--navy);}
+.rec-details-rich a{color:var(--teal);}
+
 .rec-convert-box{
   background:var(--white); border:1px solid rgba(27,37,68,0.1); border-radius:var(--radius-md);
   padding:20px 24px;
