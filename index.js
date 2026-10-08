@@ -19,23 +19,30 @@ function caseCardHtml(c) {
   const siteLink = url
     ? `<a class="case-link" href="${escapeHtml(url)}" target="_blank" rel="noopener">Visit live site →</a>`
     : '';
-  const chromeBar = `
-    <div class="case-card-chrome">
-      <span></span><span></span><span></span>
-      <div class="case-card-chrome-pill">${escapeHtml(c.site_url || 'sitepragati.in')}</div>
-    </div>`;
+  const screen = url
+    ? `<iframe src="${escapeHtml(url)}" loading="lazy" referrerpolicy="no-referrer" title="Live preview of ${escapeHtml(c.business_name)}"></iframe>`
+    : '';
   return `
-    <div class="case-card">
-      ${chromeBar}
-      ${c.category ? `<span class="case-category">${escapeHtml(c.category)}</span>` : ''}
-      <h3>${escapeHtml(c.business_name)}</h3>
-      <p>${escapeHtml(c.description || '')}</p>
-      <div class="case-stats">
-        ${statHtml(c.stat1_label, c.stat1_value)}
-        ${statHtml(c.stat2_label, c.stat2_value)}
-        ${statHtml(c.stat3_label, c.stat3_value)}
+    <div class="case-item">
+      <div class="case-laptop" aria-hidden="true">
+        <div class="case-laptop-frame">
+          <div class="case-laptop-cam"></div>
+          <div class="case-laptop-screen">${screen}</div>
+        </div>
+        <div class="case-laptop-base"></div>
+        <div class="case-laptop-shadow"></div>
       </div>
-      ${siteLink}
+      <div class="case-feature">
+        ${c.category ? `<span class="case-category">${escapeHtml(c.category)}</span>` : ''}
+        <h3>${escapeHtml(c.business_name)}</h3>
+        <p>${escapeHtml(c.description || '')}</p>
+        <div class="case-stats">
+          ${statHtml(c.stat1_label, c.stat1_value)}
+          ${statHtml(c.stat2_label, c.stat2_value)}
+          ${statHtml(c.stat3_label, c.stat3_value)}
+        </div>
+        ${siteLink}
+      </div>
     </div>`;
 }
 
