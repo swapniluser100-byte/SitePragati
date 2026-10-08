@@ -170,14 +170,6 @@ h2{font-size:clamp(1.9rem, 3.6vw, 2.6rem); margin-bottom:10px;}
   .hero-bg::after{background:linear-gradient(180deg, rgba(8,16,34,0.35) 0%, rgba(8,16,34,0.75) 55%, rgba(8,16,34,0.95) 100%);}
 }
 
-/* ===== Trust strip ===== */
-.trust-strip{background:var(--gradient-dark); padding:32px 0;}
-.trust-strip .wrap{
-  display:flex; justify-content:space-between; flex-wrap:wrap; gap:24px;
-}
-.trust-item{display:flex; flex-direction:column; align-items:center; text-align:center; flex:1; min-width:140px;}
-.trust-item strong{font-family:'Sora', sans-serif; font-size:1.9rem; font-weight:700; color:var(--amber);}
-.trust-item span{font-size:0.82rem; color:rgba(255,255,255,0.65); margin-top:2px;}
 
 .feature-grid{display:grid; grid-template-columns:repeat(3, 1fr); gap:24px;}
 .feature-card{
