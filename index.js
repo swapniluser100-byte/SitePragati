@@ -52,6 +52,33 @@ function dotHtml(c, index, activeIndex) {
   return `<button type="button" class="case-dot${active}" aria-label="Show case study: ${escapeHtml(c.business_name)}" aria-current="${index === activeIndex}"></button>`;
 }
 
+// The embedded site is rendered at a fixed "desktop" width, then
+// scaled down with a CSS transform to fit the laptop screen — so a
+// narrow mobile viewport shows a shrunk desktop layout instead of the
+// site's own mobile breakpoint blown up to look oversized inside a
+// small frame.
+const CASE_IFRAME_DESIGN_WIDTH = 1280;
+
+function scaleCaseIframes() {
+  document.querySelectorAll('.case-laptop-screen').forEach((screenEl) => {
+    const iframe = screenEl.querySelector('iframe');
+    if (!iframe) return;
+    const availableWidth = screenEl.clientWidth - 6;
+    const availableHeight = screenEl.clientHeight - 6;
+    if (availableWidth <= 0 || availableHeight <= 0) return;
+    const scale = availableWidth / CASE_IFRAME_DESIGN_WIDTH;
+    iframe.style.width = `${CASE_IFRAME_DESIGN_WIDTH}px`;
+    iframe.style.height = `${availableHeight / scale}px`;
+    iframe.style.transform = `scale(${scale})`;
+  });
+}
+
+let caseResizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(caseResizeTimer);
+  caseResizeTimer = setTimeout(scaleCaseIframes, 150);
+});
+
 async function loadCaseStudies() {
   const stage = document.getElementById('caseStudyGrid');
   const controls = document.getElementById('caseCarouselControls');
@@ -65,6 +92,7 @@ async function loadCaseStudies() {
 
   function render() {
     stage.innerHTML = caseCardHtml(caseStudies[activeIndex]);
+    requestAnimationFrame(scaleCaseIframes);
     if (dotsEl) {
       dotsEl.innerHTML = caseStudies.map((c, i) => dotHtml(c, i, activeIndex)).join('');
       Array.from(dotsEl.children).forEach((dot, i) => {
