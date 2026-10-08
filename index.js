@@ -29,7 +29,8 @@ function caseCardHtml(c) {
           <div class="case-laptop-cam"></div>
           <div class="case-laptop-screen">${screen}</div>
         </div>
-        <div class="case-laptop-base"></div>
+        <div class="case-laptop-hinge"></div>
+        <div class="case-laptop-deck"></div>
         <div class="case-laptop-shadow"></div>
       </div>
       <div class="case-feature">
