@@ -124,8 +124,15 @@
       <span class="page-eyebrow">Our work</span>
       <h2>Real businesses, already live</h2>
       <p class="section-lead">A few of the small businesses we've built and launched — see what they got, and what it cost to run.</p>
-      <div class="case-grid" id="caseStudyGrid">
-        <p class="case-empty">Loading…</p>
+      <div class="case-carousel">
+        <div class="case-carousel-stage" id="caseStudyGrid">
+          <p class="case-empty">Loading…</p>
+        </div>
+        <div class="case-carousel-controls" id="caseCarouselControls" hidden>
+          <button type="button" class="case-nav case-nav-prev" id="casePrevBtn" aria-label="Previous case study">‹</button>
+          <div class="case-dots" id="caseDots"></div>
+          <button type="button" class="case-nav case-nav-next" id="caseNextBtn" aria-label="Next case study">›</button>
+        </div>
       </div>
     </div>
   </section>

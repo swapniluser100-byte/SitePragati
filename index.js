@@ -47,21 +47,60 @@ function caseCardHtml(c) {
     </div>`;
 }
 
+function dotHtml(c, index, activeIndex) {
+  const active = index === activeIndex ? ' active' : '';
+  return `<button type="button" class="case-dot${active}" aria-label="Show case study: ${escapeHtml(c.business_name)}" aria-current="${index === activeIndex}"></button>`;
+}
+
 async function loadCaseStudies() {
-  const grid = document.getElementById('caseStudyGrid');
-  if (!grid) return;
+  const stage = document.getElementById('caseStudyGrid');
+  const controls = document.getElementById('caseCarouselControls');
+  const dotsEl = document.getElementById('caseDots');
+  const prevBtn = document.getElementById('casePrevBtn');
+  const nextBtn = document.getElementById('caseNextBtn');
+  if (!stage) return;
+
+  let caseStudies = [];
+  let activeIndex = 0;
+
+  function render() {
+    stage.innerHTML = caseCardHtml(caseStudies[activeIndex]);
+    if (dotsEl) {
+      dotsEl.innerHTML = caseStudies.map((c, i) => dotHtml(c, i, activeIndex)).join('');
+      Array.from(dotsEl.children).forEach((dot, i) => {
+        dot.addEventListener('click', () => {
+          activeIndex = i;
+          render();
+        });
+      });
+    }
+  }
+
   try {
     const res = await fetch('/api/case-studies');
     const data = await res.json();
-    const caseStudies = data.case_studies || [];
+    caseStudies = data.case_studies || [];
     if (caseStudies.length === 0) {
-      grid.closest('section').hidden = true;
+      stage.closest('section').hidden = true;
       return;
     }
-    grid.innerHTML = caseStudies.map(caseCardHtml).join('');
+    render();
+    if (controls) controls.hidden = caseStudies.length <= 1;
+    if (prevBtn) {
+      prevBtn.addEventListener('click', () => {
+        activeIndex = (activeIndex - 1 + caseStudies.length) % caseStudies.length;
+        render();
+      });
+    }
+    if (nextBtn) {
+      nextBtn.addEventListener('click', () => {
+        activeIndex = (activeIndex + 1) % caseStudies.length;
+        render();
+      });
+    }
   } catch (err) {
     // Non-critical — just hide the section rather than show a broken one.
-    grid.closest('section').hidden = true;
+    stage.closest('section').hidden = true;
   }
 }
 
