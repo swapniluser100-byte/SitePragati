@@ -149,13 +149,7 @@ h2{font-size:clamp(1.9rem, 3.6vw, 2.6rem); margin-bottom:10px;}
 }
 .hero .wrap{position:relative; z-index:1; width:100%;}
 .hero-copy{max-width:620px;}
-.hero-eyebrow{
-  display:inline-flex; align-items:center; gap:8px; background:rgba(255,255,255,0.1);
-  border:1px solid rgba(255,255,255,0.25); border-radius:999px; padding:7px 16px;
-  font-size:0.82rem; font-weight:600; color:#fff; margin-bottom:18px;
-}
-.hero-eyebrow .dot{width:7px; height:7px; border-radius:50%; background:var(--amber); flex-shrink:0;}
-.hero-copy h1{font-size:clamp(2.3rem, 4.8vw, 3.4rem); max-width:17ch; margin-bottom:20px; color:#fff;}
+.hero-copy h1{font-size:clamp(2.3rem, 4.8vw, 3.4rem); max-width:17ch; margin-top:0; margin-bottom:20px; color:#fff;}
 .hero-copy p{color:rgba(255,255,255,0.82); font-size:1.1rem; max-width:48ch; margin-bottom:32px;}
 .hero-actions{display:flex; align-items:center; gap:22px; flex-wrap:wrap; margin-bottom:40px;}
 .hero-link{font-weight:600; font-size:0.95rem; color:#fff; border-bottom:1.5px solid rgba(255,255,255,0.4); padding-bottom:2px;}
