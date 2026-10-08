@@ -179,22 +179,26 @@ h2{font-size:clamp(1.9rem, 3.6vw, 2.6rem); margin-bottom:10px;}
 .trust-item strong{font-family:'Sora', sans-serif; font-size:1.9rem; font-weight:700; color:var(--amber);}
 .trust-item span{font-size:0.82rem; color:rgba(255,255,255,0.65); margin-top:2px;}
 
-.feature-grid{display:grid; grid-template-columns:1fr 1fr; gap:24px;}
+.feature-grid{display:grid; grid-template-columns:repeat(3, 1fr); gap:24px;}
 .feature-card{
   border:1px solid rgba(27,37,68,0.12); border-bottom:3px solid var(--accent, var(--amber));
   border-radius:var(--radius-md);
-  padding:28px; background:var(--white); box-shadow:var(--shadow-card);
+  padding:24px; background:var(--white); box-shadow:var(--shadow-card);
   transition:transform 0.2s ease, box-shadow 0.2s ease;
 }
 .feature-card:hover{transform:translateY(-4px); box-shadow:0 12px 28px rgba(27,37,68,0.12);}
-.icon-badge{
-  display:flex; align-items:center; justify-content:center; width:52px; height:52px;
-  border-radius:var(--radius-sm); background:var(--accent-soft, rgba(232,163,61,0.14));
-  color:var(--accent, var(--amber-dark)); margin-bottom:18px;
+.feature-card-header{
+  display:flex; align-items:center; gap:14px; margin-bottom:16px; padding-bottom:16px;
+  border-bottom:1px solid rgba(27,37,68,0.1);
 }
-.feature-card img{width:26px; height:26px;}
-.feature-card h3{font-size:1.1rem; margin-bottom:8px;}
-.feature-card p{color:var(--slate); font-size:0.96rem;}
+.icon-badge{
+  display:flex; align-items:center; justify-content:center; width:44px; height:44px; flex-shrink:0;
+  border-radius:var(--radius-sm); background:var(--accent-soft, rgba(232,163,61,0.14));
+  color:var(--accent, var(--amber-dark));
+}
+.feature-card img{width:22px; height:22px;}
+.feature-card-header h3{font-size:1.05rem; margin:0;}
+.feature-card p{color:var(--slate); font-size:0.95rem; margin:0;}
 /* Accent variants — each service card gets its own color, not one
    repeated brand color, echoing the reference's colorful card grid. */
 .feature-card.accent-teal{--accent:var(--teal); --accent-soft:rgba(47,111,98,0.14);}
@@ -295,6 +299,10 @@ h2{font-size:clamp(1.9rem, 3.6vw, 2.6rem); margin-bottom:10px;}
 .check-card.accent-coral{--accent:#E8877D; --accent-soft:rgba(232,135,125,0.18);}
 .dark-panel .btn-outline{border-color:rgba(255,255,255,0.4); color:var(--white);}
 .dark-panel .btn-outline:hover{background:rgba(255,255,255,0.1);}
+
+@media (max-width:1024px){
+  .feature-grid{grid-template-columns:1fr 1fr;}
+}
 
 @media (max-width:860px){
   .feature-grid{grid-template-columns:1fr;}
