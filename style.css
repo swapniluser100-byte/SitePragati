@@ -367,24 +367,48 @@ h2{font-size:clamp(1.9rem, 3.6vw, 2.6rem); margin-bottom:10px;}
 /* ===== Referral ===== */
 .referral-section{padding:20px 0 60px;}
 .referral-card{
-  display:flex; align-items:center; gap:28px; flex-wrap:wrap;
-  background:linear-gradient(135deg, var(--navy) 0%, #2B3A63 100%);
-  border-radius:var(--radius-lg); padding:36px 40px;
-  box-shadow:0 12px 32px rgba(27,37,68,0.2);
+  position:relative; overflow:hidden;
+  display:flex; align-items:center; gap:32px; flex-wrap:wrap;
+  background:linear-gradient(120deg, #4A4FE0 0%, #7B5EC9 52%, #D873C4 100%);
+  border-radius:var(--radius-lg); padding:44px 48px;
+  box-shadow:0 16px 40px rgba(107,80,201,0.3);
 }
+.referral-confetti{position:absolute; inset:0; z-index:0; pointer-events:none;}
+.referral-confetti span{position:absolute; display:block; border-radius:2px;}
+.referral-confetti span:nth-child(1){top:12%; left:6%; width:10px; height:16px; background:var(--amber); transform:rotate(25deg);}
+.referral-confetti span:nth-child(2){top:72%; left:11%; width:9px; height:9px; border-radius:50%; background:#fff; opacity:0.85;}
+.referral-confetti span:nth-child(3){top:18%; left:91%; width:10px; height:15px; background:var(--teal); transform:rotate(-20deg);}
+.referral-confetti span:nth-child(4){top:76%; left:87%; width:8px; height:8px; border-radius:50%; background:var(--coral);}
+.referral-confetti span:nth-child(5){top:48%; left:2%; width:8px; height:8px; border-radius:50%; background:var(--amber); opacity:0.75;}
+.referral-confetti span:nth-child(6){top:6%; left:78%; width:7px; height:7px; border-radius:50%; background:#fff; opacity:0.75;}
+.referral-confetti span:nth-child(7){top:88%; left:48%; width:9px; height:13px; background:#fff; opacity:0.6; transform:rotate(15deg);}
+.referral-confetti span:nth-child(8){top:10%; left:40%; width:7px; height:7px; border-radius:50%; background:var(--teal); opacity:0.6;}
 .referral-card-icon{
-  font-size:2.4rem; flex-shrink:0;
-  background:rgba(232,163,61,0.18); width:72px; height:72px;
-  border-radius:50%; display:flex; align-items:center; justify-content:center;
+  position:relative; z-index:1; flex-shrink:0;
+  font-size:4rem; line-height:1;
+  filter:drop-shadow(0 14px 24px rgba(27,15,60,0.35));
 }
-.referral-card-text{flex:1; min-width:260px;}
-.referral-card-text h2{color:#FFFFFF; font-size:1.4rem; margin-bottom:8px;}
-.referral-card-text p{color:rgba(255,255,255,0.78); font-size:0.98rem; line-height:1.6; margin:0;}
-.referral-card .btn{flex-shrink:0;}
+.referral-card-icon::before{
+  content:''; position:absolute; inset:-28px; z-index:-1; border-radius:50%;
+  background:radial-gradient(circle, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0) 72%);
+}
+.referral-card-text{position:relative; z-index:1; flex:1; min-width:260px;}
+.referral-card-text h2{color:#fff; font-size:1.6rem; line-height:1.3; margin-bottom:14px;}
+.referral-card-text h2 span{display:block;}
+.referral-card-text p{
+  color:rgba(255,255,255,0.85); font-size:0.96rem; line-height:1.6; margin:0;
+  padding-top:14px; border-top:1px solid rgba(255,255,255,0.25);
+}
+.referral-card .btn{position:relative; z-index:1; flex-shrink:0;}
+.btn-gradient{
+  background:linear-gradient(135deg, #4A4FE0 0%, #B24FC9 100%);
+  color:#fff; box-shadow:0 10px 24px rgba(42,20,110,0.4);
+}
+.btn-gradient:hover{transform:translateY(-2px); box-shadow:0 14px 30px rgba(42,20,110,0.5);}
 
 @media (max-width:700px){
-  .referral-card{flex-direction:column; align-items:flex-start; text-align:left; padding:28px;}
-  .referral-card .btn{width:100%; text-align:center;}
+  .referral-card{flex-direction:column; align-items:flex-start; text-align:left; padding:32px 28px;}
+  .referral-card .btn{width:100%; justify-content:center;}
 }
 
 /* ===== Contact ===== */
