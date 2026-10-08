@@ -167,32 +167,12 @@ h2{font-size:clamp(1.9rem, 3.6vw, 2.6rem); margin-bottom:10px;}
 .hero-facts strong{font-family:'Sora', sans-serif; font-size:1.4rem; color:var(--teal);}
 .hero-facts span{font-size:0.85rem; color:var(--slate);}
 
-/* Hero visual: a crafted mini "site preview" card with floating proof badges */
+/* Hero visual: a real hero image with floating proof badges */
 .hero-visual{position:relative; padding:12px;}
-.hero-mock{
-  background:var(--white); border-radius:var(--radius-lg); overflow:hidden;
-  box-shadow:0 24px 60px rgba(27,37,68,0.18); border:1px solid rgba(27,37,68,0.06);
+.hero-image{
+  display:block; width:100%; height:auto; border-radius:var(--radius-lg);
+  box-shadow:0 24px 60px rgba(27,37,68,0.18);
 }
-.hero-mock-bar{display:flex; align-items:center; gap:7px; padding:13px 16px; background:var(--paper-dim);}
-.hero-mock-bar span{width:9px; height:9px; border-radius:50%; background:rgba(27,37,68,0.15);}
-.hero-mock-bar span:nth-child(1){background:#E8A33D;}
-.hero-mock-bar span:nth-child(2){background:#2F6F62;}
-.hero-mock-pill{flex-grow:1; height:16px; border-radius:8px; background:var(--white); margin-left:8px;}
-.hero-mock-hero{
-  margin:18px; padding:22px; border-radius:var(--radius-md);
-  background:linear-gradient(135deg, var(--navy) 0%, var(--navy-soft) 100%);
-}
-.hero-mock-hero .line-1{width:62%; height:13px; border-radius:4px; background:rgba(255,255,255,0.9); margin-bottom:10px;}
-.hero-mock-hero .line-2{width:42%; height:9px; border-radius:4px; background:rgba(232,163,61,0.8); margin-bottom:16px;}
-.hero-mock-hero .line-btn{width:34%; height:20px; border-radius:6px; background:var(--amber);}
-.hero-mock-cards{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:0 18px 18px;}
-.hero-mock-card{background:var(--paper); border:1px solid var(--paper-dim); border-radius:8px; padding:10px;}
-.hero-mock-card .thumb{height:40px; border-radius:5px; margin-bottom:9px;}
-.hero-mock-card:nth-child(1) .thumb{background:rgba(47,111,98,0.22);}
-.hero-mock-card:nth-child(2) .thumb{background:rgba(232,163,61,0.3);}
-.hero-mock-card:nth-child(3) .thumb{background:rgba(27,37,68,0.16);}
-.hero-mock-card .t1{width:75%; height:7px; border-radius:3px; background:rgba(27,37,68,0.4); margin-bottom:6px;}
-.hero-mock-card .t2{width:40%; height:7px; border-radius:3px; background:var(--amber-dark);}
 .hero-float-badge{
   position:absolute; display:flex; align-items:center; gap:10px;
   background:var(--white); border-radius:var(--radius-md); padding:12px 16px;
