@@ -15,11 +15,18 @@ function statHtml(label, value) {
 }
 
 function caseCardHtml(c) {
-  const siteLink = c.site_url
-    ? `<a class="case-link" href="${/^https?:\/\//.test(c.site_url) ? escapeHtml(c.site_url) : 'https://' + escapeHtml(c.site_url)}" target="_blank" rel="noopener">Visit live site →</a>`
+  const url = c.site_url ? (/^https?:\/\//.test(c.site_url) ? c.site_url : 'https://' + c.site_url) : '';
+  const siteLink = url
+    ? `<a class="case-link" href="${escapeHtml(url)}" target="_blank" rel="noopener">Visit live site →</a>`
     : '';
+  const chromeBar = `
+    <div class="case-card-chrome">
+      <span></span><span></span><span></span>
+      <div class="case-card-chrome-pill">${escapeHtml(c.site_url || 'sitepragati.in')}</div>
+    </div>`;
   return `
     <div class="case-card">
+      ${chromeBar}
       ${c.category ? `<span class="case-category">${escapeHtml(c.category)}</span>` : ''}
       <h3>${escapeHtml(c.business_name)}</h3>
       <p>${escapeHtml(c.description || '')}</p>
