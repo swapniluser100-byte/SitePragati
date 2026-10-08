@@ -9,7 +9,7 @@ import { json } from '../../_utils/auth.js';
 const FIELDS = [
   'business_name', 'category', 'site_url', 'description', 'image_file',
   'stat1_label', 'stat1_value', 'stat2_label', 'stat2_value',
-  'stat3_label', 'stat3_value', 'sort_order'
+  'stat3_label', 'stat3_value', 'sort_order', 'visible_on_website'
 ];
 
 export async function onRequestGet(context) {

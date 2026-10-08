@@ -2463,7 +2463,7 @@ async function loadCaseStudies() {
         (cs) => `
       <div class="cs-card">
         <div class="cs-card-info">
-          <h3>${escapeHtml(cs.business_name)}</h3>
+          <h3>${escapeHtml(cs.business_name)} ${cs.visible_on_website == 0 ? '<span class="status-badge status-closed">Hidden from website</span>' : ""}</h3>
           <p>${escapeHtml(cs.category || "")} · sort order ${cs.sort_order}</p>
           <p>${escapeHtml((cs.description || "").slice(0, 120))}${(cs.description || "").length > 120 ? "…" : ""}</p>
         </div>
@@ -2492,6 +2492,7 @@ async function loadCaseStudies() {
 }
 
 const csModal = makeModal("caseStudyModalOverlay");
+const csVisibleOnWebsiteField = document.getElementById("csVisibleOnWebsite");
 const csFields = {
   id: document.getElementById("csId"),
   business_name: document.getElementById("csBusinessName"),
@@ -2512,6 +2513,7 @@ function clearCaseStudyForm() {
   Object.entries(csFields).forEach(([key, el]) => {
     el.value = key === "sort_order" ? "0" : "";
   });
+  csVisibleOnWebsiteField.checked = true;
 }
 
 function openCaseStudyForm(id) {
@@ -2526,6 +2528,7 @@ function openCaseStudyForm(id) {
       Object.keys(csFields).forEach((key) => {
         if (cs[key] != null) csFields[key].value = cs[key];
       });
+      csVisibleOnWebsiteField.checked = cs.visible_on_website != 0;
     }
   }
 
@@ -2552,6 +2555,7 @@ csSaveBtn.addEventListener("click", () => {
   Object.entries(csFields).forEach(([key, el]) => {
     payload[key] = el.value;
   });
+  payload.visible_on_website = csVisibleOnWebsiteField.checked ? 1 : 0;
 
   if (!payload.business_name.trim()) {
     alert("Business name is required.");

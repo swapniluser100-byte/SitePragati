@@ -143,6 +143,7 @@ CREATE TABLE IF NOT EXISTS case_studies (
   stat3_label TEXT,
   stat3_value TEXT,
   sort_order INTEGER DEFAULT 0,
+  visible_on_website INTEGER DEFAULT 1, -- unchecked hides it from the public /api/case-studies response (and so from the homepage's "Our Work" section) while keeping it in the admin console
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
